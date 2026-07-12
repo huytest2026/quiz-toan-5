@@ -61,16 +61,19 @@ function submitQuiz() {
     document.getElementById('result').innerHTML = `<h3>Kết quả: ${score} / 10 câu đúng.</h3>`;
 
     // Gửi điểm về Google Sheet
+    // Gửi điểm về Google Sheet
     fetch(API_URL, {
         method: "POST",
-        mode: "no-cors", // Giải pháp cho lỗi CORS
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
             ten: document.getElementById("student-name").value,
-            diem: (score).toFixed(1),
+            diem: score,
             soCau: score + "/10"
         })
-    }).then(() => console.log("Đã gửi yêu cầu lưu điểm")).catch(e => console.log("Lỗi:", e));
+    })
+    .then(res => res.json())
+    .then(data => console.log("Đã lưu điểm thành công:", data))
+    .catch(e => console.error("Lỗi khi gửi:", e));
 }
 
 let timerInterval;
