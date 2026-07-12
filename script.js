@@ -1,5 +1,5 @@
 // Dán link Web App của bạn vào giữa hai dấu ngoặc kép bên dưới
-const API_URL = "https://script.google.com/macros/s/AKfycbwneD1m_VFEed5xSKzDalVQLjGRdGOxjsX2qrQdf3gBvrmmEWUJX-GAJ8V0F8FJPyNLPA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbylxSJcSDg0PoJmwV-agQKF60cD4WmdhVWPD6vHbG3k2-9CBAkjZpvqSgSmbqYaoXoxwQ/exec";
 let score = 0;
 let wrongQuestions = [];
 let currentQuizData = [];
