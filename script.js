@@ -147,6 +147,8 @@ startBtn.addEventListener('click', () => {
 document.getElementById('submit-btn').addEventListener('click', () => {
     if(confirm("Bạn có chắc chắn muốn nộp bài không?")) {
         submitQuiz();
+    }
+});
 
         // --- BẮT ĐẦU ĐOẠN CODE GỬI ĐIỂM VÀO ĐÂY ---
         let tenHocSinhGhiNhan = document.getElementById("student-name").value;
