@@ -42,9 +42,14 @@ function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
     
+   let userChoices = []; 
+
     currentQuizData.forEach((item, index) => {
         const selected = document.querySelector(`input[name="q${index}"]:checked`);
-        if (selected && selected.value.trim().toUpperCase() === String(item.correct).trim().toUpperCase()) {
+        let selectedValue = selected ? selected.value.trim().toUpperCase() : null; 
+        userChoices.push(selectedValue);
+
+        if (selectedValue === String(item.correct).trim().toUpperCase()) {
             score++;
         }
     });
@@ -53,21 +58,21 @@ function submitQuiz() {
     document.getElementById('result-screen').style.display = 'block';
     document.getElementById('result').innerHTML = `<h3>Kết quả: ${score} / 10 câu đúng.</h3>`;
 
-    // Gửi dữ liệu không chặn bởi CORS
+    // Gọi hàm hiển thị ôn tập (bạn sẽ dán hàm này xuống cuối file)
+    renderReview(userChoices);
+
+    // Gửi dữ liệu
     const data = JSON.stringify({
         ten: document.getElementById("student-name").value,
         diem: score,
         soCau: score + "/10"
     });
     fetch(API_URL, {
-    method: "POST",
-    mode: 'no-cors', // Rất quan trọng để không bị chặn CORS
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-        ten: document.getElementById("student-name").value,
-        diem: score,
-        soCau: score + "/10"
-    })
+        method: "POST",
+        mode: 'no-cors',
+        headers: { "Content-Type": "application/json" },
+        body: data
+    }).then(() => console.log("Đã gửi điểm xong!"));
 }).then(() => console.log("Đã gửi điểm xong!"));
 }
 
@@ -105,5 +110,48 @@ document.getElementById('submit-btn').addEventListener('click', () => {
 document.getElementById('restart-btn').addEventListener('click', () => { 
     location.reload(); 
 });
+function renderReview(userChoices) {
+    const reviewContainer = document.getElementById('review-section');
+    if (!reviewContainer) return;
 
+    let reviewHTML = '<h4 style="color: #333; margin-bottom: 15px;">Chi Tiết Bài Làm:</h4>';
+
+    currentQuizData.forEach((item, index) => {
+        let selected = userChoices[index];
+        let correct = String(item.correct).trim().toUpperCase();
+        let isCorrect = (selected === correct);
+
+        let statusColor = isCorrect ? 'green' : 'red';
+        let statusText = isCorrect ? 'ĐÚNG' : 'SAI';
+
+        reviewHTML += `
+            <div style="border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 15px;">
+                <p style="margin-bottom: 5px;">
+                    <b>Câu ${index + 1}:</b> ${item.question} 
+                    <span style="color: ${statusColor}; font-weight: bold; margin-left: 10px;">[${statusText}]</span>
+                </p>
+        `;
+
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+            let optionText = item[opt.toLowerCase()]; 
+            let style = 'margin-left: 10px; padding: 3px 0;';
+            
+            if (opt === correct) {
+                style += 'color: green; font-weight: bold;'; 
+            } else if (opt === selected && selected !== correct) {
+                style += 'color: red; text-decoration: line-through;'; 
+            }
+
+            reviewHTML += `<div style="${style}">${opt}: ${optionText}</div>`;
+        });
+
+        if (!selected) {
+            reviewHTML += `<div style="color: orange; font-style: italic; margin-left: 10px; margin-top: 5px;">(Em chưa chọn đáp án câu này)</div>`;
+        }
+
+        reviewHTML += `</div>`;
+    });
+
+    reviewContainer.innerHTML = reviewHTML;
+}
 
