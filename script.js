@@ -80,12 +80,16 @@ function submitQuiz() {
     let choices = [];
     
     currentQuizData.forEach((item, i) => {
+        // Tìm radio button đã chọn
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        // Lấy nội dung chữ sau dấu ": " của đáp án đã chọn
-        let chosenValue = sel ? sel.parentElement.innerText.split(': ')[1].trim() : ""; 
+        
+        // CẬP NHẬT TẠI ĐÂY:
+        // Lấy nội dung chữ sau dấu ": " trong thẻ label chứa radio đó
+        let chosenValue = sel ? sel.parentElement.innerText.split(': ')[1].trim().toUpperCase() : ""; 
         choices.push(chosenValue);
         
-        let correctAnswer = String(item.correct).trim();
+        // So sánh nội dung người chọn với nội dung đáp án đúng (đã được làm sạch)
+        let correctAnswer = String(item.correct).trim().toUpperCase();
         if (chosenValue === correctAnswer) score++;
     });
 
@@ -96,6 +100,7 @@ function submitQuiz() {
     document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
     renderReview(choices);
 
+    // Gửi kết quả lên Google Sheet
     fetch(API_URL, {
         method: "POST",
         mode: 'no-cors',
