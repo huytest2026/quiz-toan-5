@@ -2,8 +2,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbylxSJcSDg0PoJmwV-agQKF
 
 let score = 0;
 let wrongQuestions = [];
-let currentQuizData = []; // Dùng để hiển thị 10 câu
-let allQuizData = [];     // Dùng để lưu 250 câu gốc
+let currentQuizData = []; // 10 câu đang hiển thị
+let allQuizData = [];     // 250 câu gốc
 
 // Các biến màn hình
 const startScreen = document.getElementById('start-screen');
@@ -13,7 +13,7 @@ const startBtn = document.getElementById('start-btn');
 const submitBtn = document.getElementById('submit-btn');
 const restartBtn = document.getElementById('restart-btn');
 
-// 1. Tải dữ liệu gốc từ Google Sheets
+// 1. Tải toàn bộ dữ liệu từ Google Sheets
 function loadData() {
     fetch(API_URL)
         .then(res => res.json())
@@ -24,22 +24,22 @@ function loadData() {
         .catch(err => console.error("Lỗi khi tải dữ liệu:", err));
 }
 
-// 2. Chọn ngẫu nhiên 10 câu từ 250 câu gốc
+// 2. Chọn ngẫu nhiên 10 câu
 function generateQuiz() {
     if (allQuizData.length === 0) return;
     let shuffled = [...allQuizData].sort(() => Math.random() - 0.5);
     currentQuizData = shuffled.slice(0, 10);
-    console.log("Đã chọn 10 câu ngẫu nhiên:", currentQuizData);
+    console.log("Đang làm bài với 10 câu:", currentQuizData);
 }
 
-// 3. Hiển thị câu hỏi
+// 3. Hiển thị 10 câu lên màn hình
 function renderQuiz() {
     const quizContainer = document.getElementById('quiz');
     quizContainer.innerHTML = '';
     currentQuizData.forEach((item, index) => {
         quizContainer.innerHTML += `
-            <div class="question">
-                <p>${index + 1}. ${item.question}</p>
+            <div class="question" style="margin-bottom: 20px;">
+                <p><b>Câu ${index + 1}:</b> ${item.question}</p>
                 <input type="radio" name="q${index}" value="${item.a}"> ${item.a}<br>
                 <input type="radio" name="q${index}" value="${item.b}"> ${item.b}<br>
                 <input type="radio" name="q${index}" value="${item.c}"> ${item.c}<br>
@@ -49,11 +49,13 @@ function renderQuiz() {
     });
 }
 
-// 4. Xử lý nộp bài
+// 4. Xử lý nộp bài (Chỉ duyệt 10 câu trong currentQuizData)
 function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
     wrongQuestions = [];
+    
+    // Chỉ duyệt 10 câu đang hiển thị
     currentQuizData.forEach((item, index) => {
         const selected = document.querySelector(`input[name="q${index}"]:checked`);
         if (selected && selected.value === item.correct) {
@@ -67,10 +69,11 @@ function submitQuiz() {
     resultScreen.style.display = 'block';
 
     document.getElementById('result').innerHTML = `
-        Bạn làm đúng: ${score} / ${currentQuizData.length} câu.<br>
-        ${wrongQuestions.length > 0 ? "<span style='color:red; font-size:0.8em;'>Bạn có " + wrongQuestions.length + " câu sai.</span>" : ""}
+        <h3>Kết quả: ${score} / ${currentQuizData.length} câu đúng.</h3>
+        ${wrongQuestions.length > 0 ? "<p style='color:red;'>Bạn làm sai " + wrongQuestions.length + " câu.</p>" : "<p style='color:green;'>Chúc mừng bạn đã làm đúng hết!</p>"}
     `;
 
+    // Gửi điểm
     let tenHocSinh = document.getElementById("student-name").value;
     let tongDiem = (score / currentQuizData.length) * 10; 
 
@@ -82,7 +85,7 @@ function submitQuiz() {
             diem: tongDiem.toFixed(1),
             soCau: score + "/" + currentQuizData.length
         })
-    }).then(res => console.log("Gửi điểm thành công")).catch(e => console.log("Lỗi:", e));
+    }).then(() => console.log("Gửi điểm thành công")).catch(e => console.log("Lỗi gửi điểm:", e));
 }
 
 // 5. Đếm giờ
@@ -112,11 +115,11 @@ startBtn.addEventListener('click', () => {
 });
 
 submitBtn.addEventListener('click', () => {
-    if(confirm("Bạn có chắc chắn nộp bài không?")) submitQuiz();
+    if(confirm("Bạn có chắc chắn muốn nộp bài không?")) submitQuiz();
 });
 
 restartBtn.addEventListener('click', () => {
-    location.reload(); // Tải lại trang để làm mới toàn bộ từ đầu
+    location.reload(); 
 });
 
 // Chạy lần đầu
