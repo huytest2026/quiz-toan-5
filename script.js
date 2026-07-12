@@ -121,6 +121,20 @@ function submitQuiz() {
         Bạn làm đúng: ${score} / ${currentQuizData.length} câu.<br>
         ${wrongQuestions.length > 0 ? "<span style='color:red; font-size:0.8em;'>Bạn có " + wrongQuestions.length + " câu sai/chưa làm. Sẽ xuất hiện lại ở lần sau!</span>" : "<span style='color:green;'>Tuyệt vời! Bạn đã làm đúng hết!</span>"}
     `;
+    // --- BẮT ĐẦU DÁN ĐOẠN CODE GỬI ĐIỂM VÀO ĐÂY ---
+let tenHocSinhGhiNhan = document.getElementById("student-name").value;
+let tongDiem = (score / currentQuizData.length) * 10; // Tính theo thang điểm 10
+
+fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+        ten: tenHocSinhGhiNhan,
+        diem: tongDiem.toFixed(1), 
+        soCau: score + "/" + currentQuizData.length
+    })
+}).then(res => console.log("Đã gửi điểm thành công!"))
+  .catch(e => console.log("Lỗi gửi điểm: ", e));
 }
 
 // Bắt sự kiện các nút bấm
