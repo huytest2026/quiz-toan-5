@@ -1,7 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbylxSJcSDg0PoJmwV-agQKF60cD4WmdhVWPD6vHbG3k2-9CBAkjZpvqSgSmbqYaoXoxwQ/exec";
 
 let score = 0;
-let wrongQuestions = [];
 let currentQuizData = []; 
 let allQuizData = [];     
 
@@ -47,35 +46,31 @@ function renderQuiz() {
 function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
-    wrongQuestions = [];
     
     currentQuizData.forEach((item, index) => {
         const selected = document.querySelector(`input[name="q${index}"]:checked`);
-        // So sánh dùng toLowerCase để khớp A/a với A/a
-        if (selected && selected.value.toLowerCase() === item.correct.toLowerCase()) {
+        // So sánh giá trị đã chọn với đáp án từ Google Sheet
+        if (selected && selected.value.trim().toUpperCase() === String(item.correct).trim().toUpperCase()) {
             score++;
-        } else {
-            wrongQuestions.push(item);
         }
     });
 
     quizScreen.style.display = 'none';
     resultScreen.style.display = 'block';
 
-    document.getElementById('result').innerHTML = `
-        <h3>Kết quả: ${score} / ${currentQuizData.length} câu đúng.</h3>
-    `;
+    document.getElementById('result').innerHTML = `<h3>Kết quả: ${score} / 10 câu đúng.</h3>`;
 
-    let tenHocSinh = document.getElementById("student-name").value;
+    // Gửi điểm về Google Sheet
     fetch(API_URL, {
         method: "POST",
+        mode: "no-cors", // Giải pháp cho lỗi CORS
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-            ten: tenHocSinh,
-            diem: ((score / currentQuizData.length) * 10).toFixed(1),
-            soCau: score + "/" + currentQuizData.length
+            ten: document.getElementById("student-name").value,
+            diem: (score).toFixed(1),
+            soCau: score + "/10"
         })
-    }).catch(e => console.log("Lỗi:", e));
+    }).then(() => console.log("Đã gửi yêu cầu lưu điểm")).catch(e => console.log("Lỗi:", e));
 }
 
 let timerInterval;
@@ -83,16 +78,13 @@ function startTimer() {
     let time = 15 * 60;
     timerInterval = setInterval(() => {
         time--;
-        if (time <= 0) {
-            clearInterval(timerInterval);
-            submitQuiz();
-        }
+        if (time <= 0) { submitQuiz(); }
     }, 1000);
 }
 
 startBtn.addEventListener('click', () => {
     if (document.getElementById("student-name").value.trim() === "") {
-        alert("Em vui lòng nhập tên trước khi làm bài!");
+        alert("Vui lòng nhập tên!");
         return;
     }
     startScreen.style.display = 'none';
@@ -103,7 +95,7 @@ startBtn.addEventListener('click', () => {
 });
 
 submitBtn.addEventListener('click', () => {
-    if(confirm("Bạn có chắc chắn muốn nộp bài không?")) submitQuiz();
+    if(confirm("Nộp bài?")) submitQuiz();
 });
 
 restartBtn.addEventListener('click', () => { location.reload(); });
