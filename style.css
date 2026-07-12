@@ -1,19 +1,48 @@
+/* Thiết lập chung */
 body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
-.quiz-container { background: white; padding: 30px; max-width: 600px; margin: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.quiz-container { max-width: 800px; margin: auto; } /* Tăng chiều rộng để chứa 2 cột */
 h1 { text-align: center; color: #333; }
-p { font-size: 1.1em; line-height: 1.6; }
-.quiz-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-.question { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; color: #007bff; }
-.options label { display: block; padding: 10px; cursor: pointer; border-radius: 5px; transition: 0.3s; background-color: #f8f9fa; margin-bottom: 5px; border: 1px solid #e9ecef; }
-.options label:hover { background-color: #e2e6ea; }
+
+/* 1. Màn hình Chờ và Kết quả */
+#start-screen, #result-screen { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+
+/* 2. Cấu trúc thẻ câu hỏi (Quiz Card) */
+.quiz-card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 15px;
+    border: 1px solid #e0e7ff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.question { font-weight: bold; margin-bottom: 15px; font-size: 1.1em; color: #333; }
+
+/* 3. Lưới 2 cột cho đáp án */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Chia 2 cột bằng nhau */
+    gap: 15px;
+}
+
+.option-box {
+    border: 1px solid #d1d5db;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fff;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.option-box:hover { background-color: #f3f4f6; border-color: #007bff; }
+.option-box input { margin-right: 10px; }
+
+/* Các thành phần khác */
 button { width: 100%; padding: 15px; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 1.1em; font-weight: bold; margin-top: 10px; transition: 0.3s; }
 #start-btn { background: #007bff; }
-#start-btn:hover { background: #0056b3; }
-#start-btn:disabled { background: #6c757d; cursor: not-allowed; }
 #submit-btn { background: #28a745; }
-#submit-btn:hover { background: #218838; }
 #restart-btn { background: #ffc107; color: #333; }
-#restart-btn:hover { background: #e0a800; }
-#timer-box { font-size: 1.2em; font-weight: bold; color: #dc3545; text-align: center; padding: 10px; background: #ffe6e6; border-radius: 8px; margin-bottom: 20px; }
-#result { margin-top: 20px; padding: 15px; text-align: center; font-size: 1.3em; background: #e9ecef; border-radius: 5px; font-weight: bold; color: #28a745; }
-
+#timer-box { font-size: 1.2em; font-weight: bold; color: #dc3545; text-align: center; padding: 10px; background: #ffe6e6; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; }
+#result { margin-top: 20px; padding: 15px; text-align: center; font-size: 1.3em; color: #28a745; }
