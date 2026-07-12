@@ -59,7 +59,16 @@ function submitQuiz() {
         diem: score,
         soCau: score + "/10"
     });
-    navigator.sendBeacon(API_URL, new Blob([data], {type: 'application/json'}));
+    fetch(API_URL, {
+    method: "POST",
+    mode: 'no-cors', // Rất quan trọng để không bị chặn CORS
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        ten: document.getElementById("student-name").value,
+        diem: score,
+        soCau: score + "/10"
+    })
+}).then(() => console.log("Đã gửi điểm xong!"));
 }
 
 // --- Khởi chạy ---
