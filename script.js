@@ -82,3 +82,35 @@ document.getElementById('start-btn').addEventListener('click', () => {
     renderQuiz();
     // Start Timer...
 });
+// --- CÁC HÀM VÀ SỰ KIỆN BỊ THIẾU ---
+
+let timerInterval;
+function startTimer() {
+    let time = 15 * 60;
+    timerInterval = setInterval(() => {
+        time--;
+        if (time <= 0) { submitQuiz(); }
+    }, 1000);
+}
+
+// Bắt sự kiện cho nút Bắt đầu (Cập nhật thêm startTimer)
+document.getElementById('start-btn').addEventListener('click', () => {
+    if (document.getElementById("student-name").value.trim() === "") return alert("Vui lòng nhập tên!");
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    generateQuiz();
+    renderQuiz();
+    startTimer();
+});
+
+// Bắt sự kiện cho nút Nộp bài
+document.getElementById('submit-btn').addEventListener('click', () => {
+    if(confirm("Bạn có chắc chắn muốn nộp bài?")) {
+        submitQuiz();
+    }
+});
+
+// Bắt sự kiện cho nút Làm lại bài
+document.getElementById('restart-btn').addEventListener('click', () => { 
+    location.reload(); 
+});
