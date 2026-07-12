@@ -17,7 +17,7 @@ function handleData(data) {
     console.log("Dữ liệu đã tải:", allQuizData.length);
 }
 
-// Bắt đầu làm bài
+// Bắt đầu làm bài và đếm ngược
 function startTimer() {
     let time = 15 * 60; // 15 phút
     const timerDisplay = document.getElementById('timer-display');
@@ -37,7 +37,7 @@ function startTimer() {
 
         if (time <= 0) {
             clearInterval(timerInterval);
-            alert("Đã hết giờ!");
+            alert("Đã hết giờ làm bài!");
             submitQuiz();
         }
     }, 1000);
@@ -51,7 +51,7 @@ function renderQuiz() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
     currentQuizData.forEach((item, i) => {
-        quizDiv.innerHTML += `<div><p><b>Câu ${i+1}:</b> ${item.question}</p>
+        quizDiv.innerHTML += `<div style="margin-bottom: 15px;"><p><b>Câu ${i+1}:</b> ${item.question}</p>
         <input type="radio" name="q${i}" value="A"> A: ${item.a}<br>
         <input type="radio" name="q${i}" value="B"> B: ${item.b}<br>
         <input type="radio" name="q${i}" value="C"> C: ${item.c}<br>
@@ -83,20 +83,28 @@ function submitQuiz() {
     });
 }
 
+// Hiển thị chi tiết bài làm chuyên nghiệp hơn
 function renderReview(choices) {
     const cont = document.getElementById('review-section');
     if (!cont) return;
     let html = '<h4>Chi tiết bài làm:</h4>';
     currentQuizData.forEach((item, i) => {
-        let isCorrect = (choices[i] === String(item.correct).trim().toUpperCase());
-        html += `<div style="border-bottom:1px solid #ccc; padding:5px;">Câu ${i+1}: ${isCorrect ? '<b style="color:green">ĐÚNG</b>' : '<b style="color:red">SAI</b>'}</div>`;
+        let sel = choices[i] || 'Chưa chọn';
+        let cor = String(item.correct).trim().toUpperCase();
+        let isCorrect = (sel === cor);
+        
+        html += `<div style="border-bottom:1px solid #ccc; padding:10px 0;">
+            <p><b>Câu ${i+1}:</b> ${item.question} 
+            <span style="color:${isCorrect ? 'green' : 'red'}; font-weight:bold;">[${isCorrect ? 'ĐÚNG' : 'SAI'}]</span></p>
+            <div style="font-size: 0.9em;">Đáp án đúng: <b>${cor}</b> | Bạn đã chọn: <b>${sel}</b></div>
+        </div>`;
     });
     cont.innerHTML = html;
 }
 
 // Gán sự kiện
 document.getElementById('start-btn').addEventListener('click', () => {
-    if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên trước khi bắt đầu!");
+    if (!document.getElementById("student-name").value.trim()) return alert("Vui lòng nhập tên!");
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     generateQuiz();
@@ -104,7 +112,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     startTimer();
 });
 
-document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Nộp bài?")) submitQuiz(); });
+document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Bạn có chắc muốn nộp bài?")) submitQuiz(); });
 document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 
 loadData();
