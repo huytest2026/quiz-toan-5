@@ -80,17 +80,21 @@ function submitQuiz() {
     let choices = [];
     
     currentQuizData.forEach((item, i) => {
-        // Tìm radio button đã chọn
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
+        let chosenValue = sel ? sel.value.trim().toUpperCase() : null; // Lấy 'A', 'B', 'C', hoặc 'D'
         
-        // CẬP NHẬT TẠI ĐÂY:
-        // Lấy nội dung chữ sau dấu ": " trong thẻ label chứa radio đó
-        let chosenValue = sel ? sel.parentElement.innerText.split(': ')[1].trim().toUpperCase() : ""; 
-        choices.push(chosenValue);
+        // Lấy nội dung văn bản của đáp án đã chọn (ví dụ: "BIGGER")
+        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim().toUpperCase() : "";
         
-        // So sánh nội dung người chọn với nội dung đáp án đúng (đã được làm sạch)
+        choices.push(chosenText); // Lưu nội dung văn bản để hiển thị review
+        
         let correctAnswer = String(item.correct).trim().toUpperCase();
-        if (chosenValue === correctAnswer) score++;
+        
+        // LOGIC SO SÁNH: 
+        // Nếu chọn đúng ký tự (A/B/C/D) HOẶC nội dung văn bản khớp với đáp án đúng -> TÍNH ĐÚNG
+        if (chosenValue === correctAnswer || chosenText === correctAnswer) {
+            score++;
+        }
     });
 
     document.getElementById('quiz-screen').style.display = 'none';
@@ -100,7 +104,7 @@ function submitQuiz() {
     document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
     renderReview(choices);
 
-    // Gửi kết quả lên Google Sheet
+    // Gửi kết quả
     fetch(API_URL, {
         method: "POST",
         mode: 'no-cors',
