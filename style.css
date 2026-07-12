@@ -1,19 +1,22 @@
 /* Thiết lập chung */
 body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
-.quiz-container { max-width: 800px; margin: auto; } /* Tăng chiều rộng để chứa 2 cột */
-h1 { text-align: center; color: #333; }
 
-/* 1. Màn hình Chờ và Kết quả */
-#start-screen, #result-screen { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+/* Dùng cho class .container trong file HTML mới của bạn */
+.container { background: white; padding: 30px; max-width: 800px; margin: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+h1 { text-align: center; color: #333; margin-top: 0; }
+
+/* 1. Các màn hình chính */
+#start-screen, #result-screen { text-align: center; }
 
 /* 2. Cấu trúc thẻ câu hỏi (Quiz Card) */
 .quiz-card {
-    background: white;
+    background: #ffffff;
     padding: 20px;
     margin-bottom: 25px;
     border-radius: 15px;
     border: 1px solid #e0e7ff;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .question { font-weight: bold; margin-bottom: 15px; font-size: 1.1em; color: #333; }
@@ -27,7 +30,7 @@ h1 { text-align: center; color: #333; }
 
 .option-box {
     border: 1px solid #d1d5db;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     cursor: pointer;
     background: #fff;
@@ -37,12 +40,15 @@ h1 { text-align: center; color: #333; }
 }
 
 .option-box:hover { background-color: #f3f4f6; border-color: #007bff; }
-.option-box input { margin-right: 10px; }
+.option-box input { margin-right: 10px; cursor: pointer; }
 
 /* Các thành phần khác */
 button { width: 100%; padding: 15px; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 1.1em; font-weight: bold; margin-top: 10px; transition: 0.3s; }
 #start-btn { background: #007bff; }
 #submit-btn { background: #28a745; }
 #restart-btn { background: #ffc107; color: #333; }
-#timer-box { font-size: 1.2em; font-weight: bold; color: #dc3545; text-align: center; padding: 10px; background: #ffe6e6; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; }
-#result { margin-top: 20px; padding: 15px; text-align: center; font-size: 1.3em; color: #28a745; }
+
+#timer-display { font-family: monospace; }
+#timer-box { font-size: 1.2em; font-weight: bold; color: #dc3545; text-align: center; padding: 10px; background: #ffe6e6; border-radius: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 100; border: 1px solid #ffcccc; }
+
+#result { margin-top: 20px; padding: 15px; text-align: center; font-size: 1.3em; color: #28a745; margin-bottom: 20px; }
