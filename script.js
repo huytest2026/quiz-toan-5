@@ -124,11 +124,21 @@ function submitQuiz() {
 }
 
 // Bắt sự kiện các nút bấm
+// Bắt sự kiện các nút bấm
 startBtn.addEventListener('click', () => {
+    
+    // --- BẮT ĐẦU ĐOẠN CODE VỪA THÊM ---
+    let tenHocSinh = document.getElementById("student-name").value;
+    if (tenHocSinh.trim() === "") {
+        alert("Em vui lòng nhập tên trước khi làm bài nhé!");
+        return; // Dừng lại không cho làm bài nếu chưa nhập tên
+    }
+    // --- KẾT THÚC ĐOẠN CODE VỪA THÊM ---
+
     startScreen.style.display = 'none';
     resultScreen.style.display = 'none';
     quizScreen.style.display = 'block';
-    
+
     generateQuiz();
     renderQuiz();
     startTimer();
@@ -137,6 +147,22 @@ startBtn.addEventListener('click', () => {
 document.getElementById('submit-btn').addEventListener('click', () => {
     if(confirm("Bạn có chắc chắn muốn nộp bài không?")) {
         submitQuiz();
+
+        // --- BẮT ĐẦU ĐOẠN CODE GỬI ĐIỂM VÀO ĐÂY ---
+        let tenHocSinhGhiNhan = document.getElementById("student-name").value;
+        let tongDiem = (score / 10) * 10; // Đổi sang thang điểm 10 (giả sử làm 10 câu)
+
+        fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                ten: tenHocSinhGhiNhan,
+                diem: tongDiem, 
+                soCau: score + "/10" 
+            })
+        }).then(res => console.log("Đã gửi điểm thành công!"))
+          .catch(e => console.log("Lỗi gửi điểm: ", e));
+        // --- KẾT THÚC ĐOẠN CODE GỬI ĐIỂM ---
     }
 });
 
