@@ -2,7 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbylxSJcSDg0PoJmwV-agQKF
 
 let score = 0;
 let currentQuizData = []; 
-let allQuizData = [];     
+let allQuizData = [];       
 
 const startScreen = document.getElementById('start-screen');
 const quizScreen = document.getElementById('quiz-screen');
@@ -11,18 +11,26 @@ const startBtn = document.getElementById('start-btn');
 const submitBtn = document.getElementById('submit-btn');
 const restartBtn = document.getElementById('restart-btn');
 
+// --- 1. Tải dữ liệu bằng JSONP để tránh lỗi CORS ---
 function loadData() {
-    fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-            allQuizData = data;
-            console.log("Đã tải xong toàn bộ dữ liệu:", allQuizData.length);
-        })
-        .catch(err => console.error("Lỗi khi tải dữ liệu:", err));
+    const script = document.createElement('script');
+    // Truyền callback 'handleData' để Google trả dữ liệu về hàm này
+    script.src = API_URL + "?callback=handleData";
+    document.body.appendChild(script);
 }
 
+// Hàm nhận dữ liệu từ Google
+function handleData(data) {
+    allQuizData = data;
+    console.log("Đã tải xong toàn bộ dữ liệu:", allQuizData.length);
+}
+
+// --- 2. Các hàm xử lý Quiz ---
 function generateQuiz() {
-    if (allQuizData.length === 0) return;
+    if (allQuizData.length === 0) {
+        alert("Dữ liệu đang tải, vui lòng thử lại sau 1 giây!");
+        return;
+    }
     let shuffled = [...allQuizData].sort(() => Math.random() - 0.5);
     currentQuizData = shuffled.slice(0, 10);
 }
@@ -49,7 +57,6 @@ function submitQuiz() {
     
     currentQuizData.forEach((item, index) => {
         const selected = document.querySelector(`input[name="q${index}"]:checked`);
-        // So sánh giá trị đã chọn với đáp án từ Google Sheet
         if (selected && selected.value.trim().toUpperCase() === String(item.correct).trim().toUpperCase()) {
             score++;
         }
@@ -57,25 +64,21 @@ function submitQuiz() {
 
     quizScreen.style.display = 'none';
     resultScreen.style.display = 'block';
-
     document.getElementById('result').innerHTML = `<h3>Kết quả: ${score} / 10 câu đúng.</h3>`;
 
-    // Gửi điểm về Google Sheet
-    // Gửi điểm về Google Sheet
+    // Lưu điểm (Lưu ý: phương pháp JSONP chỉ chuyên để lấy dữ liệu. 
+    // Nếu muốn POST điểm, bạn nên dùng fetch bình thường vì POST không bị CORS chặn như GET)
     fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
             ten: document.getElementById("student-name").value,
             diem: score,
             soCau: score + "/10"
         })
-    })
-    .then(res => res.json())
-    .then(data => console.log("Đã lưu điểm thành công:", data))
-    .catch(e => console.error("Lỗi khi gửi:", e));
+    }).catch(e => console.error("Lỗi khi gửi điểm:", e));
 }
 
+// --- 3. Sự kiện & Timer ---
 let timerInterval;
 function startTimer() {
     let time = 15 * 60;
@@ -103,4 +106,5 @@ submitBtn.addEventListener('click', () => {
 
 restartBtn.addEventListener('click', () => { location.reload(); });
 
+// Gọi load dữ liệu ngay khi tải trang
 loadData();
