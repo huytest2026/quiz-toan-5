@@ -70,31 +70,37 @@ submitBtn.addEventListener('click', () => {
 restartBtn.addEventListener('click', () => {
     resultScreen.style.display = 'none';
     quizScreen.style.display = 'block';
-    // Logic ôn tập câu sai sẽ nằm ở đây
+    
+    // Tải lại dữ liệu mới từ Google Sheet
+    loadData(); 
+    
+    // Đợi 0.5 giây cho dữ liệu tải xong rồi mới tạo đề
+    setTimeout(() => {
+        generateQuiz();
+        renderQuiz();
+        startTimer();
+    }, 500);
 });
-
 // Hàm tải dữ liệu từ Google Sheets
 function loadData() {
     fetch(API_URL)
         .then(res => res.json())
         .then(data => {
-            // Kiểm tra nếu dữ liệu là mảng thì gán trực tiếp
-            currentQuizData = data; 
+            currentQuizData = data;
             console.log("Đã tải xong dữ liệu:", currentQuizData);
-            // Sau khi tải xong mới bắt đầu cho làm bài
         })
-        .catch(err => {
-            console.error("Lỗi khi tải dữ liệu:", err);
-            document.getElementById('quiz').innerHTML = "Không thể tải dữ liệu, hãy kiểm tra lại kết nối.";
-        });
+        .catch(err => console.error("Lỗi khi tải dữ liệu:", err));
 }
 
-// Hàm tạo câu hỏi ngẫu nhiên
+// Hàm chọn ngẫu nhiên 10 câu
 function generateQuiz() {
+    if (currentQuizData.length === 0) return;
     currentQuizData.sort(() => Math.random() - 0.5);
+    currentQuizData = currentQuizData.slice(0, 10);
+    console.log("Đã chọn 10 câu:", currentQuizData);
 }
 
-// Hàm hiển thị câu hỏi lên màn hình
+// Hàm hiển thị câu hỏi
 function renderQuiz() {
     const quizContainer = document.getElementById('quiz');
     quizContainer.innerHTML = '';
@@ -114,7 +120,7 @@ function renderQuiz() {
 // Hàm đếm giờ
 let timerInterval;
 function startTimer() {
-    let time = 15 * 60; // 15 phút
+    let time = 15 * 60;
     timerInterval = setInterval(() => {
         time--;
         if (time <= 0) {
@@ -124,5 +130,5 @@ function startTimer() {
     }, 1000);
 }
 
-// Chạy hàm loadData ngay khi mở trang
+// Gọi hàm này để dữ liệu sẵn sàng ngay khi vào web
 loadData();
