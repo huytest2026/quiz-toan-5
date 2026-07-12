@@ -13,79 +13,56 @@ function loadData() {
 
 function handleData(data) {
     allQuizData = data;
-    console.log("Đã tải xong toàn bộ dữ liệu:", allQuizData.length);
 }
 
 function generateQuiz() {
-    let shuffled = [...allQuizData].sort(() => Math.random() - 0.5);
-    currentQuizData = shuffled.slice(0, 10);
+    currentQuizData = [...allQuizData].sort(() => Math.random() - 0.5).slice(0, 10);
 }
 
 function renderQuiz() {
-    const quizContainer = document.getElementById('quiz');
-    quizContainer.innerHTML = '';
-    currentQuizData.forEach((item, index) => {
-        quizContainer.innerHTML += `
-            <div style="margin-bottom: 20px;">
-                <p><b>Câu ${index + 1}:</b> ${item.question}</p>
-                <input type="radio" name="q${index}" value="A"> A: ${item.a}<br>
-                <input type="radio" name="q${index}" value="B"> B: ${item.b}<br>
-                <input type="radio" name="q${index}" value="C"> C: ${item.c}<br>
-                <input type="radio" name="q${index}" value="D"> D: ${item.d}<br>
-            </div>
-        `;
+    const qC = document.getElementById('quiz');
+    qC.innerHTML = '';
+    currentQuizData.forEach((item, i) => {
+        qC.innerHTML += `<div><p><b>Câu ${i+1}:</b> ${item.question}</p>
+        <input type="radio" name="q${i}" value="A"> A: ${item.a}<br>
+        <input type="radio" name="q${i}" value="B"> B: ${item.b}<br>
+        <input type="radio" name="q${i}" value="C"> C: ${item.c}<br>
+        <input type="radio" name="q${i}" value="D"> D: ${item.d}<br></div>`;
     });
 }
 
 function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
-    let userChoices = [];
-    currentQuizData.forEach((item, index) => {
-        const selected = document.querySelector(`input[name="q${index}"]:checked`);
-        let val = selected ? selected.value.trim().toUpperCase() : null;
-        userChoices.push(val);
+    let choices = [];
+    currentQuizData.forEach((item, i) => {
+        const sel = document.querySelector(`input[name="q${i}"]:checked`);
+        let val = sel ? sel.value.trim().toUpperCase() : null;
+        choices.push(val);
         if (val === String(item.correct).trim().toUpperCase()) score++;
     });
-
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
-    document.getElementById('result').innerHTML = `<h3>Kết quả: ${score} / 10 câu đúng.</h3>`;
-    
-    renderReview(userChoices);
-
-    fetch(API_URL, {
-        method: "POST",
-        mode: 'no-cors',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ten: document.getElementById("student-name").value, diem: score, soCau: score + "/10" })
-    });
+    document.getElementById('result').innerHTML = `<h3>Kết quả: ${score}/10</h3>`;
+    renderReview(choices);
 }
 
-function renderReview(userChoices) {
-    const container = document.getElementById('review-section');
-    if (!container) return;
+function renderReview(choices) {
+    const cont = document.getElementById('review-section');
+    if (!cont) return;
     let html = '<h4>Chi tiết:</h4>';
     currentQuizData.forEach((item, i) => {
-        let sel = userChoices[i];
-        let cor = String(item.correct).trim().toUpperCase();
-        html += `<div style="border-bottom:1px solid #ccc; padding:5px;">
-            <p>Câu ${i+1}: ${item.question} <b>${sel===cor ? '[ĐÚNG]' : '[SAI]'}</b></p>
-        </div>`;
+        let isCorrect = (choices[i] === String(item.correct).trim().toUpperCase());
+        html += `<div style="border-bottom:1px solid #ccc;">Câu ${i+1}: ${isCorrect ? 'ĐÚNG' : 'SAI'}</div>`;
     });
-    container.innerHTML = html;
+    cont.innerHTML = html;
 }
 
 loadData();
-
 document.getElementById('start-btn').addEventListener('click', () => {
-    if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     generateQuiz();
     renderQuiz();
-    timerInterval = setInterval(() => {}, 1000);
 });
-
-document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Nộp bài?")) submitQuiz(); });
-document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+document.getElementById('submit-btn').addEventListener('click', submitQuiz);
