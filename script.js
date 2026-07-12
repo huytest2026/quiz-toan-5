@@ -81,17 +81,17 @@ function submitQuiz() {
     
     currentQuizData.forEach((item, i) => {
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        let chosenValue = sel ? sel.value.trim().toUpperCase() : null; // Lấy 'A', 'B', 'C', hoặc 'D'
         
-        // Lấy nội dung văn bản của đáp án đã chọn (ví dụ: "BIGGER")
-        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim().toUpperCase() : "";
+        // 1. Lấy nội dung văn bản người dùng chọn và chuyển về chữ thường
+        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim().toLowerCase() : "";
+        // 2. Lấy đáp án đúng từ sheet và chuyển về chữ thường
+        let correctAnswer = String(item.correct).trim().toLowerCase();
+        // 3. Lấy ký tự đáp án (A, B, C, D)
+        let chosenValue = sel ? sel.value.trim().toLowerCase() : "";
         
-        choices.push(chosenText); // Lưu nội dung văn bản để hiển thị review
+        choices.push(chosenText.toUpperCase()); // Lưu dạng hoa để hiển thị cho đẹp
         
-        let correctAnswer = String(item.correct).trim().toUpperCase();
-        
-        // LOGIC SO SÁNH: 
-        // Nếu chọn đúng ký tự (A/B/C/D) HOẶC nội dung văn bản khớp với đáp án đúng -> TÍNH ĐÚNG
+        // 4. So sánh: Đúng nếu chọn đúng ký tự (a,b,c,d) HOẶC nội dung text khớp nhau
         if (chosenValue === correctAnswer || chosenText === correctAnswer) {
             score++;
         }
@@ -117,7 +117,6 @@ function submitQuiz() {
         })
     });
 }
-
 function renderReview(choices) {
     const cont = document.getElementById('review-section');
     if (!cont) return;
