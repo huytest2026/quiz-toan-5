@@ -14,6 +14,7 @@ function loadData() {
 
 function handleData(data) {
     allQuizData = data;
+    console.log("Dữ liệu đã tải:", allQuizData.length);
 }
 
 // Bắt đầu làm bài và đếm ngược
@@ -41,11 +42,22 @@ function startTimer() {
     }, 1000);
 }
 
+// CẬP NHẬT: Lọc câu hỏi theo môn học
 function generateQuiz() {
-    currentQuizData = [...allQuizData].sort(() => Math.random() - 0.5).slice(0, 10);
+    const selectedSubject = document.getElementById('subject-select').value;
+    
+    // Lọc dữ liệu có cột 'mon' trùng với giá trị đã chọn
+    const filteredData = allQuizData.filter(item => item.mon === selectedSubject);
+    
+    if (filteredData.length === 0) {
+        alert("Hiện tại chưa có câu hỏi cho môn này!");
+        location.reload();
+        return;
+    }
+
+    currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
 }
 
-// HÀM HIỂN THỊ DẠNG THẺ (CARDS) & 2 CỘT
 function renderQuiz() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
@@ -77,14 +89,22 @@ function submitQuiz() {
 
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
-    document.getElementById('result').innerHTML = `<h3>Kết quả: ${score}/10 câu đúng.</h3>`;
+    
+    // Thêm thông tin môn học vào kết quả
+    const selectedSubject = document.getElementById('subject-select').value;
+    document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
     renderReview(choices);
 
     fetch(API_URL, {
         method: "POST",
         mode: 'no-cors',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ten: document.getElementById("student-name").value, diem: score, soCau: score + "/10" })
+        body: JSON.stringify({ 
+            ten: document.getElementById("student-name").value, 
+            mon: selectedSubject,
+            diem: score, 
+            soCau: score + "/10" 
+        })
     });
 }
 
