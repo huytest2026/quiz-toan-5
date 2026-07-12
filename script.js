@@ -81,34 +81,39 @@ function submitQuiz() {
     
     currentQuizData.forEach((item, i) => {
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        // Lấy ký tự đã chọn (A, B, C, D)
-        let chosenValue = sel ? sel.value.trim().toUpperCase() : "";
-        // Lấy nội dung chữ đã chọn (ví dụ: "BIGGER")
-        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim().toLowerCase() : "";
+        let chosenValue = sel ? sel.value.trim().toUpperCase() : ""; // "A", "B", "C", hoặc "D"
+        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim() : ""; // Nội dung (ví dụ: "7.33333")
         
-        let correctAnswer = String(item.correct).trim().toLowerCase();
+        let correctAnswer = String(item.correct).trim().toUpperCase(); // "A", "B", "C", "D" hoặc đáp án chữ
         
-        // CẬP NHẬT LOGIC:
-        // Nếu đáp án đúng trong Sheet là A/B/C/D, so sánh với chosenValue
-        // Nếu đáp án đúng trong Sheet là văn bản, so sánh với chosenText
+        // LOGIC CHẤM ĐIỂM MỚI:
+        // 1. Nếu đáp án đúng là "A", "B", "C", hoặc "D" -> So sánh với ký tự người dùng chọn
+        // 2. Nếu đáp án đúng là nội dung khác (ví dụ môn Anh) -> So sánh nội dung văn bản
         let isCorrect = false;
-        if (["A", "B", "C", "D"].includes(correctAnswer.toUpperCase())) {
-            isCorrect = (chosenValue === correctAnswer.toUpperCase());
+        if (["A", "B", "C", "D"].includes(correctAnswer)) {
+            isCorrect = (chosenValue === correctAnswer);
         } else {
-            isCorrect = (chosenText === correctAnswer);
+            isCorrect = (chosenText.toUpperCase() === correctAnswer);
         }
 
         if (isCorrect) score++;
-        choices.push({ text: chosenText.toUpperCase(), correct: isCorrect });
+        
+        // Lưu lại để hiển thị trong review
+        choices.push({
+            userAnswer: chosenText || "Chưa chọn",
+            isCorrect: isCorrect
+        });
     });
 
-    // ... (Giữ nguyên phần hiển thị kết quả và fetch)
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
     
     const selectedSubject = document.getElementById('subject-select').value;
     document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
+    
     renderReview(choices);
+    // ... phần fetch giữ nguyên
+}
     // ...
 }
 function renderReview(choices) {
@@ -117,14 +122,14 @@ function renderReview(choices) {
     let html = '<h4>Chi tiết bài làm:</h4>';
     
     currentQuizData.forEach((item, i) => {
-        let isCorrect = choices[i].correct;
-        let userAnswer = choices[i].text || 'Chưa chọn';
-        let cor = String(item.correct).trim().toUpperCase();
+        let isCorrect = choices[i].isCorrect;
+        let userAnswer = choices[i].userAnswer;
+        let cor = String(item.correct).trim();
         
         html += `<div style="border-bottom:1px solid #ccc; padding:10px 0;">
             <p><b>Câu ${i+1}:</b> ${item.question} 
             <span style="color:${isCorrect ? 'green' : 'red'}; font-weight:bold;">[${isCorrect ? 'ĐÚNG' : 'SAI'}]</span></p>
-            <div style="font-size: 0.9em;">Đáp án đúng: <b>${cor}</b> | Bạn đã chọn: <b>${userAnswer}</b></div>
+            <div style="font-size: 0.9em;">Đáp án đúng (Sheet): <b>${cor}</b> | Bạn đã chọn: <b>${userAnswer}</b></div>
         </div>`;
     });
     cont.innerHTML = html;
