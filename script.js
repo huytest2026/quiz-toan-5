@@ -73,4 +73,51 @@ restartBtn.addEventListener('click', () => {
     // Logic ôn tập câu sai sẽ nằm ở đây
 });
 
-// Các hàm khác như loadData, generateQuiz, renderQuiz... giữ nguyên không đổi
+// Hàm tải dữ liệu từ Google Sheets
+function loadData() {
+    fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+            currentQuizData = data;
+            console.log("Đã tải xong dữ liệu:", currentQuizData);
+        })
+        .catch(err => console.error("Lỗi khi tải dữ liệu:", err));
+}
+
+// Hàm tạo câu hỏi ngẫu nhiên
+function generateQuiz() {
+    currentQuizData.sort(() => Math.random() - 0.5);
+}
+
+// Hàm hiển thị câu hỏi lên màn hình
+function renderQuiz() {
+    const quizContainer = document.getElementById('quiz');
+    quizContainer.innerHTML = '';
+    currentQuizData.forEach((item, index) => {
+        quizContainer.innerHTML += `
+            <div class="question">
+                <p>${index + 1}. ${item.question}</p>
+                <input type="radio" name="q${index}" value="${item.a}"> ${item.a}<br>
+                <input type="radio" name="q${index}" value="${item.b}"> ${item.b}<br>
+                <input type="radio" name="q${index}" value="${item.c}"> ${item.c}<br>
+                <input type="radio" name="q${index}" value="${item.d}"> ${item.d}<br>
+            </div>
+        `;
+    });
+}
+
+// Hàm đếm giờ
+let timerInterval;
+function startTimer() {
+    let time = 15 * 60; // 15 phút
+    timerInterval = setInterval(() => {
+        time--;
+        if (time <= 0) {
+            clearInterval(timerInterval);
+            submitQuiz();
+        }
+    }, 1000);
+}
+
+// Chạy hàm loadData ngay khi mở trang
+loadData();
