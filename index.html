@@ -2,14 +2,22 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Bài Kiểm Tra Toán 5</title>
+    <title>Bài Kiểm Tra Trực Tuyến</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- Màn hình Chờ -->
     <div class="container" id="start-screen">
-        <h1>Bài Kiểm Tra Toán 5</h1>
+        <h1>Bài Kiểm Tra Trực Tuyến</h1>
+        
+        <!-- THÊM: Menu chọn môn học -->
+        <label for="subject-select" style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn môn học:</label>
+        <select id="subject-select" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
+            <option value="Toán">Toán</option>
+            <option value="Tiếng anh">Tiếng Anh</option>
+        </select>
+
         <p>⏰ Thời gian làm bài: <b>15 phút.</b></p>
         <p>📝 Số lượng: <b>10 câu</b> ngẫu nhiên.</p>
         <input type="text" id="student-name" placeholder="Nhập Họ và Tên của em vào đây..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; box-sizing: border-box;">
@@ -18,12 +26,10 @@
 
     <!-- Màn hình Làm bài -->
     <div class="container" id="quiz-screen" style="display:none;">
-        <!-- ĐỒNG HỒ ĐẾM NGƯỢC -->
         <div style="text-align: center; font-size: 1.2em; font-weight: bold; color: red; margin-bottom: 15px;">
             Thời gian còn lại: <span id="timer-display">15:00</span>
         </div>
         
-        <!-- Nơi JavaScript sẽ tự động đổ các thẻ .quiz-card vào đây -->
         <div id="quiz"></div>
         
         <button id="submit-btn" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 20px;">Nộp bài</button>
@@ -36,7 +42,6 @@
         <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài (Ôn câu sai)</button>
     </div>
 
-    <!-- THẺ ÂM THANH CẢNH BÁO -->
     <audio id="warning-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
 
     <script src="script.js?v=2"></script>
