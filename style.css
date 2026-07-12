@@ -9,6 +9,14 @@ h1 { text-align: center; color: #333; margin-top: 0; }
 /* 1. Các màn hình chính */
 #start-screen, #result-screen { text-align: center; }
 
+/* Thêm định dạng cho ô chọn môn */
+#subject-select {
+    border: 1px solid #d1d5db;
+    outline: none;
+    transition: 0.2s;
+}
+#subject-select:focus { border-color: #007bff; box-shadow: 0 0 5px rgba(0,123,255,0.2); }
+
 /* 2. Cấu trúc thẻ câu hỏi (Quiz Card) */
 .quiz-card {
     background: #ffffff;
