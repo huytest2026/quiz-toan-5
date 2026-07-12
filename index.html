@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bài Kiểm Tra Toán 5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Bài Kiểm Tra Toán 5</h1>
+
+        <!-- 1. Màn hình Chờ -->
+        <div id="start-screen">
+            <p>⏱ Thời gian làm bài: <b>15 phút</b>.</p>
+            <p>📝 Số lượng: <b>10 câu</b> ngẫu nhiên.</p>
+            <p><i>(Lưu ý: Những câu làm sai sẽ xuất hiện lại ở lần làm tiếp theo để ôn tập).</i></p>
+            <button id="start-btn" disabled>Đang tải dữ liệu...</button>
+        </div>
+
+        <!-- 2. Màn hình Làm bài -->
+        <div id="quiz-screen" style="display: none;">
+            <div id="timer-box">Thời gian còn lại: <span id="time">15:00</span></div>
+            <div id="quiz"></div>
+            <button id="submit-btn">Nộp bài</button>
+        </div>
+
+        <!-- 3. Màn hình Kết quả -->
+        <div id="result-screen" style="display: none;">
+            <div id="result"></div>
+            <button id="restart-btn">Làm lại bài (Ôn câu sai)</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
