@@ -14,7 +14,6 @@ function loadData() {
 
 function handleData(data) {
     allQuizData = data;
-    console.log("Dữ liệu đã tải:", allQuizData.length);
 }
 
 // Bắt đầu làm bài và đếm ngược
@@ -29,7 +28,6 @@ function startTimer() {
         let secs = time % 60;
         timerDisplay.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 
-        // Cảnh báo 1 phút cuối
         if (time === 60 && warningSound) {
             warningSound.play();
             alert("Cảnh báo: Chỉ còn 1 phút nữa là hết giờ!");
@@ -47,15 +45,22 @@ function generateQuiz() {
     currentQuizData = [...allQuizData].sort(() => Math.random() - 0.5).slice(0, 10);
 }
 
+// HÀM HIỂN THỊ DẠNG THẺ (CARDS) & 2 CỘT
 function renderQuiz() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
+    
     currentQuizData.forEach((item, i) => {
-        quizDiv.innerHTML += `<div style="margin-bottom: 15px;"><p><b>Câu ${i+1}:</b> ${item.question}</p>
-        <input type="radio" name="q${i}" value="A"> A: ${item.a}<br>
-        <input type="radio" name="q${i}" value="B"> B: ${item.b}<br>
-        <input type="radio" name="q${i}" value="C"> C: ${item.c}<br>
-        <input type="radio" name="q${i}" value="D"> D: ${item.d}<br></div>`;
+        quizDiv.innerHTML += `
+        <div class="quiz-card">
+            <div class="question">Câu ${i+1}: ${item.question}</div>
+            <div class="options-grid">
+                <label class="option-box"><input type="radio" name="q${i}" value="A"> A: ${item.a}</label>
+                <label class="option-box"><input type="radio" name="q${i}" value="B"> B: ${item.b}</label>
+                <label class="option-box"><input type="radio" name="q${i}" value="C"> C: ${item.c}</label>
+                <label class="option-box"><input type="radio" name="q${i}" value="D"> D: ${item.d}</label>
+            </div>
+        </div>`;
     });
 }
 
@@ -83,7 +88,6 @@ function submitQuiz() {
     });
 }
 
-// Hiển thị chi tiết bài làm chuyên nghiệp hơn
 function renderReview(choices) {
     const cont = document.getElementById('review-section');
     if (!cont) return;
