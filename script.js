@@ -73,15 +73,6 @@ function submitQuiz() {
 
 // --- Khởi chạy ---
 loadData();
-
-document.getElementById('start-btn').addEventListener('click', () => {
-    if (document.getElementById("student-name").value.trim() === "") return alert("Nhập tên!");
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('quiz-screen').style.display = 'block';
-    generateQuiz();
-    renderQuiz();
-    // Start Timer...
-});
 // --- CÁC HÀM VÀ SỰ KIỆN BỊ THIẾU ---
 
 let timerInterval;
@@ -114,3 +105,5 @@ document.getElementById('submit-btn').addEventListener('click', () => {
 document.getElementById('restart-btn').addEventListener('click', () => { 
     location.reload(); 
 });
+
+
