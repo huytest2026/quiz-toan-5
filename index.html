@@ -17,12 +17,17 @@
 
     <div class="container" id="quiz-screen" style="display:none;">
         <div id="quiz"></div>
-        <button id="submit-btn">Nộp bài</button>
+        <button id="submit-btn" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 20px;">Nộp bài</button>
     </div>
 
     <div class="container" id="result-screen" style="display:none;">
         <div id="result"></div>
-        <button id="restart-btn">Làm lại bài (Ôn câu sai)</button>
+        
+        <!-- KHUNG CHỨA PHẦN ÔN TẬP MỚI THÊM VÀO -->
+        <div id="review-section" style="margin: 20px 0; text-align: left; max-height: 400px; overflow-y: auto; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9;">
+        </div>
+        
+        <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài (Ôn câu sai)</button>
     </div>
 
     <script src="script.js"></script>
