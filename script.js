@@ -42,11 +42,9 @@ function startTimer() {
     }, 1000);
 }
 
-// CẬP NHẬT: Lọc câu hỏi theo môn học
+// Lọc câu hỏi theo môn học
 function generateQuiz() {
     const selectedSubject = document.getElementById('subject-select').value;
-    
-    // Lọc dữ liệu có cột 'mon' trùng với giá trị đã chọn
     const filteredData = allQuizData.filter(item => item.mon === selectedSubject);
     
     if (filteredData.length === 0) {
@@ -54,7 +52,6 @@ function generateQuiz() {
         location.reload();
         return;
     }
-
     currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
 }
 
@@ -76,21 +73,25 @@ function renderQuiz() {
     });
 }
 
+// CẬP NHẬT: So sánh dựa trên nội dung đáp án
 function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
     let choices = [];
+    
     currentQuizData.forEach((item, i) => {
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        let val = sel ? sel.value.trim().toUpperCase() : null;
-        choices.push(val);
-        if (val === String(item.correct).trim().toUpperCase()) score++;
+        // Lấy nội dung chữ sau dấu ": " của đáp án đã chọn
+        let chosenValue = sel ? sel.parentElement.innerText.split(': ')[1].trim() : ""; 
+        choices.push(chosenValue);
+        
+        let correctAnswer = String(item.correct).trim();
+        if (chosenValue === correctAnswer) score++;
     });
 
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
     
-    // Thêm thông tin môn học vào kết quả
     const selectedSubject = document.getElementById('subject-select').value;
     document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
     renderReview(choices);
@@ -112,9 +113,10 @@ function renderReview(choices) {
     const cont = document.getElementById('review-section');
     if (!cont) return;
     let html = '<h4>Chi tiết bài làm:</h4>';
+    
     currentQuizData.forEach((item, i) => {
         let sel = choices[i] || 'Chưa chọn';
-        let cor = String(item.correct).trim().toUpperCase();
+        let cor = String(item.correct).trim();
         let isCorrect = (sel === cor);
         
         html += `<div style="border-bottom:1px solid #ccc; padding:10px 0;">
