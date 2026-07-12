@@ -78,10 +78,15 @@ function loadData() {
     fetch(API_URL)
         .then(res => res.json())
         .then(data => {
-            currentQuizData = data;
+            // Kiểm tra nếu dữ liệu là mảng thì gán trực tiếp
+            currentQuizData = data; 
             console.log("Đã tải xong dữ liệu:", currentQuizData);
+            // Sau khi tải xong mới bắt đầu cho làm bài
         })
-        .catch(err => console.error("Lỗi khi tải dữ liệu:", err));
+        .catch(err => {
+            console.error("Lỗi khi tải dữ liệu:", err);
+            document.getElementById('quiz').innerHTML = "Không thể tải dữ liệu, hãy kiểm tra lại kết nối.";
+        });
 }
 
 // Hàm tạo câu hỏi ngẫu nhiên
