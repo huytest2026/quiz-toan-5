@@ -65,22 +65,14 @@ window.updateLiveStatus = function(index, selectedValue) {
     if (item.answered) return; 
     item.answered = true;
 
-    // Chuyển giá trị về dạng chữ thường để so sánh
+    // Chuyển cả giá trị đã chọn và đáp án đúng về dạng chữ thường và bỏ khoảng trắng
     let correctAns = String(item.correct).trim().toLowerCase();
-    let selectedAns = selectedValue.trim().toLowerCase();
+    let selectedAns = String(selectedValue).trim().toLowerCase();
 
-    // Logic: Nếu môn là Toán thì so sánh theo ký tự (a,b,c,d), 
-    // nếu môn Tiếng Anh thì so sánh theo nội dung từ vựng
-    let isCorrect = false;
-    
-    if (item.mon === "Tiếng anh") {
-        // Môn Tiếng Anh: so sánh nội dung từ vựng
-        // selectedValue lúc này chính là nội dung của từ (VD: "hotter")
-        isCorrect = (selectedAns === correctAns);
-    } else {
-        // Môn Toán: so sánh ký tự (a,b,c,d)
-        isCorrect = (selectedAns === correctAns);
-    }
+    // Logic: Nếu môn là Toán (chấm bằng A, B, C, D) 
+    // và môn Tiếng Anh (chấm bằng từ vựng)
+    // Cả hai đều có thể dùng chung 1 logic so sánh nếu dữ liệu ở cột I đã chuẩn
+    let isCorrect = (selectedAns === correctAns);
 
     if (isCorrect) {
         correctCount++;
