@@ -9,12 +9,20 @@ let wrongCount = 0;
 // Sử dụng fetch thay vì chèn thẻ script để dữ liệu ổn định hơn
 async function loadData() {
     try {
+        // Nếu API của bạn đang trả về dạng JSONP (có handleData), 
+        // bạn có thể thử bỏ qua .json() và dùng cách cũ hoặc sửa lại API.
+        // NHƯNG, cách tốt nhất là sửa API bên Google Apps Script.
         const response = await fetch(API_URL);
-        const data = await response.json();
-        allQuizData = data;
-        console.log("Dữ liệu đã tải thành công:", allQuizData[0]); 
+        const text = await response.text(); 
+        
+        // Loại bỏ phần "handleData(" và ")" nếu nó vẫn tồn tại
+        const cleanJson = text.replace(/handleData\((.*)\)/, '$1');
+        allQuizData = JSON.parse(cleanJson);
+        
+        console.log("Dữ liệu đã tải thành công:", allQuizData.length, "câu hỏi");
+        updateTopicList(); // Gọi sau khi tải xong
     } catch (error) {
-        console.error("Lỗi khi tải dữ liệu từ Google Sheets:", error);
+        console.error("Lỗi khi tải dữ liệu:", error);
     }
 }
 
