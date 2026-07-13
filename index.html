@@ -11,7 +11,6 @@
     <div class="container" id="start-screen">
         <h1>Bài Kiểm Tra Trực Tuyến</h1>
         
-        <!-- THÊM: Menu chọn môn học -->
         <label for="subject-select" style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn môn học:</label>
         <select id="subject-select" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
             <option value="Toán">Toán</option>
@@ -26,8 +25,12 @@
 
     <!-- Màn hình Làm bài -->
     <div class="container" id="quiz-screen" style="display:none;">
-        <div style="text-align: center; font-size: 1.2em; font-weight: bold; color: red; margin-bottom: 15px;">
-            Thời gian còn lại: <span id="timer-display">15:00</span>
+        
+        <!-- Bảng trạng thái chuyên nghiệp -->
+        <div class="status-bar" style="display: flex; justify-content: space-around; margin-bottom: 20px; background: #eef6ff; padding: 15px; border-radius: 10px; border-bottom: 4px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="text-align: center;">Thời gian còn lại<br><b id="timer-display" style="font-size: 1.2em; color: #d9534f;">15:00</b></div>
+            <div style="text-align: center;">Đã đúng<br><b id="count-correct" style="font-size: 1.2em; color: #28a745;">0</b></div>
+            <div style="text-align: center;">Đã sai<br><b id="count-wrong" style="font-size: 1.2em; color: #dc3545;">0</b></div>
         </div>
         
         <div id="quiz"></div>
