@@ -15,18 +15,35 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('quizHistory', JSON.stringify(history));
     }
 
-    // --- GÁN SỰ KIỆN NÚT BẤM ---
+    // --- GÁN SỰ KIỆN NÚT BẤM (CẬP NHẬT GIAO DIỆN BẢNG) ---
     document.getElementById('show-rank-btn').addEventListener('click', () => {
         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
         history.sort((a, b) => b.score - a.score);
         let top5 = history.slice(0, 5);
         
-        let html = '<table style="width:100%; border-collapse: collapse; text-align: left;">';
-        html += '<tr><th>Tên</th><th>Điểm</th></tr>';
+        let html = `
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #eee;">
+                        <th style="padding: 8px;">Tên</th>
+                        <th style="padding: 8px;">Điểm</th>
+                        <th style="padding: 8px; font-size: 0.9em; color: #666;">Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
         top5.forEach(item => {
-            html += `<tr><td>${item.name}</td><td>${item.score}/10</td></tr>`;
+            html += `
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                    <td style="padding: 8px;">${item.name}</td>
+                    <td style="padding: 8px; font-weight: bold; color: #28a745;">${item.score}/10</td>
+                    <td style="padding: 8px; font-size: 0.8em; color: #888;">${item.date.split(',')[1] || item.date}</td>
+                </tr>
+            `;
         });
-        html += '</table>';
+        
+        html += '</tbody></table>';
         
         document.getElementById('rank-list').innerHTML = html;
         document.getElementById('rank-screen').style.display = 'block';
@@ -51,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(script);
     }
     
-    // Đưa hàm này ra ngoài hoặc để toàn cục để callback hoạt động
     window.handleData = function(data) { allQuizData = data; };
 
     function startTimer() {
@@ -78,11 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
         quizDiv.innerHTML = '';
         currentQuizData.forEach((item, i) => {
             quizDiv.innerHTML += `
-            <div class="quiz-card">
-                <div class="question">Câu ${i+1}: ${item.question}</div>
+            <div class="quiz-card" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                <div class="question" style="font-weight: bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
                 <div class="options-grid">
                     ${['A','B','C','D'].map(opt => `
-                        <label class="option-box">
+                        <label class="option-box" style="display: block; padding: 8px; margin: 5px 0; border: 1px solid #eee; cursor: pointer; border-radius: 4px;">
                             <input type="radio" name="q${i}" value="${opt}" onchange="updateLiveStatus(${i}, '${opt}')"> 
                             ${opt}: ${item[opt.toLowerCase()]}
                         </label>
