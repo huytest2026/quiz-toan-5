@@ -34,11 +34,15 @@
         <button id="show-rank-btn" style="width: 100%; padding: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 10px;">Xem Bảng Xếp Hạng</button>
     </div>
 
-    <!-- Popup Bảng xếp hạng (Ẩn mặc định) -->
+    <!-- Popup Bảng xếp hạng -->
     <div id="rank-screen" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:9999; width: 90%; max-width: 400px; text-align:center;">
         <h3>🏆 Top 5 Điểm Cao</h3>
-        <div id="rank-list" style="margin: 20px 0; font-size: 1.1em;"></div>
-        <button onclick="document.getElementById('rank-screen').style.display='none'" style="width:100%; padding: 10px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">Đóng</button>
+        <div id="rank-list" style="margin: 20px 0; font-size: 1.1em; text-align: left;"></div>
+        
+        <button onclick="document.getElementById('rank-screen').style.display='none'" style="width:100%; padding: 10px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Đóng</button>
+        
+        <!-- Nút Reset Bảng xếp hạng -->
+        <button onclick="resetRanking()" style="width:100%; padding: 10px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer; margin-top: 10px;">Reset Bảng Xếp Hạng</button>
     </div>
 
     <!-- Màn hình Làm bài -->
@@ -61,6 +65,6 @@
         <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài</button>
     </div>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>
