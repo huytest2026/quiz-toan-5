@@ -2,20 +2,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lk
 
 let allQuizData = [];
 let currentQuizData = [];
+let timerInterval;
 let correctCount = 0;
 let wrongCount = 0;
 
-// --- 1. TẢI DỮ LIỆU CÂU HỎI ---
+// --- HÀM TẢI DỮ LIỆU ---
 async function loadData() {
     try {
-        // Thêm chế độ 'cors' để hỗ trợ trình duyệt
-        const response = await fetch(API_URL, { method: 'GET', mode: 'cors' });
-        allQuizData = await response.json(); 
+        const response = await fetch(API_URL);
+        const text = await response.text(); 
+        const cleanJson = text.replace(/handleData\((.*)\)/, '$1');
+        allQuizData = JSON.parse(cleanJson);
         updateTopicList();
-    } catch (error) { 
-        console.error("Lỗi tải câu hỏi:", error);
-        alert("Không thể kết nối máy chủ. Hãy thử lại sau!");
-    }
+    } catch (error) { console.error("Lỗi tải dữ liệu:", error); }
 }
 
 window.updateTopicList = function() {
@@ -32,7 +31,6 @@ window.updateTopicList = function() {
     });
 };
 
-// --- 2. XỬ LÝ QUẢN LÝ MÀN HÌNH ---
 window.generateQuiz = function() {
     const selectedSubject = document.getElementById('subject-select').value;
     const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
@@ -52,7 +50,9 @@ window.renderQuiz = function() {
                 <div class="question" style="font-weight: bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
                 ${['a','b','c','d'].map(key => `
                     <label class="option-box" style="display: block; padding: 8px; margin: 5px 0; border: 1px solid #eee; cursor: pointer;">
-                        <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? item[key] : key}" onchange="updateLiveStatus(${i}, this.value)"> 
+                        <input type="radio" name="q${i}" 
+                               value="${item.mon === 'Tiếng anh' ? item[key] : key}" 
+                               onchange="updateLiveStatus(${i}, this.value)"> 
                         ${item[key]}
                     </label>
                 `).join('')}
@@ -65,7 +65,10 @@ window.updateLiveStatus = function(index, selectedValue) {
     if (item.answered) return; 
     item.answered = true;
 
-    if (String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase()) {
+    let correctAns = String(item.correct).trim().toLowerCase();
+    let selectedAns = String(selectedValue).trim().toLowerCase();
+
+    if (selectedAns === correctAns) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
     } else {
@@ -74,53 +77,38 @@ window.updateLiveStatus = function(index, selectedValue) {
     }
 };
 
-// --- 3. BẢNG XẾP HẠNG & LƯU ĐIỂM ---
-window.loadRanking = async function() {
-    try {
-        const response = await fetch(API_URL + "?action=getRanking", { method: 'GET', mode: 'cors' });
-        const data = await response.json();
-        const list = document.getElementById('rank-list');
-        list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
-            .map(r => `<div>${r.ten}: <b>${r.diem} điểm</b></div>`).join('');
-        document.getElementById('rank-screen').style.display = 'block';
-    } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
-};
-
-async function saveResult(ten, diem, mon) {
-    await fetch(API_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Sử dụng no-cors để tránh chặn từ Google Apps Script
-        body: JSON.stringify({ ten, diem, soCau: 10, mon })
-    });
-}
-
-// --- 4. KHỞI TẠO SỰ KIỆN ---
+// --- KHỞI TẠO VÀ SỰ KIỆN ---
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
+    // Nút bắt đầu
     document.getElementById('start-btn').addEventListener('click', () => {
-        const nameInput = document.getElementById("student-name");
-        if (!nameInput.value.trim()) return alert("Vui lòng nhập tên!");
+        if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
+        if (document.querySelectorAll('input[name="topic"]:checked').length === 0) return alert("Chọn ít nhất 1 chủ đề!");
+        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         generateQuiz();
         renderQuiz();
     });
 
-    document.getElementById('show-rank-btn').addEventListener('click', loadRanking);
+    // Nút nộp bài (Đã cập nhật để quay về màn hình đầu)
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.onclick = function() {
+            if (typeof timerInterval !== 'undefined') clearInterval(timerInterval);
+            const totalScore = correctCount;
+            const studentName = document.getElementById("student-name").value;
+            
+            alert(`Bạn đã hoàn thành bài thi!\nTên: ${studentName}\nĐiểm: ${totalScore}/10`);
 
-    document.getElementById('submit-btn').onclick = function() {
-        const studentName = document.getElementById("student-name").value;
-        const mon = document.getElementById('subject-select').value;
-        
-        saveResult(studentName, correctCount, mon);
-        
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Chúc mừng ${studentName}!</h3><p>Kết quả của bạn là: <b>${correctCount}/10</b></p>`;
-    };
-
-    document.getElementById('restart-btn').addEventListener('click', () => {
-        location.reload(); // Reload là cách an toàn nhất để reset mọi thứ sau khi làm xong
-    });
+            // Quay về màn hình chọn tên thay vì reload
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+            
+            // Reset các thông số hiển thị
+            document.getElementById('count-correct').innerText = "0";
+            document.getElementById('count-wrong').innerText = "0";
+        };
+    }
 });
