@@ -17,10 +17,10 @@ window.updateTopicList = function() {
         return;
     }
 
-    // Lấy danh sách chủ đề, nếu cột 'chủ đề' bị trống thì gán là 'Chủ đề khác'
+    // Tự động tìm tên cột chủ đề (kiểm tra cả "chủ đề" và "Chủ đề")
     const topics = [...new Set(allQuizData
         .filter(i => i.mon === mon)
-        .map(i => i['chủ đề'] && i['chủ đề'].trim() !== "" ? i['chủ đề'] : "Chủ đề khác"))];
+        .map(i => i['chủ đề'] || i['Chủ đề'] || "Chủ đề khác"))];
     
     topics.forEach(topic => {
         container.innerHTML += `
@@ -113,16 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateQuiz() {
-        const selectedSubject = document.getElementById('subject-select').value;
-        const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked'))
-                                    .map(cb => cb.value);
+    const selectedSubject = document.getElementById('subject-select').value;
+    const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked'))
+                                .map(cb => cb.value);
 
-        const filteredData = allQuizData.filter(item => 
-            item.mon === selectedSubject && selectedTopics.includes(item['chủ đề'])
-        );
+    const filteredData = allQuizData.filter(item => {
+        const itemTopic = item['chủ đề'] || item['Chủ đề'] || "Chủ đề khác";
+        return item.mon === selectedSubject && selectedTopics.includes(itemTopic);
+    });
 
-        currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
-        currentQuizData.forEach(item => item.answered = false);
+    currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
+    currentQuizData.forEach(item => item.answered = false);
     }
 
     function renderQuiz() {
