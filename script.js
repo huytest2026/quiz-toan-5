@@ -92,15 +92,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz();
     });
 
-    // Nút nộp bài (Viết theo cách ổn định nhất)
+    // Nút nộp bài (Đã cập nhật để quay về màn hình đầu)
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn) {
         submitBtn.onclick = function() {
             if (typeof timerInterval !== 'undefined') clearInterval(timerInterval);
             const totalScore = correctCount;
             const studentName = document.getElementById("student-name").value;
+            
             alert(`Bạn đã hoàn thành bài thi!\nTên: ${studentName}\nĐiểm: ${totalScore}/10`);
-            location.reload(); 
+
+            // Quay về màn hình chọn tên thay vì reload
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+            
+            // Reset các thông số hiển thị
+            document.getElementById('count-correct').innerText = "0";
+            document.getElementById('count-wrong').innerText = "0";
         };
     }
 });
