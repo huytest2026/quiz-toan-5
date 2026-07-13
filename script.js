@@ -103,3 +103,12 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
 document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Nộp bài?")) submitQuiz(); });
 loadData();
+// Gán sự kiện cho nút Làm lại bài
+document.getElementById('restart-btn').addEventListener('click', () => {
+    // 1. Đặt lại các biến đếm về 0
+    correctCount = 0;
+    wrongCount = 0;
+    
+    // 2. Tải lại trang để bắt đầu từ màn hình đầu tiên
+    location.reload(); 
+});
