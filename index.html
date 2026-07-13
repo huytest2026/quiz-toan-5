@@ -12,10 +12,17 @@
         <h1>Bài Kiểm Tra Trực Tuyến</h1>
         
         <label for="subject-select" style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn môn học:</label>
-        <select id="subject-select" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
+        <select id="subject-select" onchange="updateTopicList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
+            <option value="">-- Chọn môn --</option>
             <option value="Toán">Toán</option>
             <option value="Tiếng anh">Tiếng Anh</option>
         </select>
+
+        <!-- Khu vực hiển thị Checkbox chủ đề -->
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn chủ đề (có thể chọn nhiều):</label>
+        <div id="topic-container" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #fdfdfd; max-height: 150px; overflow-y: auto;">
+            <p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>
+        </div>
 
         <p>⏰ Thời gian làm bài: <b>15 phút.</b></p>
         <p>📝 Số lượng: <b>10 câu</b> ngẫu nhiên.</p>
@@ -23,7 +30,7 @@
         
         <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
         
-        <!-- Nút mới: Xem Bảng xếp hạng -->
+        <!-- Nút Xem Bảng xếp hạng -->
         <button id="show-rank-btn" style="width: 100%; padding: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 10px;">Xem Bảng Xếp Hạng</button>
     </div>
 
@@ -51,11 +58,9 @@
     <div class="container" id="result-screen" style="display:none;">
         <div id="result"></div>
         <div id="review-section" style="margin: 20px 0; text-align: left; max-height: 400px; overflow-y: auto; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9;"></div>
-        <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài (Ôn câu sai)</button>
+        <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài</button>
     </div>
 
-    <audio id="warning-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
-
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>
