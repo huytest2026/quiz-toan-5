@@ -65,8 +65,18 @@ window.updateLiveStatus = function(index, selectedValue, element) {
         element.style.backgroundColor = "#f8d7da";
         element.style.borderColor = "#dc3545";
     }
-
     allOptions.forEach(opt => opt.style.pointerEvents = "none");
+};
+
+window.loadRanking = async function() {
+    try {
+        const response = await fetch(API_URL + "?action=getRanking");
+        const data = await response.json();
+        const list = document.getElementById('rank-list');
+        list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
+            .map(r => `<div><b>${r.ten}</b>: ${r.diem} điểm</div>`).join('');
+        document.getElementById('rank-screen').style.display = 'block';
+    } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -81,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz();
         startTimer();
     });
+
+    document.getElementById('show-rank-btn').addEventListener('click', loadRanking);
 
     document.getElementById('submit-btn').onclick = () => {
         clearInterval(timerInterval);
