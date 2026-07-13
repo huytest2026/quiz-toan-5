@@ -45,13 +45,14 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
     currentQuizData.forEach((item, i) => {
-        // Tạo giao diện với nội dung từ vựng
         quizDiv.innerHTML += `
             <div class="quiz-card" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                 <div class="question" style="font-weight: bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
                 ${['a','b','c','d'].map(key => `
                     <label class="option-box" style="display: block; padding: 8px; margin: 5px 0; border: 1px solid #eee; cursor: pointer;">
-                        <input type="radio" name="q${i}" value="${key}" onchange="updateLiveStatus(${i}, '${key}')"> 
+                        <input type="radio" name="q${i}" 
+                               value="${item.mon === 'Tiếng anh' ? item[key] : key}" 
+                               onchange="updateLiveStatus(${i}, this.value)"> 
                         ${item[key]}
                     </label>
                 `).join('')}
@@ -63,10 +64,31 @@ window.updateLiveStatus = function(index, selectedValue) {
     let item = currentQuizData[index];
     if (item.answered) return; 
     item.answered = true;
-    let isCorrect = (selectedValue === String(item.correct).toLowerCase());
+
+    // Chuyển giá trị về dạng chữ thường để so sánh
+    let correctAns = String(item.correct).trim().toLowerCase();
+    let selectedAns = selectedValue.trim().toLowerCase();
+
+    // Logic: Nếu môn là Toán thì so sánh theo ký tự (a,b,c,d), 
+    // nếu môn Tiếng Anh thì so sánh theo nội dung từ vựng
+    let isCorrect = false;
     
-    if (isCorrect) { correctCount++; document.getElementById('count-correct').innerText = correctCount; }
-    else { wrongCount++; document.getElementById('count-wrong').innerText = wrongCount; }
+    if (item.mon === "Tiếng anh") {
+        // Môn Tiếng Anh: so sánh nội dung từ vựng
+        // selectedValue lúc này chính là nội dung của từ (VD: "hotter")
+        isCorrect = (selectedAns === correctAns);
+    } else {
+        // Môn Toán: so sánh ký tự (a,b,c,d)
+        isCorrect = (selectedAns === correctAns);
+    }
+
+    if (isCorrect) {
+        correctCount++;
+        document.getElementById('count-correct').innerText = correctCount;
+    } else {
+        wrongCount++;
+        document.getElementById('count-wrong').innerText = wrongCount;
+    }
 };
 
 // --- KHỞI TẠO ---
