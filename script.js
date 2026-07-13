@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     window.handleData = function(data) { allQuizData = data; };
+    console.log("Dữ liệu nhận được:", data[0]);
 
     function startTimer() {
         let time = 15 * 60;
