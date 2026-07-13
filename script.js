@@ -15,30 +15,39 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('quizHistory', JSON.stringify(history));
     }
 
-    // --- GÁN SỰ KIỆN NÚT BẤM (CẬP NHẬT GIAO DIỆN BẢNG) ---
+    // --- GÁN SỰ KIỆN NÚT BẤM (ĐÃ CẬP NHẬT: HUY CHƯƠNG + XÓA LỊCH SỬ) ---
     document.getElementById('show-rank-btn').addEventListener('click', () => {
         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
         history.sort((a, b) => b.score - a.score);
         let top5 = history.slice(0, 5);
         
         let html = `
+            <div style="margin-bottom: 10px; text-align: right;">
+                <button id="clear-history-btn" style="padding: 5px 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 4px; font-size: 0.8em;">Xóa lịch sử</button>
+            </div>
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid #eee;">
+                        <th style="padding: 8px;">Hạng</th>
                         <th style="padding: 8px;">Tên</th>
                         <th style="padding: 8px;">Điểm</th>
-                        <th style="padding: 8px; font-size: 0.9em; color: #666;">Thời gian</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
         
-        top5.forEach(item => {
+        top5.forEach((item, index) => {
+            let medal = "";
+            if (index === 0) medal = "🥇";
+            else if (index === 1) medal = "🥈";
+            else if (index === 2) medal = "🥉";
+            else medal = index + 1;
+
             html += `
                 <tr style="border-bottom: 1px solid #f9f9f9;">
+                    <td style="padding: 8px; font-size: 1.2em;">${medal}</td>
                     <td style="padding: 8px;">${item.name}</td>
                     <td style="padding: 8px; font-weight: bold; color: #28a745;">${item.score}/10</td>
-                    <td style="padding: 8px; font-size: 0.8em; color: #888;">${item.date.split(',')[1] || item.date}</td>
                 </tr>
             `;
         });
@@ -47,6 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('rank-list').innerHTML = html;
         document.getElementById('rank-screen').style.display = 'block';
+
+        // Gán sự kiện xóa dữ liệu
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            if (confirm("Bạn có chắc muốn xóa sạch bảng xếp hạng?")) {
+                localStorage.removeItem('quizHistory');
+                document.getElementById('rank-screen').style.display = 'none';
+                alert("Đã xóa dữ liệu!");
+            }
+        });
     });
 
     document.getElementById('start-btn').addEventListener('click', () => {
@@ -144,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveResult(name, subject, correctCount);
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Kết quả: ${correctCount}/10 câu đúng.</h3>`;
+        document.getElementById('result').innerHTML = `<h3>Kết quả của ${name}: ${correctCount}/10 câu đúng.</h3>`;
         fetch(API_URL, {
             method: "POST", mode: 'no-cors',
             headers: { "Content-Type": "application/json" },
