@@ -6,12 +6,37 @@ let timerInterval;
 let correctCount = 0;
 let wrongCount = 0;
 
+// --- TÍNH NĂNG LƯU LỊCH SỬ & XẾP HẠNG ---
+function saveResult(name, subject, score) {
+    let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+    history.push({ name, subject, score, date: new Date().toLocaleString() });
+    localStorage.setItem('quizHistory', JSON.stringify(history));
+}
+
+// Hàm hiển thị bảng xếp hạng khi nhấn nút
+document.getElementById('show-rank-btn').addEventListener('click', () => {
+    let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
+    // Sắp xếp theo điểm giảm dần
+    history.sort((a, b) => b.score - a.score);
+    let top5 = history.slice(0, 5);
+    
+    let html = '<table style="width:100%; border-collapse: collapse; text-align: left;">';
+    html += '<tr><th>Tên</th><th>Điểm</th></tr>';
+    top5.forEach(item => {
+        html += `<tr><td>${item.name}</td><td>${item.score}/10</td></tr>`;
+    });
+    html += '</table>';
+    
+    document.getElementById('rank-list').innerHTML = html;
+    document.getElementById('rank-screen').style.display = 'block';
+});
+
+// --- CÁC HÀM CƠ BẢN ---
 function loadData() {
     const script = document.createElement('script');
     script.src = API_URL + "?callback=handleData";
     document.body.appendChild(script);
 }
-
 function handleData(data) { allQuizData = data; }
 
 function startTimer() {
@@ -62,41 +87,33 @@ function updateLiveStatus(index, selectedValue) {
                     (selectedValue === correctAnswer) : 
                     (item[selectedValue.toLowerCase()].toUpperCase() === correctAnswer);
     
-    // Tìm khung câu hỏi và các label đáp án
     const quizCards = document.querySelectorAll('.quiz-card');
     const labels = quizCards[index].querySelectorAll('label');
 
     if (isCorrect) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
-        labels.forEach(label => {
-            if (label.querySelector('input').value === selectedValue) {
-                label.style.backgroundColor = "#d4edda";
-                label.style.border = "1px solid #28a745";
-            }
-        });
+        labels.forEach(l => { if (l.querySelector('input').value === selectedValue) { l.style.backgroundColor = "#d4edda"; l.style.border = "1px solid #28a745"; }});
     } else {
         wrongCount++;
         document.getElementById('count-wrong').innerText = wrongCount;
-        labels.forEach(label => {
-            const val = label.querySelector('input').value;
-            if (val === selectedValue) {
-                label.style.backgroundColor = "#f8d7da";
-                label.style.border = "1px solid #dc3545";
-            }
-            if (val === correctAnswer || label.innerText.includes(correctAnswer + ":")) {
-                label.style.backgroundColor = "#d4edda";
-                label.style.border = "1px solid #28a745";
-                label.style.fontWeight = "bold";
-            }
+        labels.forEach(l => {
+            const val = l.querySelector('input').value;
+            if (val === selectedValue) { l.style.backgroundColor = "#f8d7da"; l.style.border = "1px solid #dc3545"; }
+            if (val === correctAnswer || l.innerText.includes(correctAnswer + ":")) { l.style.backgroundColor = "#d4edda"; l.style.border = "1px solid #28a745"; l.style.fontWeight = "bold"; }
         });
     }
-    // Vô hiệu hóa các input của câu này
     quizCards[index].querySelectorAll('input').forEach(input => input.disabled = true);
 }
 
 function submitQuiz() {
     clearInterval(timerInterval);
+    const name = document.getElementById("student-name").value;
+    const subject = document.getElementById('subject-select').value;
+    
+    // Lưu kết quả vào LocalStorage
+    saveResult(name, subject, correctCount);
+    
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
     document.getElementById('result').innerHTML = `<h3>Kết quả: ${correctCount}/10 câu đúng.</h3>`;
@@ -104,11 +121,7 @@ function submitQuiz() {
     fetch(API_URL, {
         method: "POST", mode: 'no-cors',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            ten: document.getElementById("student-name").value, 
-            mon: document.getElementById('subject-select').value,
-            diem: correctCount 
-        })
+        body: JSON.stringify({ ten: name, mon: subject, diem: correctCount })
     });
 }
 
