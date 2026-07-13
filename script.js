@@ -73,10 +73,21 @@ window.loadRanking = async function() {
         const response = await fetch(API_URL + "?action=getRanking");
         const data = await response.json();
         const list = document.getElementById('rank-list');
-        list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
-            .map(r => `<div><b>${r.ten}</b>: ${r.diem} điểm</div>`).join('');
+        
+        const sortedData = data.sort((a, b) => b.diem - a.diem).slice(0, 5);
+        list.innerHTML = sortedData.map((r, index) => {
+            let medal = "";
+            if (index === 0) medal = "🥇 ";
+            else if (index === 1) medal = "🥈 ";
+            else if (index === 2) medal = "🥉 ";
+            return `<div style="margin-bottom: 8px;">${medal} <b>${r.ten}</b>: ${r.diem} điểm</div>`;
+        }).join('');
+            
         document.getElementById('rank-screen').style.display = 'block';
-    } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
+    } catch (e) { 
+        console.error("Lỗi tải xếp hạng:", e);
+        alert("Không thể tải bảng xếp hạng!"); 
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
