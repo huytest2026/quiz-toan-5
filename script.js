@@ -32,7 +32,9 @@ window.updateTopicList = function() {
 
     // Lọc theo thuộc tính 'mon' và lấy danh sách chủ đề 'chuDe'
     const filteredBySubject = allQuizData.filter(i => i.mon === mon);
-    const topics = [...new Set(filteredBySubject.map(i => i.chuDe))];
+    const topics = [...new Set(filteredBySubject
+    .map(i => i.chuDe)
+    .filter(t => t && t.trim() !== ""))];
     
     topics.forEach(topic => {
         container.innerHTML += `
