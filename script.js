@@ -30,16 +30,14 @@ window.updateTopicList = function() {
 
     if (!mon) return;
 
-    // Lọc bằng cách bao quát cả 2 trường hợp viết thường và có dấu
-    const topics = [...new Set(allQuizData
-        .filter(i => (i.mon || i.Môn) === mon) 
-        .map(i => i['Chủ đề'] || i['chủ đề'] || "Chủ đề khác"))];
-    
-    // Loại bỏ các giá trị "Chủ đề khác" nếu tìm thấy chủ đề thật
-    const filteredTopics = topics.filter(t => t !== "Chủ đề khác" && t !== null && t !== undefined);
-    const finalTopics = filteredTopics.length > 0 ? filteredTopics : ["Chủ đề khác"];
+    // Lưu ý: Dùng chính xác tên cột là "Chủ đề" (có dấu)
+    // Và kiểm tra cột Môn (có thể là "Môn" hoặc "mon" tùy vào dữ liệu JSON trả về)
+    const filteredBySubject = allQuizData.filter(i => (i.Môn === mon || i.mon === mon));
 
-    finalTopics.forEach(topic => {
+    // Lấy danh sách các chủ đề duy nhất
+    const topics = [...new Set(filteredBySubject.map(i => i['Chủ đề'] || "Chưa đặt tên"))];
+    
+    topics.forEach(topic => {
         container.innerHTML += `
             <label style="display: block; margin: 5px 0; cursor: pointer;">
                 <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
