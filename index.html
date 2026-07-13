@@ -20,13 +20,22 @@
         <p>⏰ Thời gian làm bài: <b>15 phút.</b></p>
         <p>📝 Số lượng: <b>10 câu</b> ngẫu nhiên.</p>
         <input type="text" id="student-name" placeholder="Nhập Họ và Tên của em vào đây..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; box-sizing: border-box;">
+        
         <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
+        
+        <!-- Nút mới: Xem Bảng xếp hạng -->
+        <button id="show-rank-btn" style="width: 100%; padding: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 10px;">Xem Bảng Xếp Hạng</button>
+    </div>
+
+    <!-- Popup Bảng xếp hạng (Ẩn mặc định) -->
+    <div id="rank-screen" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:9999; width: 90%; max-width: 400px; text-align:center;">
+        <h3>🏆 Top 5 Điểm Cao</h3>
+        <div id="rank-list" style="margin: 20px 0; font-size: 1.1em;"></div>
+        <button onclick="document.getElementById('rank-screen').style.display='none'" style="width:100%; padding: 10px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">Đóng</button>
     </div>
 
     <!-- Màn hình Làm bài -->
     <div class="container" id="quiz-screen" style="display:none;">
-        
-        <!-- Bảng trạng thái chuyên nghiệp -->
         <div class="status-bar" style="display: flex; justify-content: space-around; margin-bottom: 20px; background: #eef6ff; padding: 15px; border-radius: 10px; border-bottom: 4px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
             <div style="text-align: center;">Thời gian còn lại<br><b id="timer-display" style="font-size: 1.2em; color: #d9534f;">15:00</b></div>
             <div style="text-align: center;">Đã đúng<br><b id="count-correct" style="font-size: 1.2em; color: #28a745;">0</b></div>
@@ -47,6 +56,6 @@
 
     <audio id="warning-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>
