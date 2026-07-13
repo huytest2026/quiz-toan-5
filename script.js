@@ -6,7 +6,7 @@ let timerInterval;
 let correctCount = 0;
 let wrongCount = 0;
 
-// --- CÁC HÀM TOÀN CỤC ---
+// --- HÀM TẢI DỮ LIỆU ---
 async function loadData() {
     try {
         const response = await fetch(API_URL);
@@ -65,16 +65,10 @@ window.updateLiveStatus = function(index, selectedValue) {
     if (item.answered) return; 
     item.answered = true;
 
-    // Chuyển cả giá trị đã chọn và đáp án đúng về dạng chữ thường và bỏ khoảng trắng
     let correctAns = String(item.correct).trim().toLowerCase();
     let selectedAns = String(selectedValue).trim().toLowerCase();
 
-    // Logic: Nếu môn là Toán (chấm bằng A, B, C, D) 
-    // và môn Tiếng Anh (chấm bằng từ vựng)
-    // Cả hai đều có thể dùng chung 1 logic so sánh nếu dữ liệu ở cột I đã chuẩn
-    let isCorrect = (selectedAns === correctAns);
-
-    if (isCorrect) {
+    if (selectedAns === correctAns) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
     } else {
@@ -83,10 +77,11 @@ window.updateLiveStatus = function(index, selectedValue) {
     }
 };
 
-// --- KHỞI TẠO ---
+// --- KHỞI TẠO VÀ SỰ KIỆN ---
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
+    // Nút bắt đầu
     document.getElementById('start-btn').addEventListener('click', () => {
         if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
         if (document.querySelectorAll('input[name="topic"]:checked').length === 0) return alert("Chọn ít nhất 1 chủ đề!");
@@ -96,26 +91,16 @@ document.addEventListener('DOMContentLoaded', () => {
         generateQuiz();
         renderQuiz();
     });
-    // ... (code cũ)
 
-document.getElementById('submit-btn').addEventListener('click', () => {
-    // 1. Dừng thời gian
-    clearInterval(timerInterval);
-
-    // 2. Tính điểm
-    const totalScore = correctCount; // Bạn đã có biến này từ hàm updateLiveStatus
-    const studentName = document.getElementById("student-name").value;
-    const subject = document.getElementById('subject-select').value;
-
-    // 3. Hiển thị thông báo
-    alert(`Bạn đã hoàn thành bài thi!\nTên: ${studentName}\nĐiểm: ${totalScore}/10`);
-
-    // 4. Lưu lịch sử (nếu cần)
-    saveResult(studentName, subject, totalScore);
-
-    // 5. Quay lại màn hình ban đầu hoặc làm mới trang
-    location.reload(); 
-});
-
-// ... (code cũ)
+    // Nút nộp bài (Viết theo cách ổn định nhất)
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.onclick = function() {
+            if (typeof timerInterval !== 'undefined') clearInterval(timerInterval);
+            const totalScore = correctCount;
+            const studentName = document.getElementById("student-name").value;
+            alert(`Bạn đã hoàn thành bài thi!\nTên: ${studentName}\nĐiểm: ${totalScore}/10`);
+            location.reload(); 
+        };
+    }
 });
