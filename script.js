@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbz2vM7S0ZD_XBVgnweWkhoksLPXglo_11HWmHCMyRtByimNfwQfduBgkqwcW10EEJ2bgw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
 let allQuizData = [];
 let currentQuizData = [];
