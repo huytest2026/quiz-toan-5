@@ -58,7 +58,9 @@ function updateLiveStatus(index, selectedValue) {
 
     item.answered = true;
     let correctAnswer = String(item.correct).trim().toUpperCase();
-    let isCorrect = (["A","B","C","D"].includes(correctAnswer)) ? (selectedValue === correctAnswer) : (item[selectedValue.toLowerCase()].toUpperCase() === correctAnswer);
+    let isCorrect = (["A","B","C","D"].includes(correctAnswer)) ? 
+                    (selectedValue === correctAnswer) : 
+                    (item[selectedValue.toLowerCase()].toUpperCase() === correctAnswer);
     
     // Tìm khung câu hỏi và các label đáp án
     const quizCards = document.querySelectorAll('.quiz-card');
@@ -67,7 +69,6 @@ function updateLiveStatus(index, selectedValue) {
     if (isCorrect) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
-        // Tô xanh đáp án đúng
         labels.forEach(label => {
             if (label.querySelector('input').value === selectedValue) {
                 label.style.backgroundColor = "#d4edda";
@@ -77,7 +78,6 @@ function updateLiveStatus(index, selectedValue) {
     } else {
         wrongCount++;
         document.getElementById('count-wrong').innerText = wrongCount;
-        // Tô đỏ đáp án sai và xanh đáp án đúng
         labels.forEach(label => {
             const val = label.querySelector('input').value;
             if (val === selectedValue) {
