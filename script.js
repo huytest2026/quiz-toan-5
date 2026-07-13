@@ -6,32 +6,30 @@ let timerInterval;
 let correctCount = 0;
 let wrongCount = 0;
 
+// Đưa hàm này ra ngoài DOMContentLoaded để HTML có thể gọi được
+window.updateTopicList = function() {
+    const mon = document.getElementById('subject-select').value;
+    const container = document.getElementById('topic-container');
+    container.innerHTML = ''; 
+
+    if (!mon) {
+        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
+        return;
+    }
+
+    const topics = [...new Set(allQuizData.filter(i => i.mon === mon).map(i => i['chủ đề']))];
+    
+    topics.forEach(topic => {
+        container.innerHTML += `
+            <label style="display: block; margin: 5px 0; cursor: pointer;">
+                <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
+            </label>
+        `;
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-
-    // --- CÁC HÀM XỬ LÝ CHỦ ĐỀ MỚI ---
-    window.updateTopicList = function() {
-        const mon = document.getElementById('subject-select').value;
-        const container = document.getElementById('topic-container');
-        container.innerHTML = ''; 
-
-        if (!mon) {
-            container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
-            return;
-        }
-
-        // Lấy danh sách các chủ đề duy nhất dựa trên môn đã chọn
-        const topics = [...new Set(allQuizData.filter(i => i.mon === mon).map(i => i['chủ đề']))];
-        
-        topics.forEach(topic => {
-            container.innerHTML += `
-                <label style="display: block; margin: 5px 0; cursor: pointer;">
-                    <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
-                </label>
-            `;
-        });
-    };
-
-    // --- CÁC HÀM XỬ LÝ ---
+    
     function saveResult(name, subject, score) {
         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
         history.push({ name, subject, score, date: new Date().toLocaleString() });
@@ -55,8 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <th style="padding: 8px;">Điểm</th>
                     </tr>
                 </thead>
-                <tbody>
-        `;
+                <tbody>`;
         
         top5.forEach((item, index) => {
             let medal = (index === 0) ? "🥇" : (index === 1) ? "🥈" : (index === 2) ? "🥉" : index + 1;
@@ -112,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // Cập nhật hàm generateQuiz để lọc theo nhiều chủ đề
     function generateQuiz() {
         const selectedSubject = document.getElementById('subject-select').value;
         const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked'))
