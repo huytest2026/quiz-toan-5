@@ -32,7 +32,7 @@ window.updateTopicList = function() {
 
     // Lưu ý: Dùng chính xác tên cột là "Chủ đề" (có dấu)
     // Và kiểm tra cột Môn (có thể là "Môn" hoặc "mon" tùy vào dữ liệu JSON trả về)
-    const filteredBySubject = allQuizData.filter(i => (i.Môn === mon || i.mon === mon));
+    const filteredBySubject = allQuizData.filter(i => i.mon === mon);
 
     // Lấy danh sách các chủ đề duy nhất
     const topics = [...new Set(filteredBySubject.map(i => i['Chủ đề'] || "Chưa đặt tên"))];
