@@ -8,10 +8,14 @@ let wrongCount = 0;
 // --- 1. TẢI DỮ LIỆU CÂU HỎI ---
 async function loadData() {
     try {
-        const response = await fetch(API_URL);
+        // Thêm chế độ 'cors' để hỗ trợ trình duyệt
+        const response = await fetch(API_URL, { method: 'GET', mode: 'cors' });
         allQuizData = await response.json(); 
         updateTopicList();
-    } catch (error) { console.error("Lỗi tải câu hỏi:", error); }
+    } catch (error) { 
+        console.error("Lỗi tải câu hỏi:", error);
+        alert("Không thể kết nối máy chủ. Hãy thử lại sau!");
+    }
 }
 
 window.updateTopicList = function() {
@@ -73,11 +77,11 @@ window.updateLiveStatus = function(index, selectedValue) {
 // --- 3. BẢNG XẾP HẠNG & LƯU ĐIỂM ---
 window.loadRanking = async function() {
     try {
-        const response = await fetch(API_URL + "?action=getRanking");
+        const response = await fetch(API_URL + "?action=getRanking", { method: 'GET', mode: 'cors' });
         const data = await response.json();
         const list = document.getElementById('rank-list');
         list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
-            .map(r => `<div>${r.ten}: ${r.diem} điểm</div>`).join('');
+            .map(r => `<div>${r.ten}: <b>${r.diem} điểm</b></div>`).join('');
         document.getElementById('rank-screen').style.display = 'block';
     } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
 };
@@ -85,6 +89,7 @@ window.loadRanking = async function() {
 async function saveResult(ten, diem, mon) {
     await fetch(API_URL, {
         method: 'POST',
+        mode: 'no-cors', // Sử dụng no-cors để tránh chặn từ Google Apps Script
         body: JSON.stringify({ ten, diem, soCau: 10, mon })
     });
 }
@@ -94,7 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
     document.getElementById('start-btn').addEventListener('click', () => {
-        if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
+        const nameInput = document.getElementById("student-name");
+        if (!nameInput.value.trim()) return alert("Vui lòng nhập tên!");
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         generateQuiz();
@@ -111,13 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Tên: ${studentName}</p><p>Điểm: ${correctCount}/10</p>`;
+        document.getElementById('result').innerHTML = `<h3>Chúc mừng ${studentName}!</h3><p>Kết quả của bạn là: <b>${correctCount}/10</b></p>`;
     };
 
     document.getElementById('restart-btn').addEventListener('click', () => {
-        document.getElementById('result-screen').style.display = 'none';
-        document.getElementById('start-screen').style.display = 'block';
-        document.getElementById('count-correct').innerText = "0";
-        document.getElementById('count-wrong').innerText = "0";
+        location.reload(); // Reload là cách an toàn nhất để reset mọi thứ sau khi làm xong
     });
 });
