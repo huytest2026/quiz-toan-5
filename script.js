@@ -30,12 +30,16 @@ window.updateTopicList = function() {
 
     if (!mon) return;
 
-    // Lọc và hiển thị chủ đề dựa trên dữ liệu đã tải
+    // Lọc bằng cách bao quát cả 2 trường hợp viết thường và có dấu
     const topics = [...new Set(allQuizData
-        .filter(i => i.mon === mon || i.Môn === mon)
+        .filter(i => (i.mon || i.Môn) === mon) 
         .map(i => i['Chủ đề'] || i['chủ đề'] || "Chủ đề khác"))];
     
-    topics.forEach(topic => {
+    // Loại bỏ các giá trị "Chủ đề khác" nếu tìm thấy chủ đề thật
+    const filteredTopics = topics.filter(t => t !== "Chủ đề khác" && t !== null && t !== undefined);
+    const finalTopics = filteredTopics.length > 0 ? filteredTopics : ["Chủ đề khác"];
+
+    finalTopics.forEach(topic => {
         container.innerHTML += `
             <label style="display: block; margin: 5px 0; cursor: pointer;">
                 <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
