@@ -6,7 +6,7 @@ async function loadData() {
         const response = await fetch(API_URL);
         allQuizData = await response.json();
         updateTopicList();
-    } catch (e) { console.error("Lỗi tải:", e); }
+    } catch (e) { console.error("Lỗi tải dữ liệu:", e); }
 }
 
 window.updateTopicList = function() {
@@ -36,21 +36,37 @@ window.renderQuiz = function() {
         <div class="quiz-card">
             <div class="question">Câu ${i+1}: ${item.question}</div>
             ${['a','b','c','d'].map(key => `
-                <label class="option-box"><input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? item[key] : key}" onchange="updateLiveStatus(${i}, this.value)"> ${item[key]}</label>
+                <label class="option-box">
+                    <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? item[key] : key}" 
+                    onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> 
+                    ${item[key]}
+                </label>
             `).join('')}
         </div>`).join('');
 };
 
-window.updateLiveStatus = (i, val) => {
-    if (currentQuizData[i].answered) return;
-    currentQuizData[i].answered = true;
-    if (val.trim().toLowerCase() === String(currentQuizData[i].correct).trim().toLowerCase()) {
+window.updateLiveStatus = function(index, selectedValue, element) {
+    let item = currentQuizData[index];
+    if (item.answered) return; 
+    item.answered = true;
+
+    const parentCard = element.closest('.quiz-card');
+    const allOptions = parentCard.querySelectorAll('.option-box');
+    const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
+
+    if (isCorrect) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
+        element.style.backgroundColor = "#d4edda";
+        element.style.borderColor = "#28a745";
     } else {
         wrongCount++;
         document.getElementById('count-wrong').innerText = wrongCount;
+        element.style.backgroundColor = "#f8d7da";
+        element.style.borderColor = "#dc3545";
     }
+
+    allOptions.forEach(opt => opt.style.pointerEvents = "none");
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -72,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: correctCount, soCau: 10, mon: document.getElementById('subject-select').value }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Kết quả: ${name}</h3><p>Điểm: <b>${correctCount}/10</b></p>`;
-        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br><b>Đúng: ${q.correct}</b></p>`).join('');
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Tên: ${name}</p><p>Điểm: <b>${correctCount}/10</b></p>`;
+        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đáp án: <b>${q.correct}</b></p>`).join('');
     };
 
     document.getElementById('restart-btn').onclick = () => location.reload();
