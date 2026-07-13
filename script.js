@@ -6,105 +6,78 @@ let timerInterval;
 let correctCount = 0;
 let wrongCount = 0;
 
-// Sử dụng fetch thay vì chèn thẻ script để dữ liệu ổn định hơn
+// --- CÁC HÀM TOÀN CỤC ---
 async function loadData() {
     try {
         const response = await fetch(API_URL);
         const text = await response.text(); 
         const cleanJson = text.replace(/handleData\((.*)\)/, '$1');
         allQuizData = JSON.parse(cleanJson);
-        
-        // DÒNG NÀY RẤT QUAN TRỌNG:
-        console.log("Cấu trúc 1 câu hỏi:", allQuizData[0]); 
-        
         updateTopicList();
-    } catch (error) {
-        console.error("Lỗi:", error);
-    }
+    } catch (error) { console.error("Lỗi tải dữ liệu:", error); }
 }
 
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
     container.innerHTML = ''; 
-
     if (!mon) return;
 
-    // Lọc theo thuộc tính 'mon' và lấy danh sách chủ đề 'chuDe'
     const filteredBySubject = allQuizData.filter(i => i.mon === mon);
-    const topics = [...new Set(filteredBySubject
-    .map(i => i.chuDe)
-    .filter(t => t && t.trim() !== ""))];
+    const topics = [...new Set(filteredBySubject.map(i => i.chuDe).filter(t => t && t.trim() !== ""))];
     
     topics.forEach(topic => {
-        container.innerHTML += `
-            <label style="display: block; margin: 5px 0; cursor: pointer;">
-                <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
-            </label>
-        `;
+        container.innerHTML += `<label style="display: block; margin: 5px 0; cursor: pointer;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
     });
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Nạp dữ liệu ngay khi trang tải xong
-    loadData();
+window.generateQuiz = function() {
+    const selectedSubject = document.getElementById('subject-select').value;
+    const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+    const filteredData = allQuizData.filter(item => item.mon === selectedSubject && selectedTopics.includes(item.chuDe));
+    
+    currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
+    currentQuizData.forEach(item => item.answered = false);
+    correctCount = 0; wrongCount = 0;
+};
 
-    function saveResult(name, subject, score) {
-        let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
-        history.push({ name, subject, score, date: new Date().toLocaleString() });
-        localStorage.setItem('quizHistory', JSON.stringify(history));
-    }
-
-    document.getElementById('show-rank-btn').addEventListener('click', () => {
-        let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
-        history.sort((a, b) => b.score - a.score);
-        let top5 = history.slice(0, 5);
-        
-        let html = `
-            <div style="margin-bottom: 10px; text-align: right;">
-                <button id="clear-history-btn" style="padding: 5px 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 4px; font-size: 0.8em;">Xóa lịch sử</button>
-            </div>
-            <table style="width:100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #eee;">
-                        <th style="padding: 8px;">Hạng</th>
-                        <th style="padding: 8px;">Tên</th>
-                        <th style="padding: 8px;">Điểm</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-        
-        top5.forEach((item, index) => {
-            let medal = (index === 0) ? "🥇" : (index === 1) ? "🥈" : (index === 2) ? "🥉" : index + 1;
-            html += `<tr>
-                        <td style="padding: 8px; font-size: 1.2em;">${medal}</td>
-                        <td style="padding: 8px;">${item.name}</td>
-                        <td style="padding: 8px; font-weight: bold; color: #28a745;">${item.score}/10</td>
-                    </tr>`;
-        });
-        
-        document.getElementById('rank-list').innerHTML = html + '</tbody></table>';
-        document.getElementById('rank-screen').style.display = 'block';
-
-        document.getElementById('clear-history-btn').addEventListener('click', () => {
-            if (confirm("Bạn có chắc muốn xóa sạch bảng xếp hạng?")) {
-                localStorage.removeItem('quizHistory');
-                document.getElementById('rank-screen').style.display = 'none';
-            }
-        });
+window.renderQuiz = function() {
+    const quizDiv = document.getElementById('quiz');
+    quizDiv.innerHTML = '';
+    currentQuizData.forEach((item, i) => {
+        quizDiv.innerHTML += `
+            <div class="quiz-card" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                <div class="question" style="font-weight: bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
+                ${['a','b','c','d'].map(opt => `
+                    <label class="option-box" style="display: block; padding: 8px; margin: 5px 0; border: 1px solid #eee; cursor: pointer;">
+                        <input type="radio" name="q${i}" value="${opt}" onchange="updateLiveStatus(${i}, '${opt}')"> ${opt.toUpperCase()}: ${item[opt]}
+                    </label>
+                `).join('')}
+            </div>`;
     });
+};
+
+window.updateLiveStatus = function(index, selectedValue) {
+    let item = currentQuizData[index];
+    if (item.answered) return; 
+    item.answered = true;
+    let isCorrect = (selectedValue === String(item.correct).toLowerCase());
+    
+    if (isCorrect) { correctCount++; document.getElementById('count-correct').innerText = correctCount; }
+    else { wrongCount++; document.getElementById('count-wrong').innerText = wrongCount; }
+};
+
+// --- KHỞI TẠO ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
-        if (document.querySelectorAll('input[name="topic"]:checked').length === 0) return alert("Vui lòng chọn ít nhất 1 chủ đề!");
+        if (document.querySelectorAll('input[name="topic"]:checked').length === 0) return alert("Chọn ít nhất 1 chủ đề!");
         
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         generateQuiz();
         renderQuiz();
-        startTimer();
     });
-
-    // ... (Giữ nguyên các hàm còn lại: startTimer, generateQuiz, renderQuiz, updateLiveStatus, submitQuiz)
-    // Lưu ý: Đảm bảo trong generateQuiz bạn sử dụng logic lọc tương tự như updateTopicList
 });
