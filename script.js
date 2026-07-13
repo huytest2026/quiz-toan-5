@@ -49,7 +49,6 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     let item = currentQuizData[index];
     if (item.answered) return; 
     item.answered = true;
-
     const parentCard = element.closest('.quiz-card');
     const allOptions = parentCard.querySelectorAll('.option-box');
     const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
@@ -80,12 +79,14 @@ window.loadRanking = async function() {
 };
 
 window.resetRanking = async function() {
-    if (confirm("Xóa toàn bộ bảng xếp hạng?")) {
+    let password = prompt("Nhập mật khẩu quản trị để Reset bảng xếp hạng:");
+    if (password) {
         try {
-            await fetch(API_URL + "?action=reset");
-            alert("Đã xóa!");
-            document.getElementById('rank-screen').style.display = 'none';
-        } catch (e) { alert("Lỗi!"); }
+            let res = await fetch(API_URL + "?action=reset&pass=" + encodeURIComponent(password));
+            let msg = await res.text();
+            alert(msg);
+            if (msg.includes("thành công")) document.getElementById('rank-screen').style.display = 'none';
+        } catch (e) { alert("Lỗi kết nối!"); }
     }
 };
 
@@ -101,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz();
         startTimer();
     });
-
     document.getElementById('show-rank-btn').addEventListener('click', loadRanking);
     document.getElementById('submit-btn').onclick = () => {
         clearInterval(timerInterval);
