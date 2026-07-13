@@ -112,9 +112,7 @@ function submitQuiz() {
     document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
     
     renderReview(choices);
-    // ... phần fetch giữ nguyên
-}
-    // ...
+
 }
 function renderReview(choices) {
     const cont = document.getElementById('review-section');
