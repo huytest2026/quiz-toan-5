@@ -73,20 +73,19 @@ window.loadRanking = async function() {
         const response = await fetch(API_URL + "?action=getRanking");
         const data = await response.json();
         const list = document.getElementById('rank-list');
-        
-        const sortedData = data.sort((a, b) => b.diem - a.diem).slice(0, 5);
-        list.innerHTML = sortedData.map((r, index) => {
-            let medal = "";
-            if (index === 0) medal = "🥇 ";
-            else if (index === 1) medal = "🥈 ";
-            else if (index === 2) medal = "🥉 ";
-            return `<div style="margin-bottom: 8px;">${medal} <b>${r.ten}</b>: ${r.diem} điểm</div>`;
-        }).join('');
-            
+        list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
+            .map((r, i) => `<div style="margin-bottom: 8px;">${i==0?'🥇':i==1?'🥈':i==2?'🥉':''} <b>${r.ten}</b>: ${r.diem} điểm</div>`).join('');
         document.getElementById('rank-screen').style.display = 'block';
-    } catch (e) { 
-        console.error("Lỗi tải xếp hạng:", e);
-        alert("Không thể tải bảng xếp hạng!"); 
+    } catch (e) { alert("Không thể tải!"); }
+};
+
+window.resetRanking = async function() {
+    if (confirm("Xóa toàn bộ bảng xếp hạng?")) {
+        try {
+            await fetch(API_URL + "?action=reset");
+            alert("Đã xóa!");
+            document.getElementById('rank-screen').style.display = 'none';
+        } catch (e) { alert("Lỗi!"); }
     }
 };
 
@@ -104,16 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('show-rank-btn').addEventListener('click', loadRanking);
-
     document.getElementById('submit-btn').onclick = () => {
         clearInterval(timerInterval);
         const name = document.getElementById("student-name").value;
         fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: correctCount, soCau: 10, mon: document.getElementById('subject-select').value }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Tên: ${name}</p><p>Điểm: <b>${correctCount}/10</b></p>`;
-        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đáp án: <b>${q.correct}</b></p>`).join('');
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${correctCount}/10</b></p>`;
+        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đúng: <b>${q.correct}</b></p>`).join('');
     };
-
     document.getElementById('restart-btn').onclick = () => location.reload();
 });
