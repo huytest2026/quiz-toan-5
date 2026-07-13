@@ -96,4 +96,26 @@ document.addEventListener('DOMContentLoaded', () => {
         generateQuiz();
         renderQuiz();
     });
+    // ... (code cũ)
+
+document.getElementById('submit-btn').addEventListener('click', () => {
+    // 1. Dừng thời gian
+    clearInterval(timerInterval);
+
+    // 2. Tính điểm
+    const totalScore = correctCount; // Bạn đã có biến này từ hàm updateLiveStatus
+    const studentName = document.getElementById("student-name").value;
+    const subject = document.getElementById('subject-select').value;
+
+    // 3. Hiển thị thông báo
+    alert(`Bạn đã hoàn thành bài thi!\nTên: ${studentName}\nĐiểm: ${totalScore}/10`);
+
+    // 4. Lưu lịch sử (nếu cần)
+    saveResult(studentName, subject, totalScore);
+
+    // 5. Quay lại màn hình ban đầu hoặc làm mới trang
+    location.reload(); 
+});
+
+// ... (code cũ)
 });
