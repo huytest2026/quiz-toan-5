@@ -10,9 +10,8 @@ let wrongCount = 0;
 async function loadData() {
     try {
         const response = await fetch(API_URL);
-        const text = await response.text(); 
-        const cleanJson = text.replace(/handleData\((.*)\)/, '$1');
-        allQuizData = JSON.parse(cleanJson);
+        // Không cần replace handleData nữa, lấy thẳng JSON
+        allQuizData = await response.json(); 
         updateTopicList();
     } catch (error) { console.error("Lỗi tải dữ liệu:", error); }
 }
