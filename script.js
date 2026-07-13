@@ -17,7 +17,10 @@ window.updateTopicList = function() {
         return;
     }
 
-    const topics = [...new Set(allQuizData.filter(i => i.mon === mon).map(i => i['chủ đề']))];
+    // Lấy danh sách chủ đề, nếu cột 'chủ đề' bị trống thì gán là 'Chủ đề khác'
+    const topics = [...new Set(allQuizData
+        .filter(i => i.mon === mon)
+        .map(i => i['chủ đề'] && i['chủ đề'].trim() !== "" ? i['chủ đề'] : "Chủ đề khác"))];
     
     topics.forEach(topic => {
         container.innerHTML += `
