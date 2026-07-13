@@ -8,6 +8,29 @@ let wrongCount = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- CÁC HÀM XỬ LÝ CHỦ ĐỀ MỚI ---
+    window.updateTopicList = function() {
+        const mon = document.getElementById('subject-select').value;
+        const container = document.getElementById('topic-container');
+        container.innerHTML = ''; 
+
+        if (!mon) {
+            container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
+            return;
+        }
+
+        // Lấy danh sách các chủ đề duy nhất dựa trên môn đã chọn
+        const topics = [...new Set(allQuizData.filter(i => i.mon === mon).map(i => i['chủ đề']))];
+        
+        topics.forEach(topic => {
+            container.innerHTML += `
+                <label style="display: block; margin: 5px 0; cursor: pointer;">
+                    <input type="checkbox" name="topic" value="${topic}" checked> ${topic}
+                </label>
+            `;
+        });
+    };
+
     // --- CÁC HÀM XỬ LÝ ---
     function saveResult(name, subject, score) {
         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
@@ -15,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('quizHistory', JSON.stringify(history));
     }
 
-    // --- GÁN SỰ KIỆN NÚT BẤM (ĐÃ CẬP NHẬT: HUY CHƯƠNG + XÓA LỊCH SỬ) ---
     document.getElementById('show-rank-btn').addEventListener('click', () => {
         let history = JSON.parse(localStorage.getItem('quizHistory')) || [];
         history.sort((a, b) => b.score - a.score);
@@ -37,38 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         top5.forEach((item, index) => {
-            let medal = "";
-            if (index === 0) medal = "🥇";
-            else if (index === 1) medal = "🥈";
-            else if (index === 2) medal = "🥉";
-            else medal = index + 1;
-
-            html += `
-                <tr style="border-bottom: 1px solid #f9f9f9;">
-                    <td style="padding: 8px; font-size: 1.2em;">${medal}</td>
-                    <td style="padding: 8px;">${item.name}</td>
-                    <td style="padding: 8px; font-weight: bold; color: #28a745;">${item.score}/10</td>
-                </tr>
-            `;
+            let medal = (index === 0) ? "🥇" : (index === 1) ? "🥈" : (index === 2) ? "🥉" : index + 1;
+            html += `<tr>
+                        <td style="padding: 8px; font-size: 1.2em;">${medal}</td>
+                        <td style="padding: 8px;">${item.name}</td>
+                        <td style="padding: 8px; font-weight: bold; color: #28a745;">${item.score}/10</td>
+                    </tr>`;
         });
         
-        html += '</tbody></table>';
-        
-        document.getElementById('rank-list').innerHTML = html;
+        document.getElementById('rank-list').innerHTML = html + '</tbody></table>';
         document.getElementById('rank-screen').style.display = 'block';
 
-        // Gán sự kiện xóa dữ liệu
         document.getElementById('clear-history-btn').addEventListener('click', () => {
             if (confirm("Bạn có chắc muốn xóa sạch bảng xếp hạng?")) {
                 localStorage.removeItem('quizHistory');
                 document.getElementById('rank-screen').style.display = 'none';
-                alert("Đã xóa dữ liệu!");
             }
         });
     });
 
     document.getElementById('start-btn').addEventListener('click', () => {
         if (!document.getElementById("student-name").value.trim()) return alert("Nhập tên!");
+        if (document.querySelectorAll('input[name="topic"]:checked').length === 0) return alert("Vui lòng chọn ít nhất 1 chủ đề!");
+        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         generateQuiz();
@@ -79,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Nộp bài?")) submitQuiz(); });
     document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 
-    // --- CÁC HÀM CƠ BẢN ---
     function loadData() {
         const script = document.createElement('script');
         script.src = API_URL + "?callback=handleData";
@@ -100,9 +112,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // Cập nhật hàm generateQuiz để lọc theo nhiều chủ đề
     function generateQuiz() {
         const selectedSubject = document.getElementById('subject-select').value;
-        const filteredData = allQuizData.filter(item => item.mon === selectedSubject);
+        const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked'))
+                                    .map(cb => cb.value);
+
+        const filteredData = allQuizData.filter(item => 
+            item.mon === selectedSubject && selectedTopics.includes(item['chủ đề'])
+        );
+
         currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
         currentQuizData.forEach(item => item.answered = false);
     }
@@ -132,9 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         item.answered = true;
         let correctAnswer = String(item.correct).trim().toUpperCase();
-        let isCorrect = (["A","B","C","D"].includes(correctAnswer)) ? 
-                        (selectedValue === correctAnswer) : 
-                        (item[selectedValue.toLowerCase()].toUpperCase() === correctAnswer);
+        let isCorrect = (selectedValue === correctAnswer);
         
         const quizCards = document.querySelectorAll('.quiz-card');
         const labels = quizCards[index].querySelectorAll('label');
@@ -149,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             labels.forEach(l => {
                 const val = l.querySelector('input').value;
                 if (val === selectedValue) { l.style.backgroundColor = "#f8d7da"; l.style.border = "1px solid #dc3545"; }
-                if (val === correctAnswer || l.innerText.includes(correctAnswer + ":")) { l.style.backgroundColor = "#d4edda"; l.style.border = "1px solid #28a745"; l.style.fontWeight = "bold"; }
+                if (val === correctAnswer) { l.style.backgroundColor = "#d4edda"; l.style.border = "1px solid #28a745"; }
             });
         }
         quizCards[index].querySelectorAll('input').forEach(input => input.disabled = true);
