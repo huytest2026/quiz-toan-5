@@ -45,12 +45,14 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
     currentQuizData.forEach((item, i) => {
+        // Tạo giao diện với nội dung từ vựng
         quizDiv.innerHTML += `
             <div class="quiz-card" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
                 <div class="question" style="font-weight: bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
-                ${['a','b','c','d'].map(opt => `
+                ${['a','b','c','d'].map(key => `
                     <label class="option-box" style="display: block; padding: 8px; margin: 5px 0; border: 1px solid #eee; cursor: pointer;">
-                        <input type="radio" name="q${i}" value="${opt}" onchange="updateLiveStatus(${i}, '${opt}')"> ${opt.toUpperCase()}: ${item[opt]}
+                        <input type="radio" name="q${i}" value="${key}" onchange="updateLiveStatus(${i}, '${key}')"> 
+                        ${item[key]}
                     </label>
                 `).join('')}
             </div>`;
