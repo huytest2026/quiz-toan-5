@@ -19,7 +19,7 @@ function handleData(data) {
 
 // Bắt đầu làm bài và đếm ngược
 function startTimer() {
-    let time = 15 * 60; // 15 phút
+    let time = 15 * 60;
     const timerDisplay = document.getElementById('timer-display');
     const warningSound = document.getElementById('warning-sound');
 
@@ -42,11 +42,10 @@ function startTimer() {
     }, 1000);
 }
 
-// Lọc câu hỏi theo môn học
+// Lọc câu hỏi
 function generateQuiz() {
     const selectedSubject = document.getElementById('subject-select').value;
     const filteredData = allQuizData.filter(item => item.mon === selectedSubject);
-    
     if (filteredData.length === 0) {
         alert("Hiện tại chưa có câu hỏi cho môn này!");
         location.reload();
@@ -58,7 +57,6 @@ function generateQuiz() {
 function renderQuiz() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
-    
     currentQuizData.forEach((item, i) => {
         quizDiv.innerHTML += `
         <div class="quiz-card">
@@ -73,7 +71,6 @@ function renderQuiz() {
     });
 }
 
-// CẬP NHẬT: So sánh dựa trên nội dung đáp án
 function submitQuiz() {
     clearInterval(timerInterval);
     score = 0;
@@ -81,14 +78,10 @@ function submitQuiz() {
     
     currentQuizData.forEach((item, i) => {
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        let chosenValue = sel ? sel.value.trim().toUpperCase() : ""; // "A", "B", "C", hoặc "D"
-        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim() : ""; // Nội dung (ví dụ: "7.33333")
+        let chosenValue = sel ? sel.value.trim().toUpperCase() : "";
+        let chosenText = sel ? sel.parentElement.innerText.split(': ')[1].trim() : "";
+        let correctAnswer = String(item.correct).trim().toUpperCase();
         
-        let correctAnswer = String(item.correct).trim().toUpperCase(); // "A", "B", "C", "D" hoặc đáp án chữ
-        
-        // LOGIC CHẤM ĐIỂM MỚI:
-        // 1. Nếu đáp án đúng là "A", "B", "C", hoặc "D" -> So sánh với ký tự người dùng chọn
-        // 2. Nếu đáp án đúng là nội dung khác (ví dụ môn Anh) -> So sánh nội dung văn bản
         let isCorrect = false;
         if (["A", "B", "C", "D"].includes(correctAnswer)) {
             isCorrect = (chosenValue === correctAnswer);
@@ -97,43 +90,43 @@ function submitQuiz() {
         }
 
         if (isCorrect) score++;
-        
-        // Lưu lại để hiển thị trong review
-        choices.push({
-            userAnswer: chosenText || "Chưa chọn",
-            isCorrect: isCorrect
-        });
+        choices.push({ userAnswer: chosenText || "Chưa chọn", isCorrect: isCorrect });
     });
 
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
-    
-    const selectedSubject = document.getElementById('subject-select').value;
-    document.getElementById('result').innerHTML = `<h3>Kết quả môn ${selectedSubject}: ${score}/10 câu đúng.</h3>`;
+    document.getElementById('result').innerHTML = `<h3>Kết quả môn ${document.getElementById('subject-select').value}: ${score}/10 câu đúng.</h3>`;
     
     renderReview(choices);
 
+    // Gửi kết quả lên Google Sheets
+    fetch(API_URL, {
+        method: "POST", mode: 'no-cors',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            ten: document.getElementById("student-name").value, 
+            mon: document.getElementById('subject-select').value,
+            diem: score 
+        })
+    });
 }
+
 function renderReview(choices) {
     const cont = document.getElementById('review-section');
     if (!cont) return;
     let html = '<h4>Chi tiết bài làm:</h4>';
-    
     currentQuizData.forEach((item, i) => {
         let isCorrect = choices[i].isCorrect;
-        let userAnswer = choices[i].userAnswer;
-        let cor = String(item.correct).trim();
-        
         html += `<div style="border-bottom:1px solid #ccc; padding:10px 0;">
             <p><b>Câu ${i+1}:</b> ${item.question} 
             <span style="color:${isCorrect ? 'green' : 'red'}; font-weight:bold;">[${isCorrect ? 'ĐÚNG' : 'SAI'}]</span></p>
-            <div style="font-size: 0.9em;">Đáp án đúng (Sheet): <b>${cor}</b> | Bạn đã chọn: <b>${userAnswer}</b></div>
+            <div style="font-size: 0.9em;">Đáp án đúng: <b>${item.correct}</b> | Bạn đã chọn: <b>${choices[i].userAnswer}</b></div>
         </div>`;
     });
     cont.innerHTML = html;
 }
 
-// Gán sự kiện
+// Gán sự kiện cho nút bấm
 document.getElementById('start-btn').addEventListener('click', () => {
     if (!document.getElementById("student-name").value.trim()) return alert("Vui lòng nhập tên!");
     document.getElementById('start-screen').style.display = 'none';
