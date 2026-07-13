@@ -30,12 +30,9 @@ window.updateTopicList = function() {
 
     if (!mon) return;
 
-    // Lưu ý: Dùng chính xác tên cột là "Chủ đề" (có dấu)
-    // Và kiểm tra cột Môn (có thể là "Môn" hoặc "mon" tùy vào dữ liệu JSON trả về)
+    // Lọc theo thuộc tính 'mon' và lấy danh sách chủ đề 'chuDe'
     const filteredBySubject = allQuizData.filter(i => i.mon === mon);
-
-    // Lấy danh sách các chủ đề duy nhất
-    const topics = [...new Set(filteredBySubject.map(i => i['Chủ đề'] || "Chưa đặt tên"))];
+    const topics = [...new Set(filteredBySubject.map(i => i.chuDe))];
     
     topics.forEach(topic => {
         container.innerHTML += `
