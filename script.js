@@ -12,15 +12,13 @@ window.updateTopicList = function() {
     const container = document.getElementById('topic-container');
     container.innerHTML = ''; 
 
-    if (!mon) {
-        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
-        return;
-    }
+    if (!mon) return;
 
-    // Tự động tìm tên cột chủ đề (kiểm tra cả "chủ đề" và "Chủ đề")
+    // Lấy tất cả các khóa (keys) từ đối tượng câu hỏi đầu tiên để debug
+    // Hoặc thử truy xuất bằng mọi cách viết có thể xảy ra
     const topics = [...new Set(allQuizData
         .filter(i => i.mon === mon)
-        .map(i => i['chủ đề'] || i['Chủ đề'] || "Chủ đề khác"))];
+        .map(i => i['Chủ đề'] || i['chủ đề'] || i['Chu de'] || i['chu de'] || "Chưa đặt tên"))];
     
     topics.forEach(topic => {
         container.innerHTML += `
