@@ -3,7 +3,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycbylxSJcSDg0PoJmwV-agQKF
 let allQuizData = [];
 let currentQuizData = [];
 let timerInterval;
-// Biến đếm trạng thái làm bài
 let correctCount = 0;
 let wrongCount = 0;
 
@@ -31,7 +30,6 @@ function generateQuiz() {
     const selectedSubject = document.getElementById('subject-select').value;
     const filteredData = allQuizData.filter(item => item.mon === selectedSubject);
     currentQuizData = [...filteredData].sort(() => Math.random() - 0.5).slice(0, 10);
-    // Gán cờ để theo dõi việc đã chọn đáp án hay chưa
     currentQuizData.forEach(item => item.answered = false);
 }
 
@@ -54,40 +52,62 @@ function renderQuiz() {
     });
 }
 
-// CẬP NHẬT TRẠNG THÁI TỨC THÌ
 function updateLiveStatus(index, selectedValue) {
     let item = currentQuizData[index];
-    if (item.answered) return; // Nếu đã chọn rồi thì không cộng dồn nữa
+    if (item.answered) return; 
 
     item.answered = true;
     let correctAnswer = String(item.correct).trim().toUpperCase();
     let isCorrect = (["A","B","C","D"].includes(correctAnswer)) ? (selectedValue === correctAnswer) : (item[selectedValue.toLowerCase()].toUpperCase() === correctAnswer);
     
+    // Tìm khung câu hỏi và các label đáp án
+    const quizCards = document.querySelectorAll('.quiz-card');
+    const labels = quizCards[index].querySelectorAll('label');
+
     if (isCorrect) {
         correctCount++;
         document.getElementById('count-correct').innerText = correctCount;
+        // Tô xanh đáp án đúng
+        labels.forEach(label => {
+            if (label.querySelector('input').value === selectedValue) {
+                label.style.backgroundColor = "#d4edda";
+                label.style.border = "1px solid #28a745";
+            }
+        });
     } else {
         wrongCount++;
         document.getElementById('count-wrong').innerText = wrongCount;
+        // Tô đỏ đáp án sai và xanh đáp án đúng
+        labels.forEach(label => {
+            const val = label.querySelector('input').value;
+            if (val === selectedValue) {
+                label.style.backgroundColor = "#f8d7da";
+                label.style.border = "1px solid #dc3545";
+            }
+            if (val === correctAnswer || label.innerText.includes(correctAnswer + ":")) {
+                label.style.backgroundColor = "#d4edda";
+                label.style.border = "1px solid #28a745";
+                label.style.fontWeight = "bold";
+            }
+        });
     }
+    // Vô hiệu hóa các input của câu này
+    quizCards[index].querySelectorAll('input').forEach(input => input.disabled = true);
 }
 
 function submitQuiz() {
     clearInterval(timerInterval);
-    // Logic gửi điểm giữ nguyên như cũ...
-    let finalScore = correctCount; 
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
-    document.getElementById('result').innerHTML = `<h3>Kết quả: ${finalScore}/10 câu đúng.</h3>`;
+    document.getElementById('result').innerHTML = `<h3>Kết quả: ${correctCount}/10 câu đúng.</h3>`;
     
-    // Gửi kết quả
     fetch(API_URL, {
         method: "POST", mode: 'no-cors',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
             ten: document.getElementById("student-name").value, 
             mon: document.getElementById('subject-select').value,
-            diem: finalScore 
+            diem: correctCount 
         })
     });
 }
@@ -102,13 +122,6 @@ document.getElementById('start-btn').addEventListener('click', () => {
 });
 
 document.getElementById('submit-btn').addEventListener('click', () => { if(confirm("Nộp bài?")) submitQuiz(); });
+document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+
 loadData();
-// Gán sự kiện cho nút Làm lại bài
-document.getElementById('restart-btn').addEventListener('click', () => {
-    // 1. Đặt lại các biến đếm về 0
-    correctCount = 0;
-    wrongCount = 0;
-    
-    // 2. Tải lại trang để bắt đầu từ màn hình đầu tiên
-    location.reload(); 
-});
