@@ -4,6 +4,7 @@ window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
 
+// Tải dữ liệu từ Google Sheet
 window.loadData = async function() {
     try {
         const response = await fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec");
@@ -13,7 +14,6 @@ window.loadData = async function() {
 };
 
 window.updateTopicList = function() {
-    if (!window.allQuizData || window.allQuizData.length === 0) return;
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
     container.innerHTML = '';
@@ -41,7 +41,7 @@ window.renderQuiz = function() {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
         return `<div class="quiz-card" style="margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;">
-            <div class="question" style="margin-bottom:10px;"><b>Câu ${i+1}: ${item.question}</b></div>
+            <div class="question"><b>Câu ${i+1}: ${item.question}</b></div>
             ${options.map(opt => `<label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
                 <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? opt.val : opt.key}" 
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
@@ -61,21 +61,22 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     } else {
         document.getElementById('count-wrong').innerText = parseInt(document.getElementById('count-wrong').innerText) + 1;
         element.style.backgroundColor = "#f8d7da";
-        window.wrongDetails.push({ chuDe: item.chuDe, question: item.question, a:item.a, b:item.b, c:item.c, d:item.d, correct: item.correct, dapAnSai: selectedValue });
+        window.wrongDetails.push({ ...item, dapAnSai: selectedValue });
     }
     element.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
+// Gán sự kiện khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
+    // Nút Bắt đầu
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
         if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
         
-        window.correctCount = 0;
-        window.wrongDetails = [];
+        window.correctCount = 0; window.wrongDetails = [];
         document.getElementById('count-correct').innerText = "0";
         document.getElementById('count-wrong').innerText = "0";
         
@@ -84,10 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
         window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 20);
-        renderQuiz();
-        startTimer();
+        renderQuiz(); startTimer();
     });
 
+    // Nút Nộp bài
     document.getElementById('submit-btn').addEventListener('click', () => {
         clearInterval(window.timerInterval);
         const name = document.getElementById("student-name").value;
@@ -98,5 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
         document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p>`;
+    });
+
+    // Nút Làm lại
+    document.getElementById('restart-btn').addEventListener('click', () => {
+        location.reload();
     });
 });
