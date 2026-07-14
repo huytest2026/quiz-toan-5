@@ -21,7 +21,7 @@ window.updateTopicList = function() {
 };
 
 function startTimer() {
-    let timeLeft = 10 * 60; // Đã đổi thành 10 phút
+    let timeLeft = 10 * 60; // 10 phút
     timerInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
@@ -32,17 +32,29 @@ function startTimer() {
 
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
-    quizDiv.innerHTML = currentQuizData.map((item, i) => `
+    quizDiv.innerHTML = currentQuizData.map((item, i) => {
+        // Tạo mảng đáp án để trộn
+        let options = [
+            { key: 'a', value: item.a }, { key: 'b', value: item.b },
+            { key: 'c', value: item.c }, { key: 'd', value: item.d }
+        ];
+        // Thuật toán trộn Fisher-Yates
+        for (let j = options.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [options[j], options[k]] = [options[k], options[j]];
+        }
+        return `
         <div class="quiz-card">
             <div class="question">Câu ${i+1}: ${item.question}</div>
-            ${['a','b','c','d'].map(key => `
+            ${options.map(opt => `
                 <label class="option-box">
-                    <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? item[key] : key}" 
+                    <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? opt.value : opt.key}" 
                     onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> 
-                    ${item[key]}
+                    ${opt.value}
                 </label>
             `).join('')}
-        </div>`).join('');
+        </div>`;
+    }).join('');
 };
 
 window.updateLiveStatus = function(index, selectedValue, element) {
@@ -75,7 +87,7 @@ window.loadRanking = async function() {
         list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
             .map((r, i) => `<div style="margin-bottom: 8px;">${i==0?'🥇':i==1?'🥈':i==2?'🥉':''} <b>${r.ten}</b>: ${r.diem} điểm</div>`).join('');
         document.getElementById('rank-screen').style.display = 'block';
-    } catch (e) { alert("Không thể tải!"); }
+    } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
 };
 
 window.resetRanking = async function() {
@@ -95,14 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
-        if (!mon) return alert("Vui lòng chọn môn học!");
-        if (!name) return alert("Vui lòng nhập họ và tên!");
+        if (!mon) return alert("Vui lòng chọn môn học trước khi bắt đầu!");
+        if (!name) return alert("Vui lòng nhập họ và tên của em!");
 
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         
         const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-        // Đã đổi slice thành 20 câu
         currentQuizData = allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 20);
         renderQuiz();
         startTimer();
@@ -112,12 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submit-btn').onclick = () => {
         clearInterval(timerInterval);
         const name = document.getElementById("student-name").value;
-        // Đã cập nhật soCau là 20
         fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: correctCount, soCau: 20, mon: document.getElementById('subject-select').value }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${correctCount}/20</b></p>`;
-        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đúng: <b>${q.correct}</b></p>`).join('');
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Tên: ${name}</p><p>Điểm: <b>${correctCount}/20</b></p>`;
+        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đáp án: <b>${q.correct}</b></p>`).join('');
     };
     document.getElementById('restart-btn').onclick = () => location.reload();
 });
