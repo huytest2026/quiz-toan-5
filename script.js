@@ -16,6 +16,7 @@ window.loadData = async function() {
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
+    if (!container) return; 
     container.innerHTML = '';
     if (!mon) return;
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
@@ -24,25 +25,29 @@ window.updateTopicList = function() {
     });
 };
 
-// --- MỚI: Hàm Chọn/Bỏ chọn tất cả ---
 window.toggleTopics = function(selectAll) {
     document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
 };
-// ------------------------------------
 
 window.startTimer = function() {
     let timeLeft = 10 * 60;
+    const timerDisplay = document.getElementById('timer-display');
     if (window.timerInterval) clearInterval(window.timerInterval);
     window.timerInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-        document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-        if (timeLeft <= 0) { clearInterval(window.timerInterval); document.getElementById('submit-btn').click(); }
+        if (timerDisplay) timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        if (timeLeft <= 0) { 
+            clearInterval(window.timerInterval); 
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.click(); 
+        }
     }, 1000);
 };
 
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
+    if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
@@ -60,22 +65,32 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     if (item.answered) return;
     item.answered = true;
     const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
+    const correctEl = document.getElementById('count-correct');
+    const wrongEl = document.getElementById('count-wrong');
+    
     if (isCorrect) {
         window.correctCount++;
-        document.getElementById('count-correct').innerText = window.correctCount;
+        if (correctEl) correctEl.innerText = window.correctCount;
         element.style.backgroundColor = "#d4edda";
     } else {
-        document.getElementById('count-wrong').innerText = parseInt(document.getElementById('count-wrong').innerText) + 1;
+        if (wrongEl) wrongEl.innerText = parseInt(wrongEl.innerText || 0) + 1;
         element.style.backgroundColor = "#f8d7da";
         window.wrongDetails.push({ ...item, dapAnSai: selectedValue });
     }
     element.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
+// --- ĐOẠN NÀY ĐÃ ĐƯỢC CHỈNH SỬA AN TOÀN ---
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
-    document.getElementById('start-btn').addEventListener('click', () => {
+    // Hàm tiện ích để gắn sự kiện an toàn
+    const addSafeListener = (id, event, callback) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(event, callback);
+    };
+
+    addSafeListener('start-btn', 'click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
         if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
@@ -92,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz(); startTimer();
     });
 
-    document.getElementById('submit-btn').addEventListener('click', () => {
+    addSafeListener('submit-btn', 'click', () => {
         clearInterval(window.timerInterval);
         const name = document.getElementById("student-name").value;
         fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec", { 
@@ -104,5 +119,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p>`;
     });
 
-    document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+    addSafeListener('restart-btn', 'click', () => location.reload());
 });
