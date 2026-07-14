@@ -20,9 +20,15 @@ window.updateTopicList = function() {
     if (!mon) return;
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
     topics.forEach(topic => {
-        container.innerHTML += `<label style="display:block;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
+        container.innerHTML += `<label style="display:block; margin:5px 0;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
     });
 };
+
+// --- MỚI: Hàm Chọn/Bỏ chọn tất cả ---
+window.toggleTopics = function(selectAll) {
+    document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
+};
+// ------------------------------------
 
 window.startTimer = function() {
     let timeLeft = 10 * 60;
@@ -66,11 +72,9 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     element.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
-// Gán sự kiện khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
-    // Nút Bắt đầu
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
@@ -88,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz(); startTimer();
     });
 
-    // Nút Nộp bài
     document.getElementById('submit-btn').addEventListener('click', () => {
         clearInterval(window.timerInterval);
         const name = document.getElementById("student-name").value;
@@ -101,8 +104,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p>`;
     });
 
-    // Nút Làm lại
-    document.getElementById('restart-btn').addEventListener('click', () => {
-        location.reload();
-    });
+    document.getElementById('restart-btn').addEventListener('click', () => location.reload());
 });
