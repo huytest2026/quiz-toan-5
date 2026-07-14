@@ -19,51 +19,30 @@
         </select>
 
         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn chủ đề (có thể chọn nhiều):</label>
-        <!-- Nút bấm nổi bật với màu sắc tương phản -->
         <div style="margin-bottom: 10px; display: flex; gap: 10px;">
-            <button type="button" onclick="toggleTopics(true)" 
-                style="flex:1; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold;">
-                Chọn tất cả
-            </button>
-            <button type="button" onclick="toggleTopics(false)" 
-                style="flex:1; padding: 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold;">
-                Bỏ chọn tất cả
-            </button>
+            <button type="button" onclick="toggleTopics(true)" style="flex:1; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold;">Chọn tất cả</button>
+            <button type="button" onclick="toggleTopics(false)" style="flex:1; padding: 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold;">Bỏ chọn tất cả</button>
         </div>
         
         <div id="topic-container" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #fdfdfd; max-height: 150px; overflow-y: auto;">
             <p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>
         </div>
 
-        <p>⏰ Thời gian làm bài: <b>10 phút.</b></p>
-        <p>📝 Số lượng: <b>20 câu</b> ngẫu nhiên.</p>
         <input type="text" id="student-name" placeholder="Nhập Họ và Tên của em vào đây..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; box-sizing: border-box;">
-        
         <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
-        
-        <button id="show-rank-btn" style="width: 100%; padding: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 10px;">Xem Bảng Xếp Hạng</button>
     </div>
 
     <!-- Màn hình Làm bài -->
     <div class="container" id="quiz-screen" style="display:none;">
-        <div class="status-bar" style="display: flex; justify-content: space-around; margin-bottom: 20px; background: #eef6ff; padding: 15px; border-radius: 10px; border-bottom: 4px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div class="status-bar" style="display: flex; justify-content: space-around; margin-bottom: 20px; background: #eef6ff; padding: 15px; border-radius: 10px; border-bottom: 4px solid #3498db;">
             <div style="text-align: center;">Thời gian còn lại<br><b id="timer-display" style="font-size: 1.2em; color: #d9534f;">10:00</b></div>
             <div style="text-align: center;">Đã đúng<br><b id="count-correct" style="font-size: 1.2em; color: #28a745;">0</b></div>
             <div style="text-align: center;">Đã sai<br><b id="count-wrong" style="font-size: 1.2em; color: #dc3545;">0</b></div>
         </div>
-        
         <div id="quiz"></div>
-        
         <button id="submit-btn" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 20px;">Nộp bài</button>
     </div>
 
-    <!-- Màn hình Kết quả -->
-    <div class="container" id="result-screen" style="display:none;">
-        <div id="result"></div>
-        <div id="review-section" style="margin: 20px 0; text-align: left; max-height: 400px; overflow-y: auto; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9;"></div>
-        <button id="restart-btn" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Làm lại bài</button>
-    </div>
-
-    <script src="script.js?v=2029_FINAL"></script>
+    <script src="script.js?v=2026_FINAL"></script>
 </body>
 </html>
