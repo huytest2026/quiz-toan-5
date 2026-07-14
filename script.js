@@ -1,10 +1,9 @@
 window.allQuizData = [];
 window.currentQuizData = [];
 window.correctCount = 0;
-window.wrongCount = 0; // Thêm biến đếm sai
+window.wrongCount = 0;
 window.timerInterval = null;
 
-// Hàm an toàn để cập nhật text
 function safeUpdateText(id, value) {
     const el = document.getElementById(id);
     if (el) el.innerText = value;
@@ -15,7 +14,7 @@ window.loadData = async function() {
         const response = await fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec");
         window.allQuizData = await response.json();
         updateTopicList();
-    } catch (e) { console.error("Lỗi tải dữ liệu:", e); }
+    } catch (e) { console.error("Lỗi tải:", e); }
 };
 
 window.updateTopicList = function() {
@@ -34,47 +33,59 @@ window.toggleTopics = function(selectAll) {
     document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
 };
 
-window.updateLiveStatus = function(index, selectedValue, element) {
+window.renderQuiz = function() {
+    const quizDiv = document.getElementById('quiz');
+    if (!quizDiv) return;
+    quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
+        let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
+        options.sort(() => Math.random() - 0.5);
+        return `<div class="quiz-card" style="margin-bottom:20px; padding:15px; border:1px solid #ddd; border-radius:8px;">
+            <div class="question" style="margin-bottom:12px;"><b>Câu ${i+1}:</b> ${item.question}</div>
+            ${options.map(opt => `<label class="option-box" style="display:block; margin:8px 0; padding:10px; border:1px solid #eee; cursor:pointer;">
+                <input type="radio" name="q${i}" value="${opt.key}" onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
+        </div>`;
+    }).join('');
+};
+
+window.startTimer = function() {
+    let timeLeft = 10 * 60;
+    window.timerInterval = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+        safeUpdateText('timer-display', `${m}:${s < 10 ? '0' : ''}${s}`);
+        if (timeLeft <= 0) { clearInterval(window.timerInterval); alert("Hết giờ!"); }
+    }, 1000);
+};
+
+window.updateLiveStatus = function(index, val, el) {
     let item = window.currentQuizData[index];
     if (item.answered) return;
     item.answered = true;
-    
-    const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
-    if (isCorrect) {
+    if (val.toLowerCase() === item.correct.toLowerCase()) {
         window.correctCount++;
         safeUpdateText('count-correct', window.correctCount);
-        element.style.backgroundColor = "#d4edda";
+        el.style.backgroundColor = "#d4edda";
     } else {
         window.wrongCount++;
         safeUpdateText('count-wrong', window.wrongCount);
-        element.style.backgroundColor = "#f8d7da";
+        el.style.backgroundColor = "#f8d7da";
     }
-    // Vô hiệu hóa các lựa chọn khác
-    element.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
+    el.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
-
-    // Gán sự kiện an toàn
-    const startBtn = document.getElementById('start-btn');
-    if (startBtn) {
-        startBtn.addEventListener('click', () => {
-            const mon = document.getElementById('subject-select').value;
-            const name = document.getElementById("student-name")?.value.trim();
-            if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
-            
-            // Logic bắt đầu bài thi...
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'block';
-            // ... (thêm code renderQuiz và startTimer ở đây)
-        });
-    }
-
-    const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', () => {
-            // Logic nộp bài...
-        });
-    }
+    document.getElementById('start-btn')?.addEventListener('click', () => {
+        const mon = document.getElementById('subject-select').value;
+        const name = document.getElementById("student-name")?.value.trim();
+        if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
+        
+        const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 20);
+        
+        if (window.currentQuizData.length === 0) return alert("Không tìm thấy câu hỏi!");
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        renderQuiz(); startTimer();
+    });
 });
