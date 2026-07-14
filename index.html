@@ -18,8 +18,13 @@
             <option value="Tiếng anh">Tiếng Anh</option>
         </select>
 
-        <!-- Khu vực hiển thị Checkbox chủ đề -->
+        <!-- KHU VỰC CẬP NHẬT: Thêm 2 nút Chọn/Bỏ chọn -->
         <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn chủ đề (có thể chọn nhiều):</label>
+        <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+            <button type="button" onclick="toggleTopics(true)" style="flex:1; padding: 8px; cursor: pointer; background: #e9ecef; border: 1px solid #ccc; border-radius: 4px;">Chọn tất cả</button>
+            <button type="button" onclick="toggleTopics(false)" style="flex:1; padding: 8px; cursor: pointer; background: #e9ecef; border: 1px solid #ccc; border-radius: 4px;">Bỏ chọn tất cả</button>
+        </div>
+        
         <div id="topic-container" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #fdfdfd; max-height: 150px; overflow-y: auto;">
             <p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>
         </div>
@@ -30,18 +35,15 @@
         
         <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
         
-        <!-- Nút Xem Bảng xếp hạng -->
         <button id="show-rank-btn" style="width: 100%; padding: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 10px;">Xem Bảng Xếp Hạng</button>
     </div>
 
+    <!-- Các phần còn lại giữ nguyên như cũ -->
     <!-- Popup Bảng xếp hạng -->
     <div id="rank-screen" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:9999; width: 90%; max-width: 400px; text-align:center;">
         <h3>🏆 Top 5 Điểm Cao</h3>
         <div id="rank-list" style="margin: 20px 0; font-size: 1.1em; text-align: left;"></div>
-        
         <button onclick="document.getElementById('rank-screen').style.display='none'" style="width:100%; padding: 10px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">Đóng</button>
-        
-        <!-- Nút Reset Bảng xếp hạng -->
         <button onclick="resetRanking()" style="width:100%; padding: 10px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer; margin-top: 10px;">Reset Bảng Xếp Hạng</button>
     </div>
 
@@ -52,9 +54,7 @@
             <div style="text-align: center;">Đã đúng<br><b id="count-correct" style="font-size: 1.2em; color: #28a745;">0</b></div>
             <div style="text-align: center;">Đã sai<br><b id="count-wrong" style="font-size: 1.2em; color: #dc3545;">0</b></div>
         </div>
-        
         <div id="quiz"></div>
-        
         <button id="submit-btn" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; margin-top: 20px;">Nộp bài</button>
     </div>
 
