@@ -21,7 +21,7 @@ window.updateTopicList = function() {
 };
 
 function startTimer() {
-    let timeLeft = 15 * 60;
+    let timeLeft = 10 * 60; // Đã đổi thành 10 phút
     timerInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
@@ -75,7 +75,7 @@ window.loadRanking = async function() {
         list.innerHTML = data.sort((a, b) => b.diem - a.diem).slice(0, 5)
             .map((r, i) => `<div style="margin-bottom: 8px;">${i==0?'🥇':i==1?'🥈':i==2?'🥉':''} <b>${r.ten}</b>: ${r.diem} điểm</div>`).join('');
         document.getElementById('rank-screen').style.display = 'block';
-    } catch (e) { alert("Không thể tải bảng xếp hạng!"); }
+    } catch (e) { alert("Không thể tải!"); }
 };
 
 window.resetRanking = async function() {
@@ -92,34 +92,32 @@ window.resetRanking = async function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
-    
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
-        
-        if (!mon) return alert("Vui lòng chọn môn học trước khi bắt đầu!");
-        if (!name) return alert("Vui lòng nhập Họ và Tên của em!");
+        if (!mon) return alert("Vui lòng chọn môn học!");
+        if (!name) return alert("Vui lòng nhập họ và tên!");
 
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         
         const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-        currentQuizData = allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
+        // Đã đổi slice thành 20 câu
+        currentQuizData = allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 20);
         renderQuiz();
         startTimer();
     });
 
     document.getElementById('show-rank-btn').addEventListener('click', loadRanking);
-    
     document.getElementById('submit-btn').onclick = () => {
         clearInterval(timerInterval);
         const name = document.getElementById("student-name").value;
-        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: correctCount, soCau: 10, mon: document.getElementById('subject-select').value }) });
+        // Đã cập nhật soCau là 20
+        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: correctCount, soCau: 20, mon: document.getElementById('subject-select').value }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Tên: ${name}</p><p>Điểm: <b>${correctCount}/10</b></p>`;
-        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đáp án: <b>${q.correct}</b></p>`).join('');
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${correctCount}/20</b></p>`;
+        document.getElementById('review-section').innerHTML = currentQuizData.map((q, i) => `<p>Câu ${i+1}: ${q.question} <br>Đúng: <b>${q.correct}</b></p>`).join('');
     };
-
     document.getElementById('restart-btn').onclick = () => location.reload();
 });
