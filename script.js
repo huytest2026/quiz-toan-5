@@ -9,8 +9,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lk
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     
-    // Sử dụng dấu phẩy (,) hoặc dấu chấm (.) để tạo khoảng nghỉ tự nhiên khi đọc
-    // Thay thế toàn bộ cụm dấu gạch dưới bằng một dấu phẩy
+    // Thay thế toàn bộ dấu gạch dưới (____) bằng dấu phẩy
+    // Dấu phẩy tạo ra khoảng nghỉ tự nhiên khi máy đọc
     const cleanText = text.replace(/_+/g, ','); 
     
     const msg = new SpeechSynthesisUtterance(cleanText);
