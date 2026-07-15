@@ -61,9 +61,21 @@ window.renderQuiz = function() {
 
 window.checkAnswer = function(i, selectedKey) {
     const card = document.getElementById(`q-card-${i}`);
+    
+    // 1. Lấy đáp án đúng từ dữ liệu gốc
+    const correctAnswer = window.currentQuizData[i].correct;
+    
+    // 2. Vô hiệu hóa tất cả input trong câu để không chọn lại
     card.querySelectorAll('input').forEach(input => input.disabled = true);
-    const isCorrect = selectedKey === window.currentQuizData[i].correct;
+    
+    // 3. So sánh chính xác (lưu ý: đảm bảo dữ liệu trong Google Sheets ở cột 'correct' 
+    // phải khớp với giá trị 'a', 'b', 'c', 'd' tương ứng)
+    const isCorrect = (selectedKey === String(correctAnswer).trim());
+    
+    // 4. Tô màu
     card.style.borderColor = isCorrect ? 'green' : 'red';
+    
+    // 5. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
