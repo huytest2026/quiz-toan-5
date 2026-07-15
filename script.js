@@ -3,64 +3,86 @@ window.userPermissions = [];
 window.currentQuizData = [];
 let timerInterval;
 
-// 1. Hàm render câu hỏi (Đã thêm xáo trộn đáp án)
+// --- 1. Hàm tải dữ liệu (Phải có để không bị đơ) ---
+window.loadData = function() {
+    const maHS = document.getElementById('student-code').value.trim();
+    if (!maHS) return alert("Nhập mã học sinh!");
+    
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    const script = document.createElement('script');
+    script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
+    document.body.appendChild(script);
+    script.onload = () => script.remove();
+};
+
+window.handleQuizData = function(data) {
+    if (data.error) return alert(data.error);
+    window.allQuizData = data.questions || [];
+    window.userPermissions = data.permissions || [];
+    alert("Tải dữ liệu thành công!");
+    window.updateTopicList();
+};
+
+// --- 2. Xử lý UI và Đề bài ---
+window.updateTopicList = function() {
+    const mon = document.getElementById('subject-select').value;
+    const maHS = document.getElementById('student-code').value.trim();
+    const container = document.getElementById('topic-container');
+    if (!container || !mon) return;
+
+    const allowed = window.userPermissions.filter(p => String(p.maHS) === maHS && p.mon === mon).map(p => p.chuDe);
+    const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
+    
+    container.innerHTML = topics.map(topic => {
+        const isAllowed = allowed.includes(topic);
+        return `<label style="display:block; margin:5px 0; opacity:${isAllowed ? '1' : '0.5'}">
+            <input type="checkbox" name="topic" value="${topic}" ${isAllowed ? 'checked' : 'disabled'}> ${topic}
+        </label>`;
+    }).join('');
+};
+
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
-
+    
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Xáo trộn đáp án
-        let options = ['a', 'b', 'c', 'd'].map(key => ({ key, val: item[key] }));
-        options.sort(() => Math.random() - 0.5);
-
+        let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
-                <label class="option-box" style="display:block; margin:5px 0; padding:5px; cursor:pointer;">
-                    <input type="radio" name="q${i}" value="${opt.key}" onclick="window.checkAnswer(${i}, '${opt.key}')"> ${opt.val}
+                <label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
+                    <input type="radio" name="q${i}" value="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}')"> ${opt.v}
                 </label>
             `).join('')}
         </div>`;
     }).join('');
 };
 
-// 2. Hàm kiểm tra đáp án ngay lập tức
 window.checkAnswer = function(i, selectedKey) {
     const card = document.getElementById(`q-card-${i}`);
-    const inputs = card.querySelectorAll('input');
-    
-    // Vô hiệu hóa tất cả input trong câu này để không đổi được nữa
-    inputs.forEach(input => input.disabled = true);
-
+    card.querySelectorAll('input').forEach(input => input.disabled = true);
     const isCorrect = selectedKey === window.currentQuizData[i].correct;
     card.style.borderColor = isCorrect ? 'green' : 'red';
     
-    // Cập nhật điểm
-    let correct = parseInt(document.getElementById('count-correct').innerText);
-    let wrong = parseInt(document.getElementById('count-wrong').innerText);
-    if(isCorrect) document.getElementById('count-correct').innerText = correct + 1;
-    else document.getElementById('count-wrong').innerText = wrong + 1;
+    let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    el.innerText = parseInt(el.innerText) + 1;
 };
 
-// 3. Hàm xử lý bắt đầu bài làm (Xáo trộn câu hỏi + Thiết lập thời gian)
+// --- 3. Logic Đếm giờ và Bắt đầu ---
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
-    const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-    if (selectedTopics.length === 0) return alert("Chọn ít nhất 1 chủ đề!");
+    const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+    if (selected.length === 0) return alert("Chọn chủ đề!");
 
-    // Lọc và xáo trộn câu hỏi
-    let filtered = window.allQuizData.filter(i => i.mon === mon && selectedTopics.includes(i.chuDe));
-    window.currentQuizData = filtered.sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
+                             .sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
 
-    // Thiết lập thời gian
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         time--;
-        let min = Math.floor(time / 60);
-        let sec = time % 60;
-        document.getElementById('timer-display').innerText = `${min}:${sec < 10 ? '0' + sec : sec}`;
+        document.getElementById('timer-display').innerText = Math.floor(time/60) + ":" + (time%60).toString().padStart(2,'0');
         if (time <= 0) { clearInterval(timerInterval); alert("Hết giờ!"); window.submitQuiz(); }
     }, 1000);
 
@@ -69,8 +91,12 @@ window.startQuiz = function() {
     window.renderQuiz();
 };
 
-// Gắn sự kiện vào nút Bắt Đầu
+window.submitQuiz = function() {
+    clearInterval(timerInterval);
+    alert("Nộp bài thành công!");
+    location.reload();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').onclick = window.startQuiz;
-    // ... các hàm loadData, updateTopicList, submitQuiz giữ nguyên như cũ ...
 });
