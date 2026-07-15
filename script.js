@@ -5,10 +5,12 @@ window.correctCount = 0;
 window.timerInterval = null;
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// CÁCH MỚI: Dùng hàm đơn giản, không gọi getVoices() để tránh đơ
+// CẬP NHẬT: Hàm đọc với logic bỏ qua dấu gạch dưới
 window.speakText = function(text) {
-    window.speechSynthesis.cancel(); // Hủy lệnh cũ trước khi đọc mới
-    const msg = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.cancel();
+    // Thay thế tất cả dấu gạch dưới bằng từ 'blank'
+    const cleanText = text.replace(/_+/g, ' blank '); 
+    const msg = new SpeechSynthesisUtterance(cleanText);
     msg.lang = 'en-US'; 
     msg.rate = 0.9;
     window.speechSynthesis.speak(msg);
@@ -106,7 +108,6 @@ window.renderQuiz = function() {
         `;
         quizDiv.appendChild(card);
         
-        // Gán sự kiện trực tiếp không qua trung gian
         if (card.querySelector('.speak-btn')) {
             card.querySelector('.speak-btn').onclick = function() {
                 window.speakText(item.question);
