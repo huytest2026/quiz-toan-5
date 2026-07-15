@@ -5,13 +5,13 @@
     <!-- Ô nhập MÃ HỌC SINH -->
     <div style="margin-bottom: 15px;">
         <input type="text" id="student-code" placeholder="Nhập MÃ HỌC SINH của em..." style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 2px solid #007bff; font-size: 1.1em; box-sizing: border-box; font-weight: bold;">
-        <!-- NÚT MỚI THÊM VÀO -->
-        <button type="button" id="load-data-btn" style="width: 100%; padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Xác nhận Mã & Tải đề</button>
+        <!-- ĐÃ THÊM ONCLICK VÀO ĐÂY -->
+        <button type="button" id="load-data-btn" onclick="window.loadData()" style="width: 100%; padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Xác nhận Mã & Tải đề</button>
     </div>
 
     <label for="subject-select" style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn môn học:</label>
-    <!-- Đã xóa onchange="updateTopicList()" để tránh lỗi chạy sớm -->
-    <select id="subject-select" onchange="updateTopicList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
+    <!-- ĐÃ THÊM ONCLICK VÀO ĐÂY -->
+    <select id="subject-select" onchange="window.updateTopicList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-size: 1.1em; cursor: pointer; background: white;">
         <option value="">-- Chọn môn --</option>
         <option value="Toán">Toán</option>
         <option value="Tiếng anh">Tiếng Anh</option>
@@ -19,8 +19,8 @@
 
     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn chủ đề (có thể chọn nhiều):</label>
     <div style="margin-bottom: 10px; display: flex; gap: 10px;">
-        <button type="button" onclick="toggleTopics(true)" style="flex:1; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold;">Chọn tất cả</button>
-        <button type="button" onclick="toggleTopics(false)" style="flex:1; padding: 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold;">Bỏ chọn tất cả</button>
+        <button type="button" onclick="window.toggleTopics(true)" style="flex:1; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold;">Chọn tất cả</button>
+        <button type="button" onclick="window.toggleTopics(false)" style="flex:1; padding: 10px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 5px; font-weight: bold;">Bỏ chọn tất cả</button>
     </div>
     
     <div id="topic-container" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #fdfdfd; max-height: 150px; overflow-y: auto;">
