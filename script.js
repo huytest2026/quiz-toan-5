@@ -20,10 +20,10 @@ window.handleQuizData = function(data) {
     window.allQuizData = data.questions || [];
     window.userPermissions = data.permissions || [];
     alert("Tải dữ liệu thành công!");
-    window.updateTopicList(); // Phục hồi hiển thị chủ đề
+    window.updateTopicList();
 };
 
-// --- 2. Hàm hiển thị chủ đề (Phục hồi) ---
+// --- 2. Hàm quản lý chủ đề ---
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const maHS = document.getElementById('student-code').value.trim();
@@ -41,14 +41,14 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị và logic làm bài ---
+// --- 3. Hàm hiển thị và Logic chấm điểm ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         return `
-        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
+        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
@@ -61,31 +61,38 @@ window.renderQuiz = function() {
 
 window.checkAnswer = function(i, selectedKey) {
     const card = document.getElementById(`q-card-${i}`);
+    const questionData = window.currentQuizData[i];
     
-    // 1. Lấy đáp án đúng từ dữ liệu gốc
-    const correctAnswer = window.currentQuizData[i].correct;
+    const selectedText = questionData[selectedKey].trim().toLowerCase();
+    const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    // 2. Vô hiệu hóa tất cả input trong câu để không chọn lại
+    // Logic tự nhận biết môn để chấm điểm
+    let isCorrect = false;
+    if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
+        isCorrect = (selectedKey.toLowerCase() === rawCorrect);
+    } else {
+        isCorrect = (selectedText === rawCorrect);
+    }
+    
     card.querySelectorAll('input').forEach(input => input.disabled = true);
     
-    // 3. So sánh chính xác (lưu ý: đảm bảo dữ liệu trong Google Sheets ở cột 'correct' 
-    // phải khớp với giá trị 'a', 'b', 'c', 'd' tương ứng)
-    const isCorrect = (selectedKey === String(correctAnswer).trim());
+    // Tô màu nền thẻ và viền
+    card.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
+    card.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
     
-    // 4. Tô màu
-    card.style.borderColor = isCorrect ? 'green' : 'red';
-    
-    // 5. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
 
-// --- 4. Sự kiện và Khởi tạo ---
+// --- 4. Sự kiện Bắt đầu thi ---
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Chọn chủ đề!");
-    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
+    
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
+                                             .sort(() => Math.random() - 0.5)
+                                             .slice(0, mon === 'Toán' ? 10 : 20);
     
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
@@ -102,11 +109,10 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    alert("Nộp bài xong! Hệ thống tự làm mới.");
+    alert("Nộp bài xong! Hệ thống sẽ tải lại.");
     location.reload();
 };
 
-// Gắn sự kiện (Dùng cách này để không bị mất chức năng)
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
