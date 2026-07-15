@@ -5,7 +5,7 @@ window.correctCount = 0;
 window.timerInterval = null;
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// Hàm đọc văn bản (có xử lý dấu gạch dưới thành dấu phẩy để ngắt nghỉ)
+// Hàm đọc văn bản
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     const cleanText = text.replace(/_+/g, ','); 
@@ -15,36 +15,48 @@ window.speakText = function(text) {
     window.speechSynthesis.speak(msg);
 };
 
-// Hàm tải dữ liệu dựa trên Mã học sinh
+// Hàm tải dữ liệu (Cập nhật phản hồi người dùng)
 window.loadData = async function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Vui lòng nhập mã học sinh!");
     
+    const loadBtn = document.getElementById('load-data-btn');
+    const originalText = loadBtn.innerText;
+    loadBtn.innerText = "Đang tải...";
+    loadBtn.disabled = true; // Chặn bấm nhiều lần
+    
     try {
         const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
         const data = await response.json();
+        
         if (data.error) {
             alert(data.error);
         } else {
             window.allQuizData = data;
-            updateTopicList();
             alert("Tải đề thành công!");
+            window.updateTopicList();
         }
     } catch (e) { 
         console.error("Lỗi tải dữ liệu:", e); 
         alert("Không thể kết nối tới server!");
+    } finally {
+        loadBtn.innerText = originalText;
+        loadBtn.disabled = false;
     }
 };
 
-// Cập nhật danh sách chủ đề (đã thêm check dữ liệu an toàn)
+// Cập nhật danh sách chủ đề
 window.updateTopicList = function() {
-    if (window.allQuizData.length === 0) return;
-    
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
     if (!container) return;
     
     container.innerHTML = '';
+    if (window.allQuizData.length === 0) {
+        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy nhập mã và bấm "Tải đề" trước...</p>';
+        return;
+    }
+    
     if (!mon) {
         container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
         return;
@@ -58,13 +70,6 @@ window.updateTopicList = function() {
 
 window.toggleTopics = function(selectAll) {
     document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
-};
-
-window.getRank = function(score) {
-    if (score >= 18) return "Xuất sắc";
-    if (score >= 15) return "Giỏi";
-    if (score >= 10) return "Khá";
-    return "Cần cố gắng";
 };
 
 window.showRanking = async function() {
@@ -155,7 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener(event, callback);
     };
 
-    // Đăng ký nút Tải đề
+    // Nút Tải đề đã được gắn onclick trực tiếp trong HTML, 
+    // nhưng vẫn giữ addSafeListener làm phương án dự phòng
     addSafeListener('load-data-btn', 'click', window.loadData);
 
     addSafeListener('start-btn', 'click', () => {
