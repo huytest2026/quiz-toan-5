@@ -36,6 +36,29 @@ window.getRank = function(score) {
     return "Cần cố gắng";
 };
 
+// Hàm xử lý bảng xếp hạng mới
+window.showRanking = async function() {
+    const rankBody = document.getElementById('rank-body');
+    const rankBoard = document.getElementById('rank-board');
+    
+    // Nếu bảng đang mở thì đóng lại, ngược lại thì tải dữ liệu
+    if (rankBoard.style.display === 'block') {
+        rankBoard.style.display = 'none';
+    } else {
+        rankBoard.style.display = 'block';
+        rankBody.innerHTML = "<tr><td colspan='3'>Đang tải...</td></tr>";
+        try {
+            const response = await fetch(API_URL + "?action=getRanking");
+            const ranking = await response.json();
+            rankBody.innerHTML = ranking.slice(0, 10).map(r => 
+                `<tr><td>${r.ten}</td><td>${r.diem}</td><td>${r.mon}</td></tr>`
+            ).join('');
+        } catch (e) {
+            rankBody.innerHTML = "<tr><td colspan='3'>Lỗi tải bảng xếp hạng</td></tr>";
+        }
+    }
+};
+
 window.startTimer = function() {
     let timeLeft = 10 * 60;
     const timerDisplay = document.getElementById('timer-display');
@@ -122,6 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quiz-screen').style.display = 'block';
         renderQuiz(); startTimer();
     });
+
+    // Sự kiện nút Bảng Xếp Hạng
+    addSafeListener('show-rank-btn', 'click', window.showRanking);
 
     addSafeListener('submit-btn', 'click', () => {
         clearInterval(window.timerInterval);
