@@ -1,10 +1,14 @@
+// --- Khởi tạo biến ---
 window.allQuizData = [];
 window.userPermissions = [];
 window.currentQuizData = [];
+window.wrongDetails = [];
 window.correctCount = 0;
+window.timerInterval = null;
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Đừng quên thay link web app mới vào đây
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Thay URL thật của bạn vào đây
 
+// --- 1. Tải dữ liệu từ Google Sheet ---
 window.loadData = async function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Vui lòng nhập mã học sinh!");
@@ -18,9 +22,10 @@ window.loadData = async function() {
         window.userPermissions = data.permissions || [];
         alert("Tải dữ liệu thành công!");
         window.updateTopicList();
-    } catch (e) { alert("Lỗi kết nối!"); } finally { loadBtn.innerText = "Xác nhận Mã & Tải đề"; }
+    } catch (e) { alert("Lỗi kết nối server!"); } finally { loadBtn.innerText = "Xác nhận Mã & Tải đề"; }
 };
 
+// --- 2. Cập nhật và phân quyền chủ đề ---
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const maHS = document.getElementById('student-code').value.trim();
@@ -40,34 +45,21 @@ window.updateTopicList = function() {
 
 window.toggleTopics = (val) => document.querySelectorAll('input[name="topic"]:not(:disabled)').forEach(cb => cb.checked = val);
 
-window.submitQuiz = function() {
-    document.getElementById('quiz-screen').style.display = 'none';
-    document.getElementById('result-screen').style.display = 'block';
-    document.getElementById('result').innerHTML = `<h3>Kết quả: ${window.correctCount}/${window.currentQuizData.length} câu đúng</h3>`;
+// --- 3. Render câu hỏi ---
+window.renderQuiz = function() {
+    const quizDiv = document.getElementById('quiz');
+    quizDiv.innerHTML = window.currentQuizData.map((item, i) => `
+        <div class="quiz-card"><b>Câu ${i+1}: ${item.question}</b><br>
+        ${['a','b','c','d'].map(key => `<label class="option-box"><input type="radio" name="q${i}" value="${key}" onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${item[key]}</label>`).join('')}
+        </div>`).join('');
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('start-btn').addEventListener('click', () => {
-        const mon = document.getElementById('subject-select').value;
-        const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-        if (selected.length === 0) return alert("Chọn ít nhất 1 chủ đề!");
-        
-        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('quiz-screen').style.display = 'block';
-        
-        const quizDiv = document.getElementById('quiz');
-        quizDiv.innerHTML = window.currentQuizData.map((item, i) => `
-            <div class="quiz-card"><b>Câu ${i+1}: ${item.question}</b><br>
-            ${['a','b','c','d'].map(key => `<label class="option-box"><input type="radio" name="q${i}" value="${key}" onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${item[key]}</label>`).join('')}
-            </div>`).join('');
-    });
-});
-
+// --- 4. Chấm điểm trực tiếp & Lưu câu sai ---
 window.updateLiveStatus = function(idx, val, el) {
     let item = window.currentQuizData[idx];
     if (item.answered) return;
     item.answered = true;
+    
     if (val.trim().toLowerCase() === String(item.correct).trim().toLowerCase()) {
         window.correctCount++;
         document.getElementById('count-correct').innerText = window.correctCount;
@@ -75,6 +67,53 @@ window.updateLiveStatus = function(idx, val, el) {
     } else {
         document.getElementById('count-wrong').innerText = parseInt(document.getElementById('count-wrong').innerText || 0) + 1;
         el.style.backgroundColor = "#f8d7da";
+        window.wrongDetails.push(item); // Lưu câu sai
     }
     el.parentElement.querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
+
+// --- 5. Nộp bài & Đánh giá ---
+window.submitQuiz = function() {
+    clearInterval(window.timerInterval);
+    const total = window.currentQuizData.length;
+    const percent = Math.round((window.correctCount / total) * 100);
+    let feedback = percent >= 80 ? "Xuất sắc!" : (percent >= 50 ? "Khá!" : "Cần cố gắng!");
+    
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    
+    let html = `<h3>Kết quả: ${window.correctCount}/${total} (${percent}%)</h3><p>${feedback}</p>`;
+    if (window.wrongDetails.length > 0) {
+        html += `<button onclick="window.retryWrongQuestions()" style="padding:10px; background:#ffc107; border:none; cursor:pointer;">Làm lại ${window.wrongDetails.length} câu sai</button>`;
+    }
+    document.getElementById('result').innerHTML = html;
+};
+
+// --- 6. Làm lại câu sai ---
+window.retryWrongQuestions = function() {
+    window.currentQuizData = [...window.wrongDetails];
+    window.wrongDetails = [];
+    window.correctCount = 0;
+    document.getElementById('count-correct').innerText = "0";
+    document.getElementById('count-wrong').innerText = "0";
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    window.renderQuiz();
+};
+
+// --- 7. Bắt đầu bài thi ---
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('start-btn').addEventListener('click', () => {
+        const mon = document.getElementById('subject-select').value;
+        const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+        if (selected.length === 0) return alert("Chọn ít nhất 1 chủ đề!");
+        
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
+        window.wrongDetails = [];
+        window.correctCount = 0;
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        window.renderQuiz();
+    });
+});
