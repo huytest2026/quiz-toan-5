@@ -1,3 +1,4 @@
+console.log("Script đã được nạp thành công!");
 window.allQuizData = [];
 window.currentQuizData = [];
 window.wrongDetails = [];
