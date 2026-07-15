@@ -1,77 +1,116 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bài Kiểm Tra Trực Tuyến</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        .quiz-card { margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
-        .option-box { display: block; margin: 5px 0; padding: 10px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; }
-        .option-box:hover { background-color: #f0f0f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f8f9fa; }
-    </style>
-</head>
-<body>
+// --- 1. Khởi tạo biến toàn cục ---
+window.allQuizData = [];
+window.userPermissions = [];
+window.currentQuizData = [];
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-<!-- Màn hình Chờ -->
-<div class="container" id="start-screen">
-    <h1>Bài Kiểm Tra Trực Tuyến</h1>
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="student-code" placeholder="Nhập MÃ HỌC SINH..." style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 2px solid #007bff; box-sizing: border-box; font-weight: bold;">
-        <button type="button" id="load-data-btn" onclick="window.loadData()" style="width: 100%; padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Xác nhận Mã & Tải đề</button>
-    </div>
+// --- 2. Các hàm xử lý dữ liệu và logic ---
 
-    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn môn học:</label>
-    <select id="subject-select" onchange="window.updateTopicList()" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer;">
-        <option value="">-- Chọn môn --</option>
-        <option value="Toán">Toán</option>
-        <option value="Tiếng anh">Tiếng Anh</option>
-    </select>
+window.updateTopicList = function() {
+    const mon = document.getElementById('subject-select').value;
+    const maHS = document.getElementById('student-code').value.trim();
+    const container = document.getElementById('topic-container');
+    if (!container || !mon) return;
 
-    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn chủ đề:</label>
-    <div style="margin-bottom: 10px; display: flex; gap: 10px;">
-        <button type="button" onclick="window.toggleTopics(true)" style="flex:1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Chọn tất cả</button>
-        <button type="button" onclick="window.toggleTopics(false)" style="flex:1; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Bỏ chọn</button>
-    </div>
-    <div id="topic-container" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 150px; overflow-y: auto;">
-        <p style="color: #888;">Hãy nhập mã và bấm "Tải đề" trước...</p>
-    </div>
+    const allowed = window.userPermissions.filter(p => String(p.maHS) === maHS && p.mon === mon).map(p => p.chuDe);
+    const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
+    
+    container.innerHTML = topics.map(topic => {
+        const isAllowed = allowed.includes(topic);
+        return `<label style="display:block; margin:5px 0; opacity:${isAllowed ? '1' : '0.5'}">
+            <input type="checkbox" name="topic" value="${topic}" ${isAllowed ? 'checked' : 'disabled'}> ${topic}
+        </label>`;
+    }).join('');
+};
 
-    <input type="text" id="student-name" placeholder="Nhập Họ và Tên..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-    <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
-</div>
+window.toggleTopics = function(status) {
+    const checkboxes = document.querySelectorAll('#topic-container input[type="checkbox"]');
+    checkboxes.forEach(cb => { if (!cb.disabled) cb.checked = status; });
+};
 
-<!-- Màn hình Làm bài -->
-<div class="container" id="quiz-screen" style="display:none;">
-    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
-        <div>Thời gian: <span id="timer-display">--:--</span></div>
-        <div>Đúng: <span id="count-correct" style="color: green;">0</span> | Sai: <span id="count-wrong" style="color: red;">0</span></div>
-    </div>
-    <div id="quiz"></div>
-    <button type="button" id="submit-btn" onclick="window.submitQuiz()" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 20px;">Nộp bài</button>
-</div>
+window.handleQuizData = function(data) {
+    if (data.error) return alert(data.error);
+    window.allQuizData = data.questions || [];
+    window.userPermissions = data.permissions || [];
+    alert("Tải dữ liệu thành công!");
+    window.updateTopicList();
+};
 
-<!-- Màn hình Kết quả -->
-<div class="container" id="result-screen" style="display:none; text-align: center;">
-    <div id="result"></div>
-    <button type="button" onclick="window.showRanking()" style="padding:10px; background:#17a2b8; color:white; border:none; margin-top:10px; border-radius:5px; cursor:pointer;">Xem Bảng Xếp Hạng</button>
-    <button type="button" style="margin-top: 10px; padding: 10px; border-radius:5px; border:1px solid #ccc;" onclick="location.reload()">Làm lại từ đầu</button>
-</div>
+window.loadData = function() {
+    const maHS = document.getElementById('student-code').value.trim();
+    if (!maHS) return alert("Nhập mã!");
+    const script = document.createElement('script');
+    script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
+    document.body.appendChild(script);
+    script.onload = () => script.remove();
+};
 
-<!-- Bảng xếp hạng -->
-<div class="container" id="rank-board" style="display:none;">
-    <h3>Bảng xếp hạng</h3>
-    <table>
-        <thead><tr><th>Tên</th><th>Điểm</th><th>Môn</th></tr></thead>
-        <tbody id="rank-body"></tbody>
-    </table>
-    <button onclick="location.reload()" style="margin-top: 15px; padding: 10px; width: 100%;">Quay về trang chủ</button>
-</div>
+// --- 3. Hàm hiển thị và nộp bài ---
 
-<script src="script.js" defer></script>
-</body>
-</html>
+window.renderQuiz = function() {
+    const quizDiv = document.getElementById('quiz');
+    if (!quizDiv) return;
+    quizDiv.innerHTML = window.currentQuizData.map((item, i) => `
+        <div class="quiz-card" style="margin-bottom:15px; padding:10px; border:1px solid #ccc;">
+            <b>Câu ${i+1}: ${item.question}</b><br>
+            ${['a','b','c','d'].map(key => `
+                <label style="display:block; cursor:pointer;">
+                    <input type="radio" name="q${i}" value="${key}"> ${item[key]}
+                </label>
+            `).join('')}
+        </div>`).join('');
+};
+
+window.submitQuiz = function() {
+    let score = 0;
+    let answered = 0;
+    window.currentQuizData.forEach((item, i) => {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (selected) {
+            answered++;
+            if (selected.value === item.correct) score++;
+        }
+    });
+
+    if (answered < window.currentQuizData.length && !confirm("Bạn chưa hoàn thành hết các câu hỏi. Vẫn nộp bài?")) return;
+
+    alert(`Bài làm hoàn thành!\nSố câu đúng: ${score} / ${window.currentQuizData.length}`);
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'block';
+};
+
+// --- 4. Bảng xếp hạng ---
+
+window.showRanking = function() {
+    const script = document.createElement('script');
+    script.src = `${API_URL}?action=getRanking&callback=handleRankingData`;
+    document.body.appendChild(script);
+    script.onload = () => script.remove();
+};
+
+window.handleRankingData = function(data) {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('rank-board').style.display = 'block';
+    
+    const tbody = document.getElementById('rank-body');
+    tbody.innerHTML = data.map(item => `<tr><td>${item.ten}</td><td>${item.diem}</td><td>${item.mon}</td></tr>`).join('');
+};
+
+// --- 5. Gắn sự kiện khi trang tải xong ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Không cần gắn onclick vào đây vì đã có trong HTML (onclick="window.loadData()" v.v.)
+    // Nhưng gắn sự kiện cho nút bắt đầu để xử lý logic filter
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) startBtn.onclick = () => {
+        const mon = document.getElementById('subject-select').value;
+        const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+        if (selected.length === 0) return alert("Chọn ít nhất 1 chủ đề!");
+        
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        window.renderQuiz();
+    };
+});
