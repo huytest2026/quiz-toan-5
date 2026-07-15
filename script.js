@@ -3,11 +3,11 @@ window.currentQuizData = [];
 window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// Tải dữ liệu từ Google Sheet
 window.loadData = async function() {
     try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec");
+        const response = await fetch(API_URL);
         window.allQuizData = await response.json();
         updateTopicList();
     } catch (e) { console.error("Lỗi tải dữ liệu:", e); }
@@ -29,7 +29,6 @@ window.toggleTopics = function(selectAll) {
     document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
 };
 
-// Hàm xếp loại
 window.getRank = function(score) {
     if (score >= 18) return "Xuất sắc";
     if (score >= 15) return "Giỏi";
@@ -96,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener(event, callback);
     };
 
-    // Nút Bắt đầu
     addSafeListener('start-btn', 'click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
@@ -105,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.correctCount = 0; window.wrongDetails = [];
         document.getElementById('count-correct').innerText = "0";
         document.getElementById('count-wrong').innerText = "0";
-        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         
@@ -114,36 +111,25 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuiz(); startTimer();
     });
 
-    // Nút Luyện tập lại câu sai (Tính năng Spaced Repetition cơ bản)
     addSafeListener('review-wrong-btn', 'click', async () => {
         const name = document.getElementById("student-name").value.trim();
         if (!name) return alert("Vui lòng nhập tên!");
-        
-        // Gọi API lấy dữ liệu câu sai (cần setup phía Google Apps Script để nhận action này)
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getWrongQuestions&name=${encodeURIComponent(name)}`);
+        const response = await fetch(`${API_URL}?action=getWrongQuestions&name=${encodeURIComponent(name)}`);
         const wrongData = await response.json();
-        
-        if (wrongData.length === 0) return alert("Bạn chưa có câu nào sai trong lịch sử!");
-        
+        if (wrongData.length === 0) return alert("Bạn chưa có câu nào sai!");
         window.currentQuizData = wrongData.slice(0, 20);
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         renderQuiz(); startTimer();
     });
 
-    // Nút Nộp bài
     addSafeListener('submit-btn', 'click', () => {
         clearInterval(window.timerInterval);
         const name = document.getElementById("student-name").value;
-        const rank = window.getRank(window.correctCount);
-        
-        fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec", { 
-            method: 'POST', 
-            body: JSON.stringify({ ten: name, diem: window.correctCount, soCau: 20, mon: document.getElementById('subject-select').value, wrongDetails: window.wrongDetails }) 
-        });
+        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: window.correctCount, soCau: 20, mon: document.getElementById('subject-select').value, wrongDetails: window.wrongDetails }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p><p>Xếp loại: <b>${rank}</b></p>`;
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p><p>Xếp loại: <b>${window.getRank(window.correctCount)}</b></p>`;
     });
 
     addSafeListener('restart-btn', 'click', () => location.reload());
