@@ -92,9 +92,10 @@ window.renderQuiz = function() {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
         
-        // Chỉ hiển thị nút nghe nếu là môn Tiếng anh
+        // Sử dụng JSON.stringify để bao bọc chuỗi an toàn
+        const safeQuestion = JSON.stringify(item.question); 
         const audioBtn = mon === 'Tiếng anh' ? `
-            <button type="button" onclick="speakText('${item.question.replace(/'/g, "\\'")}', '${lang}')" 
+            <button type="button" onclick="speakText(${safeQuestion}, '${lang}')" 
             style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
             🔊 Nghe câu hỏi
             </button>` : '';
