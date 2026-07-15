@@ -10,10 +10,14 @@
         .quiz-card { margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
         .option-box { display: block; margin: 5px 0; padding: 10px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; }
         .option-box:hover { background-color: #f0f0f0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
 
+<!-- Màn hình Chờ -->
 <div class="container" id="start-screen">
     <h1>Bài Kiểm Tra Trực Tuyến</h1>
     <div style="margin-bottom: 15px;">
@@ -41,6 +45,7 @@
     <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">Bắt Đầu Làm Bài</button>
 </div>
 
+<!-- Màn hình Làm bài -->
 <div class="container" id="quiz-screen" style="display:none;">
     <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
         <div>Thời gian: <span id="timer-display">--:--</span></div>
@@ -50,9 +55,21 @@
     <button type="button" id="submit-btn" onclick="window.submitQuiz()" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 20px;">Nộp bài</button>
 </div>
 
+<!-- Màn hình Kết quả -->
 <div class="container" id="result-screen" style="display:none; text-align: center;">
     <div id="result"></div>
-    <button type="button" id="restart-btn" style="margin-top: 10px; padding: 10px;" onclick="location.reload()">Làm lại</button>
+    <button type="button" onclick="window.showRanking()" style="padding:10px; background:#17a2b8; color:white; border:none; margin-top:10px; border-radius:5px; cursor:pointer;">Xem Bảng Xếp Hạng</button>
+    <button type="button" style="margin-top: 10px; padding: 10px; border-radius:5px; border:1px solid #ccc;" onclick="location.reload()">Làm lại từ đầu</button>
+</div>
+
+<!-- Bảng xếp hạng -->
+<div class="container" id="rank-board" style="display:none;">
+    <h3>Bảng xếp hạng</h3>
+    <table>
+        <thead><tr><th>Tên</th><th>Điểm</th><th>Môn</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+    </table>
+    <button onclick="location.reload()" style="margin-top: 15px; padding: 10px; width: 100%;">Quay về trang chủ</button>
 </div>
 
 <script src="script.js"></script>
