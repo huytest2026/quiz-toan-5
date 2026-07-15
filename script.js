@@ -3,9 +3,11 @@ window.currentQuizData = [];
 window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
+
+// Cấu hình API của bạn
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// Hàm đọc văn bản
+// Hàm đọc văn bản (Cho Tiếng Anh)
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     const cleanText = text.replace(/_+/g, ','); 
@@ -15,15 +17,14 @@ window.speakText = function(text) {
     window.speechSynthesis.speak(msg);
 };
 
-// Hàm tải dữ liệu (Cập nhật phản hồi người dùng)
+// 1. Hàm tải dữ liệu từ Google Sheet
 window.loadData = async function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Vui lòng nhập mã học sinh!");
     
     const loadBtn = document.getElementById('load-data-btn');
-    const originalText = loadBtn.innerText;
     loadBtn.innerText = "Đang tải...";
-    loadBtn.disabled = true; // Chặn bấm nhiều lần
+    loadBtn.disabled = true;
     
     try {
         const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
@@ -32,7 +33,7 @@ window.loadData = async function() {
         if (data.error) {
             alert(data.error);
         } else {
-            window.allQuizData = data;
+            window.allQuizData = data; 
             alert("Tải đề thành công!");
             window.updateTopicList();
         }
@@ -40,12 +41,12 @@ window.loadData = async function() {
         console.error("Lỗi tải dữ liệu:", e); 
         alert("Không thể kết nối tới server!");
     } finally {
-        loadBtn.innerText = originalText;
+        loadBtn.innerText = "Tải đề";
         loadBtn.disabled = false;
     }
 };
 
-// Cập nhật danh sách chủ đề
+// 2. Cập nhật danh sách chủ đề dựa trên Môn đã chọn
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
@@ -53,62 +54,28 @@ window.updateTopicList = function() {
     
     container.innerHTML = '';
     if (window.allQuizData.length === 0) {
-        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy nhập mã và bấm "Tải đề" trước...</p>';
+        container.innerHTML = '<p>Hãy nhập mã và bấm "Tải đề" trước...</p>';
         return;
     }
     
     if (!mon) {
-        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
+        container.innerHTML = '<p>Hãy chọn môn trước...</p>';
         return;
     }
     
+    // Lọc các chủ đề duy nhất (Unique) theo môn
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
-    topics.forEach(topic => {
-        container.innerHTML += `<label style="display:block; margin:5px 0;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
-    });
-};
-
-window.toggleTopics = function(selectAll) {
-    document.querySelectorAll('input[name="topic"]').forEach(cb => cb.checked = selectAll);
-};
-
-window.showRanking = async function() {
-    const rankBody = document.getElementById('rank-body');
-    const rankBoard = document.getElementById('rank-board');
-    if (rankBoard.style.display === 'block') {
-        rankBoard.style.display = 'none';
+    
+    if (topics.length === 0) {
+        container.innerHTML = '<p>Không có chủ đề cho môn này!</p>';
     } else {
-        rankBoard.style.display = 'block';
-        rankBody.innerHTML = "<tr><td colspan='3'>Đang tải...</td></tr>";
-        try {
-            const response = await fetch(API_URL + "?action=getRanking");
-            const ranking = await response.json();
-            rankBody.innerHTML = ranking.slice(0, 10).map(r =>
-                `<tr><td>${r.ten}</td><td>${r.diem}</td><td>${r.mon}</td></tr>`
-            ).join('');
-        } catch (e) {
-            rankBody.innerHTML = "<tr><td colspan='3'>Lỗi tải bảng xếp hạng</td></tr>";
-        }
+        topics.forEach(topic => {
+            container.innerHTML += `<label style="display:block; margin:5px 0;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
+        });
     }
 };
 
-window.startTimer = function(minutes) {
-    let timeLeft = minutes * 60;
-    const timerDisplay = document.getElementById('timer-display');
-    if (window.timerInterval) clearInterval(window.timerInterval);
-    timerDisplay.innerText = `${minutes}:00`;
-    window.timerInterval = setInterval(() => {
-        timeLeft--;
-        let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-        timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-        if (timeLeft <= 0) {
-            clearInterval(window.timerInterval);
-            const submitBtn = document.getElementById('submit-btn');
-            if (submitBtn) submitBtn.click();
-        }
-    }, 1000);
-};
-
+// 3. Xử lý hiển thị Quiz
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
@@ -118,13 +85,12 @@ window.renderQuiz = function() {
         options.sort(() => Math.random() - 0.5);
         const card = document.createElement('div');
         card.className = "quiz-card";
-        card.style.cssText = "margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;";
         
-        let audioBtnHtml = item.mon === 'Tiếng anh' ? `<button type="button" class="speak-btn" style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">🔊 Nghe câu hỏi</button>` : '';
+        let audioBtnHtml = item.mon === 'Tiếng anh' ? `<button type="button" class="speak-btn">🔊 Nghe</button>` : '';
         
         card.innerHTML = `
             <div class="question"><b>Câu ${i+1}: ${item.question}</b><br>${audioBtnHtml}</div>
-            ${options.map(opt => `<label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
+            ${options.map(opt => `<label class="option-box">
                 <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? opt.val : opt.key}"
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
         `;
@@ -135,13 +101,16 @@ window.renderQuiz = function() {
     });
 };
 
+// 4. Xử lý chấm điểm trực tiếp
 window.updateLiveStatus = function(index, selectedValue, element) {
     let item = window.currentQuizData[index];
     if (item.answered) return;
     item.answered = true;
+    
     const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
     const correctEl = document.getElementById('count-correct');
     const wrongEl = document.getElementById('count-wrong');
+    
     if (isCorrect) {
         window.correctCount++;
         if (correctEl) correctEl.innerText = window.correctCount;
@@ -154,45 +123,25 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     element.closest('.quiz-card').querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
+// Khởi tạo sự kiện khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
-    const addSafeListener = (id, event, callback) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener(event, callback);
-    };
-
-    // Nút Tải đề đã được gắn onclick trực tiếp trong HTML, 
-    // nhưng vẫn giữ addSafeListener làm phương án dự phòng
-    addSafeListener('load-data-btn', 'click', window.loadData);
-
-    addSafeListener('start-btn', 'click', () => {
-        if (window.allQuizData.length === 0) return alert("Vui lòng xác nhận Mã & Tải đề trước!");
-        
+    // Sự kiện nút Bắt đầu
+    document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
-        if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
+        const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+
+        if (window.allQuizData.length === 0) return alert("Vui lòng tải đề trước!");
+        if (!mon || !name || topics.length === 0) return alert("Vui lòng chọn môn, nhập tên và chọn ít nhất 1 chủ đề!");
         
         const config = mon === "Toán" ? { time: 15, count: 10 } : { time: 10, count: 20 };
-        window.correctCount = 0; window.wrongDetails = [];
-        document.getElementById('count-correct').innerText = "0";
-        document.getElementById('count-wrong').innerText = "0";
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, config.count);
+        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
-        
-        const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, config.count);
-        renderQuiz(); startTimer(config.time);
+        window.renderQuiz();
+        window.startTimer(config.time);
     });
 
-    addSafeListener('submit-btn', 'click', () => {
-        clearInterval(window.timerInterval);
-        const name = document.getElementById("student-name").value;
-        const mon = document.getElementById('subject-select').value;
-        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: window.correctCount, soCau: (mon === "Toán"?10:20), mon: mon, wrongDetails: window.wrongDetails }) });
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}</b></p>`;
-    });
-
-    addSafeListener('show-rank-btn', 'click', window.showRanking);
-    addSafeListener('restart-btn', 'click', () => location.reload());
+    // Thêm các sự kiện khác nếu cần...
 });
