@@ -6,7 +6,7 @@ window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
 
-const API_URL = "URL_API_CUA_BAN_O_DAY"; // Thay URL web app mới của bạn vào đây
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Thay URL web app mới của bạn vào đây
 
 // --- 1. Tải dữ liệu từ Google Sheet ---
 window.loadData = async function() {
