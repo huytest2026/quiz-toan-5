@@ -5,13 +5,11 @@ window.correctCount = 0;
 window.timerInterval = null;
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// Khởi tạo giọng đọc
-window.speechSynthesis.getVoices();
-
-window.speakText = function(text, lang = 'en-US') {
-    window.speechSynthesis.cancel();
+// CÁCH MỚI: Dùng hàm đơn giản, không gọi getVoices() để tránh đơ
+window.speakText = function(text) {
+    window.speechSynthesis.cancel(); // Hủy lệnh cũ trước khi đọc mới
     const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = lang;
+    msg.lang = 'en-US'; 
     msg.rate = 0.9;
     window.speechSynthesis.speak(msg);
 };
@@ -94,11 +92,12 @@ window.renderQuiz = function() {
         const card = document.createElement('div');
         card.className = "quiz-card";
         card.style.cssText = "margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;";
+        
         let audioBtnHtml = '';
         if (item.mon === 'Tiếng anh') {
-            audioBtnHtml = `<button type="button" class="speak-btn" style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
-            🔊 Nghe câu hỏi</button>`;
+            audioBtnHtml = `<button type="button" class="speak-btn" style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">🔊 Nghe câu hỏi</button>`;
         }
+        
         card.innerHTML = `
             <div class="question"><b>Câu ${i+1}: ${item.question}</b><br>${audioBtnHtml}</div>
             ${options.map(opt => `<label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
@@ -106,8 +105,12 @@ window.renderQuiz = function() {
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
         `;
         quizDiv.appendChild(card);
-        if (audioBtnHtml) {
-            card.querySelector('.speak-btn').onclick = () => window.speakText(item.question, 'en-US');
+        
+        // Gán sự kiện trực tiếp không qua trung gian
+        if (card.querySelector('.speak-btn')) {
+            card.querySelector('.speak-btn').onclick = function() {
+                window.speakText(item.question);
+            };
         }
     });
 };
