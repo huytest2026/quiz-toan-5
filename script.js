@@ -9,10 +9,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lk
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     
-    // Xóa hoàn toàn các dấu gạch dưới, không để lại từ 'blank'
-    // .replace(/_+/g, ' ') thay dấu gạch bằng khoảng trắng
-    // .replace(/\s+/g, ' ') đảm bảo không có khoảng trắng thừa
-    const cleanText = text.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim(); 
+    // Sử dụng dấu phẩy (,) hoặc dấu chấm (.) để tạo khoảng nghỉ tự nhiên khi đọc
+    // Thay thế toàn bộ cụm dấu gạch dưới bằng một dấu phẩy
+    const cleanText = text.replace(/_+/g, ','); 
     
     const msg = new SpeechSynthesisUtterance(cleanText);
     msg.lang = 'en-US'; 
