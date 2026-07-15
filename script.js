@@ -41,7 +41,7 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị và Logic chấm điểm ---
+// --- 3. Hàm hiển thị câu hỏi ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
@@ -51,22 +51,21 @@ window.renderQuiz = function() {
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
-                <label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
-                    <input type="radio" name="q${i}" value="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}')"> ${opt.v}
-                </label>
+                <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
+                    <input type="radio" name="q${i}" value="${opt.k}" disabled> ${opt.v}
+                </div>
             `).join('')}
         </div>`;
     }).join('');
 };
 
+// --- 4. Logic chấm điểm thông minh ---
 window.checkAnswer = function(i, selectedKey, element) {
-    // 1. Tìm thẻ div bao quanh đáp án được chọn (element chính là cái bạn vừa click)
-    // 2. Lấy dữ liệu câu hỏi
     const questionData = window.currentQuizData[i];
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    // 3. Logic xác định đúng/sai
+    // Tự nhận diện môn: So sánh ký tự (Toán) hoặc so sánh nội dung (Tiếng Anh)
     let isCorrect = false;
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
@@ -74,20 +73,21 @@ window.checkAnswer = function(i, selectedKey, element) {
         isCorrect = (selectedText === rawCorrect);
     }
     
-    // 4. CHỈ TÔ MÀU ĐÁP ÁN ĐƯỢC CHỌN (element)
-    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da'; // Xanh nếu đúng, Đỏ nếu sai
+    // Tô màu cho riêng đáp án được chọn
+    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // 5. Khóa tất cả các lựa chọn của câu đó lại để không chọn tiếp
+    // Khóa các lựa chọn khác trong câu
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
-        box.style.pointerEvents = 'none'; // Ngắt tương tác
+        box.style.pointerEvents = 'none';
     });
     
-    // 6. Cập nhật điểm
+    // Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
-// --- 4. Sự kiện Bắt đầu thi ---
+
+// --- 5. Bắt đầu và Nộp bài ---
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
