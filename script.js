@@ -4,9 +4,9 @@ window.userPermissions = [];
 window.currentQuizData = [];
 window.wrongDetails = [];
 window.correctCount = 0;
-window.timerInterval = null;
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Thay URL web app mới của bạn vào đây
+// URL API đã triển khai
+const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
 // --- 1. Tải dữ liệu từ Google Sheet ---
 window.loadData = async function() {
@@ -15,14 +15,26 @@ window.loadData = async function() {
     
     const loadBtn = document.getElementById('load-data-btn');
     loadBtn.innerText = "Đang tải...";
+    
     try {
-        const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
+        // Fetch với mode 'cors' để tránh lỗi chặn từ Google
+        const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`, { method: 'GET', mode: 'cors' });
         const data = await response.json();
-        window.allQuizData = data.questions || [];
-        window.userPermissions = data.permissions || [];
-        alert("Tải dữ liệu thành công!");
-        window.updateTopicList();
-    } catch (e) { alert("Lỗi kết nối server!"); } finally { loadBtn.innerText = "Xác nhận Mã & Tải đề"; }
+        
+        if (data.error) {
+            alert(data.error);
+        } else {
+            window.allQuizData = data.questions || [];
+            window.userPermissions = data.permissions || [];
+            alert("Tải dữ liệu thành công!");
+            window.updateTopicList();
+        }
+    } catch (e) {
+        alert("Lỗi kết nối server! Vui lòng kiểm tra lại quyền truy cập (Anyone).");
+        console.error(e);
+    } finally {
+        loadBtn.innerText = "Xác nhận Mã & Tải đề";
+    }
 };
 
 // --- 2. Cập nhật và phân quyền chủ đề ---
@@ -32,7 +44,7 @@ window.updateTopicList = function() {
     const container = document.getElementById('topic-container');
     if (!container || !mon) return;
 
-    const allowed = window.userPermissions.filter(p => p.maHS === maHS && p.mon === mon).map(p => p.chuDe);
+    const allowed = window.userPermissions.filter(p => String(p.maHS) === maHS && p.mon === mon).map(p => p.chuDe);
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
     
     container.innerHTML = topics.map(topic => {
@@ -54,7 +66,7 @@ window.renderQuiz = function() {
         </div>`).join('');
 };
 
-// --- 4. Chấm điểm trực tiếp & Lưu câu sai ---
+// --- 4. Chấm điểm trực tiếp ---
 window.updateLiveStatus = function(idx, val, el) {
     let item = window.currentQuizData[idx];
     if (item.answered) return;
@@ -72,19 +84,17 @@ window.updateLiveStatus = function(idx, val, el) {
     el.parentElement.querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
-// --- 5. Nộp bài, Đánh giá & Xem xếp hạng ---
+// --- 5. Nộp bài ---
 window.submitQuiz = function() {
-    clearInterval(window.timerInterval);
-    const total = window.currentQuizData.length;
-    const percent = Math.round((window.correctCount / total) * 100);
-    let feedback = percent >= 80 ? "Xuất sắc!" : (percent >= 50 ? "Khá!" : "Cần cố gắng!");
-    
     document.getElementById('quiz-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
     
-    let html = `<h3>Kết quả: ${window.correctCount}/${total} (${percent}%)</h3><p>${feedback}</p>`;
+    const total = window.currentQuizData.length;
+    const percent = total > 0 ? Math.round((window.correctCount / total) * 100) : 0;
+    
+    let html = `<h3>Kết quả: ${window.correctCount}/${total} (${percent}%)</h3>`;
     if (window.wrongDetails.length > 0) {
-        html += `<button onclick="window.retryWrongQuestions()" style="padding:10px; background:#ffc107; border:none; cursor:pointer;">Làm lại ${window.wrongDetails.length} câu sai</button>`;
+        html += `<button onclick="window.retryWrongQuestions()" style="padding:10px; background:#ffc107; border:none; cursor:pointer; border-radius:5px;">Làm lại ${window.wrongDetails.length} câu sai</button>`;
     }
     document.getElementById('result').innerHTML = html;
 };
@@ -104,12 +114,11 @@ window.retryWrongQuestions = function() {
 // --- 7. Xem bảng xếp hạng ---
 window.showRanking = async function() {
     try {
-        const response = await fetch(`${API_URL}?action=getRanking`);
+        const response = await fetch(`${API_URL}?action=getRanking`, { method: 'GET', mode: 'cors' });
         const data = await response.json();
         document.getElementById('result-screen').style.display = 'none';
         document.getElementById('rank-board').style.display = 'block';
-        const rankBody = document.getElementById('rank-body');
-        rankBody.innerHTML = data.map(item => `<tr><td>${item.ten}</td><td>${item.diem}</td><td>${item.mon}</td></tr>`).join('');
+        document.getElementById('rank-body').innerHTML = data.map(item => `<tr><td>${item.ten}</td><td>${item.diem}</td><td>${item.mon}</td></tr>`).join('');
     } catch (e) { alert("Không tải được bảng xếp hạng!"); }
 };
 
