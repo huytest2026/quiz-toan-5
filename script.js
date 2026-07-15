@@ -5,7 +5,7 @@ window.correctCount = 0;
 window.timerInterval = null;
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// CẬP NHẬT: Hàm đọc với logic bỏ qua dấu gạch dưới
+// Hàm đọc văn bản (có xử lý dấu gạch dưới thành dấu phẩy để ngắt nghỉ)
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     const cleanText = text.replace(/_+/g, ','); 
@@ -15,10 +15,11 @@ window.speakText = function(text) {
     window.speechSynthesis.speak(msg);
 };
 
-// CẬP NHẬT: Tải dữ liệu kèm Mã học sinh
+// Hàm tải dữ liệu dựa trên Mã học sinh
 window.loadData = async function() {
-    const maHS = document.getElementById('student-code').value;
-    if (!maHS) return; // Chỉ tải khi có mã
+    const maHS = document.getElementById('student-code').value.trim();
+    if (!maHS) return alert("Vui lòng nhập mã học sinh!");
+    
     try {
         const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
         const data = await response.json();
@@ -27,17 +28,28 @@ window.loadData = async function() {
         } else {
             window.allQuizData = data;
             updateTopicList();
-            alert("Đăng nhập thành công!");
+            alert("Tải đề thành công!");
         }
-    } catch (e) { console.error("Lỗi tải dữ liệu:", e); }
+    } catch (e) { 
+        console.error("Lỗi tải dữ liệu:", e); 
+        alert("Không thể kết nối tới server!");
+    }
 };
 
+// Cập nhật danh sách chủ đề (đã thêm check dữ liệu an toàn)
 window.updateTopicList = function() {
+    if (window.allQuizData.length === 0) return;
+    
     const mon = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
     if (!container) return;
+    
     container.innerHTML = '';
-    if (!mon) return;
+    if (!mon) {
+        container.innerHTML = '<p style="color: #888; font-size: 0.9em;">Hãy chọn môn trước...</p>';
+        return;
+    }
+    
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
     topics.forEach(topic => {
         container.innerHTML += `<label style="display:block; margin:5px 0;"><input type="checkbox" name="topic" value="${topic}" checked> ${topic}</label>`;
@@ -143,14 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener(event, callback);
     };
 
-    // Nút tải dữ liệu sau khi nhập mã
+    // Đăng ký nút Tải đề
     addSafeListener('load-data-btn', 'click', window.loadData);
 
     addSafeListener('start-btn', 'click', () => {
+        if (window.allQuizData.length === 0) return alert("Vui lòng xác nhận Mã & Tải đề trước!");
+        
         const mon = document.getElementById('subject-select').value;
         const name = document.getElementById("student-name").value.trim();
-        const ma = document.getElementById("student-code").value.trim();
-        if (!mon || !name || !ma) return alert("Vui lòng nhập mã, chọn môn và nhập tên!");
+        if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
         
         const config = mon === "Toán" ? { time: 15, count: 10 } : { time: 10, count: 20 };
         window.correctCount = 0; window.wrongDetails = [];
