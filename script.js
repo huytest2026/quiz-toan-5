@@ -5,6 +5,15 @@ window.correctCount = 0;
 window.timerInterval = null;
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
+// Hàm phát âm
+window.speakText = function(text, lang = 'vi-VN') {
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = lang; 
+    msg.rate = 1.0; 
+    window.speechSynthesis.speak(msg);
+};
+
 window.loadData = async function() {
     try {
         const response = await fetch(API_URL);
@@ -76,11 +85,25 @@ window.startTimer = function(minutes) {
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
+    const mon = document.getElementById('subject-select').value;
+    const lang = mon === 'Tiếng anh' ? 'en-US' : 'vi-VN';
+
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
+        
+        // Chỉ hiển thị nút nghe nếu là môn Tiếng anh
+        const audioBtn = mon === 'Tiếng anh' ? `
+            <button type="button" onclick="speakText('${item.question.replace(/'/g, "\\'")}', '${lang}')" 
+            style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
+            🔊 Nghe câu hỏi
+            </button>` : '';
+
         return `<div class="quiz-card" style="margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;">
-            <div class="question"><b>Câu ${i+1}: ${item.question}</b></div>
+            <div class="question">
+                <b>Câu ${i+1}: ${item.question}</b><br>
+                ${audioBtn}
+            </div>
             ${options.map(opt => `<label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
                 <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? opt.val : opt.key}" 
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
