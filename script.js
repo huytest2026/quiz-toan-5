@@ -8,8 +8,12 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lk
 // CẬP NHẬT: Hàm đọc với logic bỏ qua dấu gạch dưới
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
-    // Thay thế tất cả dấu gạch dưới bằng từ 'blank'
-    const cleanText = text.replace(/_+/g, ' blank '); 
+    
+    // Xóa hoàn toàn các dấu gạch dưới, không để lại từ 'blank'
+    // .replace(/_+/g, ' ') thay dấu gạch bằng khoảng trắng
+    // .replace(/\s+/g, ' ') đảm bảo không có khoảng trắng thừa
+    const cleanText = text.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim(); 
+    
     const msg = new SpeechSynthesisUtterance(cleanText);
     msg.lang = 'en-US'; 
     msg.rate = 0.9;
