@@ -1,11 +1,21 @@
 window.allQuizData = [];
-window.userPermissions = []; // Biến mới để lưu quyền
+window.userPermissions = [];
 window.currentQuizData = [];
 window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
 
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+
+// Hàm đọc văn bản (Cho Tiếng Anh)
+window.speakText = function(text) {
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/_+/g, ','); 
+    const msg = new SpeechSynthesisUtterance(cleanText);
+    msg.lang = 'en-US'; 
+    msg.rate = 0.9;
+    window.speechSynthesis.speak(msg);
+};
 
 // 1. Tải cả đề và phân quyền
 window.loadData = async function() {
@@ -20,7 +30,7 @@ window.loadData = async function() {
         const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
         const data = await response.json();
         
-        // Giả sử API trả về { questions: [...], permissions: [...] }
+        // Giả định API trả về { questions: [...], permissions: [...] }
         window.allQuizData = data.questions || [];
         window.userPermissions = data.permissions || [];
         
@@ -34,7 +44,7 @@ window.loadData = async function() {
     }
 };
 
-// 2. Cập nhật danh sách chủ đề (Chỉ tích và mở khóa chủ đề được phân quyền)
+// 2. Cập nhật danh sách chủ đề (Chỉ cho tương tác với phần được phân quyền)
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const maHS = document.getElementById('student-code').value.trim();
@@ -44,25 +54,31 @@ window.updateTopicList = function() {
     container.innerHTML = '';
     if (!mon) return container.innerHTML = '<p>Hãy chọn môn trước...</p>';
 
-    // Lọc danh sách chủ đề được phép từ userPermissions
     const allowedTopics = window.userPermissions
         .filter(p => p.maHS === maHS && p.mon === mon)
         .map(p => p.chuDe);
 
-    // Lấy tất cả chủ đề có trong ngân hàng câu hỏi của môn đó
-    const allTopics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
+    const allAvailableTopics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
     
-    allTopics.forEach(topic => {
+    allAvailableTopics.forEach(topic => {
         const isAllowed = allowedTopics.includes(topic);
         container.innerHTML += `
-            <label style="display:block; margin:5px 0; color: ${isAllowed ? '#000' : '#ccc'}">
+            <label style="display:block; margin:5px 0; opacity: ${isAllowed ? '1' : '0.5'}; cursor: ${isAllowed ? 'pointer' : 'not-allowed'}">
                 <input type="checkbox" name="topic" value="${topic}" ${isAllowed ? 'checked' : 'disabled'}> 
                 ${topic} ${isAllowed ? '' : '(Chưa được cấp quyền)'}
             </label>`;
     });
 };
 
-// 3. Xử lý Nộp bài
+// 3. Nút Chọn/Bỏ chọn chỉ tác động phần được phân quyền
+window.toggleTopics = function(selectAll) {
+    const checkboxes = document.querySelectorAll('input[name="topic"]:not(:disabled)');
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll;
+    });
+};
+
+// 4. Xử lý Nộp bài
 window.submitQuiz = function() {
     clearInterval(window.timerInterval);
     document.getElementById('quiz-screen').style.display = 'none';
@@ -75,9 +91,7 @@ window.submitQuiz = function() {
     `;
 };
 
-// 4. Các hàm hỗ trợ
-window.toggleTopics = (val) => document.querySelectorAll('input[name="topic"]:not(:disabled)').forEach(cb => cb.checked = val);
-
+// 5. Render câu hỏi
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
@@ -105,13 +119,15 @@ window.updateLiveStatus = function(index, selectedValue, element) {
     element.parentElement.querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
-// Khởi tạo
+// 6. Khởi tạo
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
-        const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+        const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
         
-        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
+        if (selectedTopics.length === 0) return alert("Vui lòng chọn chủ đề!");
+        
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selectedTopics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 10);
         
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
