@@ -85,38 +85,39 @@ window.startTimer = function(minutes) {
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
-    const mon = document.getElementById('subject-select').value;
-    const lang = mon === 'Tiếng anh' ? 'en-US' : 'vi-VN';
+    
+    // Xóa nội dung cũ
+    quizDiv.innerHTML = '';
 
-    quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
+    window.currentQuizData.forEach((item, i) => {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
         
-        // Tạo nút với data-question để chứa nội dung an toàn
-        const audioBtn = mon === 'Tiếng anh' ? `
-            <button type="button" class="speak-btn" data-text="${item.question.replace(/"/g, '&quot;')}" data-lang="${lang}"
-            style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
-            🔊 Nghe câu hỏi
-            </button>` : '';
+        // 1. Tạo phần tử thẻ chứa câu hỏi
+        const card = document.createElement('div');
+        card.className = "quiz-card";
+        card.style.cssText = "margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;";
 
-        return `<div class="quiz-card" style="margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px;">
-            <div class="question">
-                <b>Câu ${i+1}: ${item.question}</b><br>
-                ${audioBtn}
-            </div>
+        // 2. Xử lý logic nút Nghe cho Tiếng Anh
+        let audioBtnHtml = '';
+        if (item.mon === 'Tiếng anh') {
+            const btn = document.createElement('button');
+            btn.innerText = "🔊 Nghe câu hỏi";
+            btn.style.cssText = "margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;";
+            // Dùng sự kiện click thay vì onclick để tránh lỗi ký tự
+            btn.onclick = () => window.speakText(item.question, 'en-US');
+            audioBtnHtml = btn.outerHTML;
+        }
+
+        // 3. Render giao diện
+        card.innerHTML = `
+            <div class="question"><b>Câu ${i+1}: ${item.question}</b><br>${audioBtnHtml}</div>
             ${options.map(opt => `<label class="option-box" style="display:block; margin:5px 0; cursor:pointer;">
                 <input type="radio" name="q${i}" value="${item.mon === 'Tiếng anh' ? opt.val : opt.key}" 
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
-        </div>`;
-    }).join('');
-
-    // Gán sự kiện cho các nút vừa tạo
-    document.querySelectorAll('.speak-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const text = e.target.getAttribute('data-text');
-            const lang = e.target.getAttribute('data-lang');
-            window.speakText(text, lang);
-        });
+        `;
+        
+        quizDiv.appendChild(card);
     });
 };
 
