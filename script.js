@@ -6,7 +6,7 @@ window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Thay URL thật của bạn vào đây
+const API_URL = "URL_API_CUA_BAN_O_DAY"; // Thay URL web app mới của bạn vào đây
 
 // --- 1. Tải dữ liệu từ Google Sheet ---
 window.loadData = async function() {
@@ -67,12 +67,12 @@ window.updateLiveStatus = function(idx, val, el) {
     } else {
         document.getElementById('count-wrong').innerText = parseInt(document.getElementById('count-wrong').innerText || 0) + 1;
         el.style.backgroundColor = "#f8d7da";
-        window.wrongDetails.push(item); // Lưu câu sai
+        window.wrongDetails.push(item); 
     }
     el.parentElement.querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
-// --- 5. Nộp bài & Đánh giá ---
+// --- 5. Nộp bài, Đánh giá & Xem xếp hạng ---
 window.submitQuiz = function() {
     clearInterval(window.timerInterval);
     const total = window.currentQuizData.length;
@@ -101,7 +101,19 @@ window.retryWrongQuestions = function() {
     window.renderQuiz();
 };
 
-// --- 7. Bắt đầu bài thi ---
+// --- 7. Xem bảng xếp hạng ---
+window.showRanking = async function() {
+    try {
+        const response = await fetch(`${API_URL}?action=getRanking`);
+        const data = await response.json();
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('rank-board').style.display = 'block';
+        const rankBody = document.getElementById('rank-body');
+        rankBody.innerHTML = data.map(item => `<tr><td>${item.ten}</td><td>${item.diem}</td><td>${item.mon}</td></tr>`).join('');
+    } catch (e) { alert("Không tải được bảng xếp hạng!"); }
+};
+
+// --- 8. Bắt đầu bài thi ---
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
