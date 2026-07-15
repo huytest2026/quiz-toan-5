@@ -1,5 +1,3 @@
-console.log("File script.js đã được tải thành công!");
-alert("Script đã load!");
 window.allQuizData = [];
 window.currentQuizData = [];
 window.wrongDetails = [];
