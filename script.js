@@ -1,23 +1,12 @@
 window.allQuizData = [];
 window.userPermissions = [];
 window.currentQuizData = [];
-window.wrongDetails = [];
 window.correctCount = 0;
 window.timerInterval = null;
 
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// Hàm đọc văn bản (Cho Tiếng Anh)
-window.speakText = function(text) {
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/_+/g, ','); 
-    const msg = new SpeechSynthesisUtterance(cleanText);
-    msg.lang = 'en-US'; 
-    msg.rate = 0.9;
-    window.speechSynthesis.speak(msg);
-};
-
-// 1. Tải cả đề và phân quyền
+// 1. Tải dữ liệu và phân quyền
 window.loadData = async function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Vui lòng nhập mã học sinh!");
@@ -30,21 +19,20 @@ window.loadData = async function() {
         const response = await fetch(`${API_URL}?ma=${encodeURIComponent(maHS)}`);
         const data = await response.json();
         
-        // Giả định API trả về { questions: [...], permissions: [...] }
         window.allQuizData = data.questions || [];
         window.userPermissions = data.permissions || [];
         
         alert("Tải dữ liệu thành công!");
         window.updateTopicList();
     } catch (e) { 
-        alert("Không thể kết nối tới server!");
+        alert("Lỗi kết nối server!");
     } finally {
         loadBtn.innerText = "Xác nhận Mã & Tải đề";
         loadBtn.disabled = false;
     }
 };
 
-// 2. Cập nhật danh sách chủ đề (Chỉ cho tương tác với phần được phân quyền)
+// 2. Cập nhật danh sách chủ đề (Chặn các phần không được phân quyền)
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const maHS = document.getElementById('student-code').value.trim();
@@ -58,9 +46,9 @@ window.updateTopicList = function() {
         .filter(p => p.maHS === maHS && p.mon === mon)
         .map(p => p.chuDe);
 
-    const allAvailableTopics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
+    const allTopics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
     
-    allAvailableTopics.forEach(topic => {
+    allTopics.forEach(topic => {
         const isAllowed = allowedTopics.includes(topic);
         container.innerHTML += `
             <label style="display:block; margin:5px 0; opacity: ${isAllowed ? '1' : '0.5'}; cursor: ${isAllowed ? 'pointer' : 'not-allowed'}">
@@ -70,28 +58,13 @@ window.updateTopicList = function() {
     });
 };
 
-// 3. Nút Chọn/Bỏ chọn chỉ tác động phần được phân quyền
+// 3. Nút Chọn/Bỏ chọn (Chỉ tác động phần được phép)
 window.toggleTopics = function(selectAll) {
     const checkboxes = document.querySelectorAll('input[name="topic"]:not(:disabled)');
-    checkboxes.forEach(cb => {
-        cb.checked = selectAll;
-    });
+    checkboxes.forEach(cb => cb.checked = selectAll);
 };
 
-// 4. Xử lý Nộp bài
-window.submitQuiz = function() {
-    clearInterval(window.timerInterval);
-    document.getElementById('quiz-screen').style.display = 'none';
-    document.getElementById('result-screen').style.display = 'block';
-    
-    const total = window.currentQuizData.length;
-    document.getElementById('result').innerHTML = `
-        <h3>Kết quả của bạn</h3>
-        <p>Số câu đúng: <b>${window.correctCount}/${total}</b></p>
-    `;
-};
-
-// 5. Render câu hỏi
+// 4. Render bài thi
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = '';
@@ -105,21 +78,38 @@ window.renderQuiz = function() {
     });
 };
 
+// 5. Chấm điểm trực tiếp
 window.updateLiveStatus = function(index, selectedValue, element) {
     let item = window.currentQuizData[index];
     if (item.answered) return;
     item.answered = true;
     
-    if (selectedValue.trim().toLowerCase() === String(item.correct).trim().toLowerCase()) {
+    const isCorrect = String(selectedValue).trim().toLowerCase() === String(item.correct).trim().toLowerCase();
+    if (isCorrect) {
         window.correctCount++;
+        document.getElementById('count-correct').innerText = window.correctCount;
         element.style.backgroundColor = "#d4edda";
     } else {
+        document.getElementById('count-wrong').innerText = parseInt(document.getElementById('count-wrong').innerText) + 1;
         element.style.backgroundColor = "#f8d7da";
     }
     element.parentElement.querySelectorAll('label').forEach(l => l.style.pointerEvents = "none");
 };
 
-// 6. Khởi tạo
+// 6. Nộp bài và đánh giá
+window.submitQuiz = function() {
+    clearInterval(window.timerInterval);
+    const total = window.currentQuizData.length;
+    const percent = Math.round((window.correctCount / total) * 100);
+    
+    let feedback = percent >= 70 ? "Giỏi lắm!" : "Cần cố gắng hơn!";
+    
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('result').innerHTML = `<h3>Kết quả: ${window.correctCount}/${total}</h3><p>${feedback}</p>`;
+};
+
+// 7. Khởi tạo sự kiện chính
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').addEventListener('click', () => {
         const mon = document.getElementById('subject-select').value;
@@ -133,6 +123,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quiz-screen').style.display = 'block';
         window.renderQuiz();
     });
-
-    document.getElementById('submit-btn').addEventListener('click', window.submitQuiz);
 });
