@@ -1,13 +1,13 @@
-// --- 1. Khởi tạo biến toàn cục ---
+// --- Khởi tạo biến toàn cục ---
 window.allQuizData = [];
 window.userPermissions = [];
 window.currentQuizData = [];
 const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
 
-// --- 2. Định nghĩa hàm ngay từ đầu để đảm bảo tính sẵn sàng ---
+// --- Hàm xử lý tải dữ liệu ---
 window.updateTopicList = function() {
-    const mon = document.getElementById('subject-select') ? document.getElementById('subject-select').value : "";
-    const maHS = document.getElementById('student-code') ? document.getElementById('student-code').value.trim() : "";
+    const mon = document.getElementById('subject-select').value;
+    const maHS = document.getElementById('student-code').value.trim();
     const container = document.getElementById('topic-container');
     if (!container || !mon) return;
 
@@ -27,40 +27,67 @@ window.handleQuizData = function(data) {
     window.allQuizData = data.questions || [];
     window.userPermissions = data.permissions || [];
     alert("Tải dữ liệu thành công!");
-    
-    // Đảm bảo hàm tồn tại trước khi gọi
-    if (typeof window.updateTopicList === 'function') {
-        window.updateTopicList();
-    }
+    window.updateTopicList();
 };
 
 window.loadData = function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Nhập mã!");
-    
-    // Kỹ thuật JSONP an toàn
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
     document.body.appendChild(script);
     script.onload = () => script.remove();
 };
 
+// --- Hàm hiển thị câu hỏi ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => `
-        <div class="quiz-card"><b>Câu ${i+1}: ${item.question}</b><br>
-        ${['a','b','c','d'].map(key => `<label class="option-box"><input type="radio" name="q${i}" value="${key}" onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${item[key]}</label>`).join('')}
+        <div class="quiz-card" style="margin-bottom:15px; padding:10px; border:1px solid #ccc;">
+            <b>Câu ${i+1}: ${item.question}</b><br>
+            ${['a','b','c','d'].map(key => `
+                <label style="display:block; cursor:pointer;">
+                    <input type="radio" name="q${i}" value="${key}"> ${item[key]}
+                </label>
+            `).join('')}
         </div>`).join('');
 };
 
-// --- 3. Đăng ký sự kiện khi DOM đã sẵn sàng ---
+// --- HÀM NỘP BÀI (Xử lý không bị đơ) ---
+window.submitQuiz = function() {
+    let score = 0;
+    let answered = 0;
+    
+    window.currentQuizData.forEach((item, i) => {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (selected) {
+            answered++;
+            if (selected.value === item.correct) {
+                score++;
+            }
+        }
+    });
+
+    if (answered < window.currentQuizData.length) {
+        if (!confirm("Bạn chưa hoàn thành hết các câu hỏi. Bạn có chắc muốn nộp bài?")) return;
+    }
+
+    // Hiển thị kết quả ngay lập tức
+    alert(`Bài làm hoàn thành!\nSố câu đúng: ${score} / ${window.currentQuizData.length}`);
+    
+    // Reset màn hình
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'block';
+};
+
+// --- Gắn sự kiện ---
 document.addEventListener('DOMContentLoaded', () => {
     const loadBtn = document.getElementById('load-data-btn');
-    if (loadBtn) loadBtn.addEventListener('click', window.loadData);
+    if (loadBtn) loadBtn.onclick = window.loadData;
 
     const startBtn = document.getElementById('start-btn');
-    if (startBtn) startBtn.addEventListener('click', () => {
+    if (startBtn) startBtn.onclick = () => {
         const mon = document.getElementById('subject-select').value;
         const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
         if (selected.length === 0) return alert("Chọn ít nhất 1 chủ đề!");
@@ -69,5 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
         window.renderQuiz();
-    });
+    };
+
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) submitBtn.onclick = window.submitQuiz;
 });
