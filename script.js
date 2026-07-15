@@ -61,12 +61,13 @@ window.renderQuiz = function() {
 
 window.checkAnswer = function(i, selectedKey) {
     const card = document.getElementById(`q-card-${i}`);
+    if (!card) return; // Kiểm tra an toàn
+
     const questionData = window.currentQuizData[i];
-    
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    // Logic tự nhận biết môn để chấm điểm
+    // Logic nhận biết môn học
     let isCorrect = false;
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
@@ -74,12 +75,14 @@ window.checkAnswer = function(i, selectedKey) {
         isCorrect = (selectedText === rawCorrect);
     }
     
+    // Khóa các radio button
     card.querySelectorAll('input').forEach(input => input.disabled = true);
     
     // Tô màu nền thẻ và viền
     card.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     card.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
     
+    // Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
