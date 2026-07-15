@@ -3,7 +3,7 @@ window.userPermissions = [];
 window.currentQuizData = [];
 let timerInterval;
 
-// --- 1. Hàm tải dữ liệu (Phải có để không bị đơ) ---
+// --- 1. Hàm tải dữ liệu ---
 window.loadData = function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Nhập mã học sinh!");
@@ -20,10 +20,10 @@ window.handleQuizData = function(data) {
     window.allQuizData = data.questions || [];
     window.userPermissions = data.permissions || [];
     alert("Tải dữ liệu thành công!");
-    window.updateTopicList();
+    window.updateTopicList(); // Phục hồi hiển thị chủ đề
 };
 
-// --- 2. Xử lý UI và Đề bài ---
+// --- 2. Hàm hiển thị chủ đề (Phục hồi) ---
 window.updateTopicList = function() {
     const mon = document.getElementById('subject-select').value;
     const maHS = document.getElementById('student-code').value.trim();
@@ -41,10 +41,10 @@ window.updateTopicList = function() {
     }).join('');
 };
 
+// --- 3. Hàm hiển thị và logic làm bài ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
-    
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         return `
@@ -64,20 +64,17 @@ window.checkAnswer = function(i, selectedKey) {
     card.querySelectorAll('input').forEach(input => input.disabled = true);
     const isCorrect = selectedKey === window.currentQuizData[i].correct;
     card.style.borderColor = isCorrect ? 'green' : 'red';
-    
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
 
-// --- 3. Logic Đếm giờ và Bắt đầu ---
+// --- 4. Sự kiện và Khởi tạo ---
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Chọn chủ đề!");
-
-    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
-                             .sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
-
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
+    
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -85,7 +82,7 @@ window.startQuiz = function() {
         document.getElementById('timer-display').innerText = Math.floor(time/60) + ":" + (time%60).toString().padStart(2,'0');
         if (time <= 0) { clearInterval(timerInterval); alert("Hết giờ!"); window.submitQuiz(); }
     }, 1000);
-
+    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     window.renderQuiz();
@@ -93,10 +90,12 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    alert("Nộp bài thành công!");
+    alert("Nộp bài xong! Hệ thống tự làm mới.");
     location.reload();
 };
 
+// Gắn sự kiện (Dùng cách này để không bị mất chức năng)
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
 });
