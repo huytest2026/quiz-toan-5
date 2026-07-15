@@ -92,10 +92,9 @@ window.renderQuiz = function() {
         let options = [{key:'a', val:item.a}, {key:'b', val:item.b}, {key:'c', val:item.c}, {key:'d', val:item.d}];
         options.sort(() => Math.random() - 0.5);
         
-        // Sử dụng JSON.stringify để bao bọc chuỗi an toàn
-        const safeQuestion = JSON.stringify(item.question); 
+        // Tạo nút với data-question để chứa nội dung an toàn
         const audioBtn = mon === 'Tiếng anh' ? `
-            <button type="button" onclick="speakText(${safeQuestion}, '${lang}')" 
+            <button type="button" class="speak-btn" data-text="${item.question.replace(/"/g, '&quot;')}" data-lang="${lang}"
             style="margin: 10px 0; padding: 5px 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
             🔊 Nghe câu hỏi
             </button>` : '';
@@ -110,6 +109,15 @@ window.renderQuiz = function() {
                 onchange="updateLiveStatus(${i}, this.value, this.parentElement)"> ${opt.val}</label>`).join('')}
         </div>`;
     }).join('');
+
+    // Gán sự kiện cho các nút vừa tạo
+    document.querySelectorAll('.speak-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const text = e.target.getAttribute('data-text');
+            const lang = e.target.getAttribute('data-lang');
+            window.speakText(text, lang);
+        });
+    });
 };
 
 window.updateLiveStatus = function(index, selectedValue, element) {
