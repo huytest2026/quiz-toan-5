@@ -36,12 +36,9 @@ window.getRank = function(score) {
     return "Cần cố gắng";
 };
 
-// Hàm xử lý bảng xếp hạng mới
 window.showRanking = async function() {
     const rankBody = document.getElementById('rank-body');
     const rankBoard = document.getElementById('rank-board');
-    
-    // Nếu bảng đang mở thì đóng lại, ngược lại thì tải dữ liệu
     if (rankBoard.style.display === 'block') {
         rankBoard.style.display = 'none';
     } else {
@@ -59,14 +56,15 @@ window.showRanking = async function() {
     }
 };
 
-window.startTimer = function() {
-    let timeLeft = 10 * 60;
+window.startTimer = function(minutes) {
+    let timeLeft = minutes * 60;
     const timerDisplay = document.getElementById('timer-display');
     if (window.timerInterval) clearInterval(window.timerInterval);
+    timerDisplay.innerText = `${minutes}:00`;
     window.timerInterval = setInterval(() => {
         timeLeft--;
         let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-        if (timerDisplay) timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        timerDisplay.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
         if (timeLeft <= 0) { 
             clearInterval(window.timerInterval); 
             const submitBtn = document.getElementById('submit-btn');
@@ -123,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById("student-name").value.trim();
         if (!mon || !name) return alert("Vui lòng chọn môn và nhập tên!");
         
+        const config = mon === "Toán" ? { time: 15, count: 10 } : { time: 10, count: 20 };
+        
         window.correctCount = 0; window.wrongDetails = [];
         document.getElementById('count-correct').innerText = "0";
         document.getElementById('count-wrong').innerText = "0";
@@ -130,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quiz-screen').style.display = 'block';
         
         const topics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, 20);
-        renderQuiz(); startTimer();
+        window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && topics.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, config.count);
+        renderQuiz(); startTimer(config.time);
     });
 
     addSafeListener('review-wrong-btn', 'click', async () => {
@@ -143,19 +143,21 @@ document.addEventListener('DOMContentLoaded', () => {
         window.currentQuizData = wrongData.slice(0, 20);
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
-        renderQuiz(); startTimer();
+        renderQuiz(); startTimer(10);
     });
 
-    // Sự kiện nút Bảng Xếp Hạng
     addSafeListener('show-rank-btn', 'click', window.showRanking);
 
     addSafeListener('submit-btn', 'click', () => {
         clearInterval(window.timerInterval);
         const name = document.getElementById("student-name").value;
-        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: window.correctCount, soCau: 20, mon: document.getElementById('subject-select').value, wrongDetails: window.wrongDetails }) });
+        const mon = document.getElementById('subject-select').value;
+        const totalQ = mon === "Toán" ? 10 : 20;
+        
+        fetch(API_URL, { method: 'POST', body: JSON.stringify({ ten: name, diem: window.correctCount, soCau: totalQ, mon: mon, wrongDetails: window.wrongDetails }) });
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/20</b></p><p>Xếp loại: <b>${window.getRank(window.correctCount)}</b></p>`;
+        document.getElementById('result').innerHTML = `<h3>Hoàn thành!</h3><p>Điểm: <b>${window.correctCount}/${totalQ}</b></p><p>Xếp loại: <b>${window.getRank(window.correctCount)}</b></p>`;
     });
 
     addSafeListener('restart-btn', 'click', () => location.reload());
