@@ -59,15 +59,14 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-window.checkAnswer = function(i, selectedKey) {
-    const card = document.getElementById(`q-card-${i}`);
-    if (!card) return; // Kiểm tra an toàn
-
+window.checkAnswer = function(i, selectedKey, element) {
+    // 1. Tìm thẻ div bao quanh đáp án được chọn (element chính là cái bạn vừa click)
+    // 2. Lấy dữ liệu câu hỏi
     const questionData = window.currentQuizData[i];
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    // Logic nhận biết môn học
+    // 3. Logic xác định đúng/sai
     let isCorrect = false;
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
@@ -75,18 +74,19 @@ window.checkAnswer = function(i, selectedKey) {
         isCorrect = (selectedText === rawCorrect);
     }
     
-    // Khóa các radio button
-    card.querySelectorAll('input').forEach(input => input.disabled = true);
+    // 4. CHỈ TÔ MÀU ĐÁP ÁN ĐƯỢC CHỌN (element)
+    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da'; // Xanh nếu đúng, Đỏ nếu sai
     
-    // Tô màu nền thẻ và viền
-    card.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    card.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
+    // 5. Khóa tất cả các lựa chọn của câu đó lại để không chọn tiếp
+    const card = document.getElementById(`q-card-${i}`);
+    card.querySelectorAll('.option-box').forEach(box => {
+        box.style.pointerEvents = 'none'; // Ngắt tương tác
+    });
     
-    // Cập nhật điểm
+    // 6. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
-
 // --- 4. Sự kiện Bắt đầu thi ---
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
