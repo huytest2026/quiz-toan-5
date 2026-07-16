@@ -132,13 +132,20 @@ window.submitQuiz = function() {
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const callbackName = 'jsonp_callback_' + Date.now();
+    
     window[callbackName] = function(data) {
         document.body.removeChild(script);
         delete window[callbackName];
+        
         if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
-        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
+        
+        // Thêm r.mon vào chuỗi hiển thị
+        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
+                       data.slice(0, 10).map((r, i) => 
+                       `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n');
         alert(rankText);
     };
+
     const script = document.createElement('script');
     script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
     document.body.appendChild(script);
