@@ -117,3 +117,22 @@ button:hover { opacity: 0.95; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .options-grid { grid-template-columns: 1fr; }
     .container { padding: 20px; border-radius: 0; }
 }
+button.speak-btn {
+    width: auto !important;
+    padding: 8px 16px !important;
+    background-color: #e1effe;
+    color: #2b6cb0;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em !important;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+button.speak-btn:hover {
+    background-color: #2b6cb0;
+    color: white;
+}
