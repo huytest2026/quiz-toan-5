@@ -119,21 +119,36 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    alert("Nộp bài xong! Hệ thống sẽ tải lại.");
-    location.reload();
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('load-data-btn').onclick = window.loadData;
-    document.getElementById('start-btn').onclick = window.startQuiz;
-});
-window.reviewWrongQuestions = function() {
-    const wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-    if (wrongQuestions.length === 0) return alert("Bạn chưa có câu sai nào để ôn tập!");
     
-    window.currentQuizData = wrongQuestions; // Gán danh sách câu sai vào quiz
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('quiz-screen').style.display = 'block';
-    window.renderQuiz();
-    alert("Đang ôn tập " + wrongQuestions.length + " câu sai.");
+    // Thu thập thông tin cần thiết
+    const userName = document.getElementById('student-code').value.trim();
+    const subject = document.getElementById('subject-select').value;
+    const score = parseInt(document.getElementById('count-correct').innerText);
+    const total = window.currentQuizData.length;
+    
+    // Lấy danh sách câu sai từ bộ nhớ (đã lưu trong hàm checkAnswer)
+    const wrongList = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+    
+    // Gửi lên Google Sheets
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    
+    fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors", // Bắt buộc để tránh lỗi CORS
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            name: userName, 
+            score: score, 
+            total: total, 
+            subject: subject, 
+            wrongList: wrongList 
+        })
+    }).then(() => {
+        alert("Đã nộp bài thành công! Hệ thống sẽ tải lại.");
+        localStorage.removeItem('wrongQuestions'); // Xóa câu sai sau khi nộp
+        location.reload();
+    }).catch(err => {
+        console.error(err);
+        alert("Có lỗi xảy ra khi nộp bài!");
+    });
 };
