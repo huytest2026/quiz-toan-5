@@ -59,10 +59,9 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- 4. Logic chấm điểm thông minh ---
+// --- 4. Logic chấm điểm đã cập nhật (Fix lỗi lưu LocalStorage) ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
-    console.log("Dữ liệu câu hỏi đang kiểm tra:", questionData);
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
@@ -70,23 +69,32 @@ window.checkAnswer = function(i, selectedKey, element) {
                     ? (selectedKey.toLowerCase() === rawCorrect) 
                     : (selectedText === rawCorrect);
     
+    // Cập nhật logic lưu: ép buộc lưu ngay lập tức
     if (!isCorrect) {
-        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-        if (!wrongQuestions.find(q => q.question === questionData.question)) {
-            wrongQuestions.push(questionData);
-            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+        try {
+            let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+            // Kiểm tra trùng lặp dựa trên câu hỏi
+            if (!wrongQuestions.some(q => q.question === questionData.question)) {
+                wrongQuestions.push(questionData);
+                localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+                console.log("Đã lưu câu sai vào LocalStorage");
+            }
+        } catch (e) {
+            console.error("Lỗi lưu:", e);
         }
     }
     
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     const card = document.getElementById(`q-card-${i}`);
-    card.querySelectorAll('.option-box').forEach(box => {
-        box.style.pointerEvents = 'none';
-        box.style.opacity = '0.7';
-    });
+    if (card) {
+        card.querySelectorAll('.option-box').forEach(box => {
+            box.style.pointerEvents = 'none';
+            box.style.opacity = '0.7';
+        });
+    }
     
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    if (el) el.innerText = parseInt(el.innerText) + 1;
+    if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
 
 // --- 5. Bắt đầu và Nộp bài ---
@@ -115,7 +123,8 @@ window.startQuiz = function() {
 window.submitQuiz = function() {
     clearInterval(timerInterval);
     const maHS = document.getElementById('student-code').value.trim();
-    const score = parseInt(document.getElementById('count-correct').innerText);
+    const countCorrect = document.getElementById('count-correct');
+    const score = countCorrect ? parseInt(countCorrect.innerText) : 0;
     const total = window.currentQuizData.length;
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
@@ -125,20 +134,17 @@ window.submitQuiz = function() {
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ maHS: maHS, score: score, total: total })
-    }).then(() => {
-        alert("Nộp bài thành công! Hệ thống sẽ tải lại.");
-        localStorage.removeItem('wrongQuestions');
-        location.reload();
     });
+
+    alert("Nộp bài thành công!");
+    location.reload(); // Không xóa wrongQuestions ở đây nếu muốn học sinh xem lại sau khi nộp
 };
 
-// --- Khối khởi tạo sự kiện ---
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
 });
 
-// --- Các hàm bổ sung ---
 window.reviewWrong = function() {
     let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
     if (wrongQuestions.length === 0) return alert("Bạn chưa có câu sai nào để ôn tập!");
@@ -146,8 +152,12 @@ window.reviewWrong = function() {
     window.currentQuizData = wrongQuestions;
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
-    document.getElementById('count-correct').innerText = 0;
-    document.getElementById('count-wrong').innerText = 0;
+    
+    const countCorrect = document.getElementById('count-correct');
+    const countWrong = document.getElementById('count-wrong');
+    if (countCorrect) countCorrect.innerText = 0;
+    if (countWrong) countWrong.innerText = 0;
+    
     window.renderQuiz();
 };
 
@@ -159,5 +169,5 @@ window.showRanking = function() {
             let rankText = "BẢNG XẾP HẠNG:\n" + data.map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
             alert(rankText);
         })
-        .catch(err => alert("Không thể tải bảng xếp hạng!"));
+        .catch(() => alert("Không thể tải bảng xếp hạng!"));
 };
