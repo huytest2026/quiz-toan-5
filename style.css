@@ -1,10 +1,10 @@
-/* Thiết lập chung - Nền dịu mắt, chữ to hơn */
+/* Thiết lập chung - Nền dịu mắt, chữ to, thoáng đãng */
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     background-color: #eef2f7; 
     padding: 20px; 
     color: #333;
-    font-size: 18px; /* Tăng size chữ gốc */
+    font-size: 18px; 
     line-height: 1.6;
 }
 
@@ -17,9 +17,15 @@ body {
     box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
 }
 
-h1 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 30px; font-size: 2em; }
+h1 { 
+    text-align: center; 
+    color: #2c3e50; 
+    margin-top: 0; 
+    margin-bottom: 30px; 
+    font-size: 2em; 
+}
 
-/* Bảng trạng thái */
+/* Bảng trạng thái (Status Bar) */
 .status-bar { 
     position: sticky; 
     top: 10px; 
@@ -29,11 +35,11 @@ h1 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 30px; fon
     padding: 15px 25px;
     border-radius: 12px;
     margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
     font-weight: bold;
 }
 
-/* Thẻ câu hỏi (Quiz Card) - Làm nổi bật */
+/* Thẻ câu hỏi (Quiz Card) - Hiệu ứng nổi */
 .quiz-card {
     background: #ffffff;
     padding: 30px;
@@ -44,79 +50,15 @@ h1 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 30px; fon
     transition: transform 0.2s ease;
 }
 
-/* Chữ câu hỏi to, rõ */
+/* Nội dung câu hỏi to, dễ đọc */
 .question { 
     font-weight: 600; 
     margin-bottom: 20px; 
     font-size: 1.4em; 
     color: #2d3748; 
-    line-height: 1.6;
 }
 
-/* Nút Nghe - Đẹp và dễ bấm */
-button.speak-btn {
-    width: auto !important;
-    padding: 8px 20px !important;
-    background-color: #f0f7ff;
-    color: #4a90e2;
-    border: 2px solid #4a90e2;
-    font-size: 1em !important;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-bottom: 10px;
-}
-button.speak-btn:hover { background-color: #4a90e2; color: white; }
-
-/* Lưới đáp án */
-.options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-/* Ô đáp án to hơn */
-.option-box {
-    border: 2px solid #e2e8f0;
-    padding: 20px;
-    border-radius: 15px;
-    cursor: pointer;
-    background: #f9fafb;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    font-size: 1.15em;
-}
-
-.option-box:hover { 
-    background-color: #f0f7ff; 
-    border-color: #4a90e2; 
-    transform: scale(1.02);
-}
-
-/* Nút bấm tổng thể */
-button { 
-    width: 100%; 
-    padding: 18px; 
-    color: white; 
-    border: none; 
-    cursor: pointer; 
-    border-radius: 12px; 
-    font-size: 1.2em; 
-    font-weight: bold; 
-    margin-top: 20px; 
-    transition: 0.3s; 
-}
-button:hover { opacity: 0.95; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-
-#start-btn { background: #4a90e2; }
-#submit-btn { background: #28a745; }
-
-/* Responsive */
-@media (max-width: 600px) {
-    .options-grid { grid-template-columns: 1fr; }
-    .container { padding: 20px; border-radius: 0; }
-}
+/* Nút Nghe (Speak Button) - Thiết kế riêng biệt */
 button.speak-btn {
     width: auto !important;
     padding: 8px 16px !important;
@@ -130,9 +72,61 @@ button.speak-btn {
     display: inline-flex;
     align-items: center;
     transition: 0.2s;
+    margin-bottom: 10px;
+}
+button.speak-btn:hover { 
+    background-color: #2b6cb0; 
+    color: white; 
 }
 
-button.speak-btn:hover {
-    background-color: #2b6cb0;
-    color: white;
+/* Lưới đáp án (2 cột) */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Ô đáp án */
+.option-box {
+    border: 2px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    font-size: 1.15em;
+}
+.option-box:hover { 
+    background-color: #f0f7ff; 
+    border-color: #4a90e2; 
+    transform: scale(1.02);
+}
+
+/* Nút bấm (Start, Submit, v.v.) */
+button { 
+    width: 100%; 
+    padding: 18px; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 12px; 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    margin-top: 20px; 
+    transition: 0.3s; 
+}
+button:hover { 
+    opacity: 0.95; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+}
+
+#start-btn { background: #4a90e2; }
+#submit-btn { background: #28a745; }
+
+/* Responsive cho điện thoại */
+@media (max-width: 600px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .container { padding: 20px; border-radius: 0; }
 }
