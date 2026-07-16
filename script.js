@@ -1,16 +1,21 @@
+// --- KHAI BÁO BIẾN TOÀN CỤC ---
+let studentCode = "";
+let currentSubject = "";
+let totalQuestions = 0;
+let timerInterval;
+
 window.allQuizData = [];
 window.userPermissions = [];
 window.currentQuizData = [];
-let timerInterval;
 
 // --- 1. Hàm tải dữ liệu ---
 window.loadData = function() {
-    const maHS = document.getElementById('student-code').value.trim();
-    if (!maHS) return alert("Nhập mã học sinh!");
+    studentCode = document.getElementById('student-code').value.trim();
+    if (!studentCode) return alert("Nhập mã học sinh!");
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const script = document.createElement('script');
-    script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
+    script.src = `${API_URL}?ma=${encodeURIComponent(studentCode)}&callback=handleQuizData`;
     document.body.appendChild(script);
     script.onload = () => script.remove();
 };
@@ -25,13 +30,12 @@ window.handleQuizData = function(data) {
 
 // --- 2. Hàm quản lý chủ đề ---
 window.updateTopicList = function() {
-    const mon = document.getElementById('subject-select').value;
-    const maHS = document.getElementById('student-code').value.trim();
+    currentSubject = document.getElementById('subject-select').value;
     const container = document.getElementById('topic-container');
-    if (!container || !mon) return;
+    if (!container || !currentSubject) return;
 
-    const allowed = window.userPermissions.filter(p => String(p.maHS) === maHS && p.mon === mon).map(p => p.chuDe);
-    const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
+    const allowed = window.userPermissions.filter(p => String(p.maHS) === studentCode && p.mon === currentSubject).map(p => p.chuDe);
+    const topics = [...new Set(window.allQuizData.filter(i => i.mon === currentSubject).map(i => i.chuDe))];
     
     container.innerHTML = topics.map(topic => {
         const isAllowed = allowed.includes(topic);
@@ -48,7 +52,7 @@ window.renderQuiz = function() {
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         return `
-        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
+        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
@@ -59,60 +63,42 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- 4. Logic chấm điểm đã cập nhật (Fix lỗi lưu LocalStorage) ---
+// --- 4. Logic chấm điểm ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
-    
-    // Kiểm tra dữ liệu: Nếu questionData bị lỗi, Console sẽ báo ngay
-    if (!questionData) {
-        console.error("LỖI: Không tìm thấy câu hỏi tại vị trí", i);
-        return;
-    }
+    if (!questionData) return;
 
     const selectedText = (questionData[selectedKey] || "").trim().toLowerCase();
     const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
+    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) ? (selectedKey.toLowerCase() === rawCorrect) : (selectedText === rawCorrect);
     
-    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
-                    ? (selectedKey.toLowerCase() === rawCorrect) 
-                    : (selectedText === rawCorrect);
-    
-    // Nếu sai, lưu ngay vào LocalStorage
     if (!isCorrect) {
         let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-        
-        // Dùng câu hỏi làm khóa để kiểm tra trùng
         if (!wrongQuestions.some(q => q.question === questionData.question)) {
             wrongQuestions.push(questionData);
             localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
-            console.log("Đã lưu thành công câu sai vào LocalStorage!");
-        } else {
-            console.log("Câu sai này đã có sẵn, không lưu đè.");
         }
     }
     
-    // Hiệu ứng màu sắc
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    element.parentElement.querySelectorAll('.option-box').forEach(box => {
-        box.style.pointerEvents = 'none';
-        box.style.opacity = '0.7';
-    });
+    element.parentElement.querySelectorAll('.option-box').forEach(box => { box.style.pointerEvents = 'none'; box.style.opacity = '0.7'; });
     
-    // Cập nhật bộ đếm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
 
 // --- 5. Bắt đầu và Nộp bài ---
 window.startQuiz = function() {
-    const mon = document.getElementById('subject-select').value;
+    currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Chọn chủ đề!");
     
-    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === currentSubject && selected.includes(i.chuDe))
                                                .sort(() => Math.random() - 0.5)
-                                               .slice(0, mon === 'Toán' ? 10 : 20);
+                                               .slice(0, currentSubject === 'Toán' ? 10 : 20);
+    totalQuestions = window.currentQuizData.length;
     
-    let time = (mon === 'Toán' ? 15 : 10) * 60;
+    let time = (currentSubject === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         time--;
@@ -127,10 +113,8 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    const maHS = document.getElementById('student-code').value.trim();
     const countCorrect = document.getElementById('count-correct');
     const score = countCorrect ? parseInt(countCorrect.innerText) : 0;
-    const total = window.currentQuizData.length;
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     
@@ -138,70 +122,29 @@ window.submitQuiz = function() {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-        maHS: studentCode,
-        score: score,
-        total: totalQuestions,
-        mon: currentSubject })
+        body: JSON.stringify({ maHS: studentCode, score: score, total: totalQuestions, mon: currentSubject })
     });
 
     alert("Nộp bài thành công!");
-    location.reload(); // Không xóa wrongQuestions ở đây nếu muốn học sinh xem lại sau khi nộp
+    location.reload();
+};
+
+window.showRanking = function() {
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    const callbackName = 'jsonp_callback_' + Date.now();
+    window[callbackName] = function(data) {
+        document.body.removeChild(script);
+        delete window[callbackName];
+        if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
+        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
+        alert(rankText);
+    };
+    const script = document.createElement('script');
+    script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
+    document.body.appendChild(script);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
 });
-
-window.reviewWrong = function() {
-    // Tìm dữ liệu ở phạm vi gốc của website
-    let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-    
-    // Nếu vẫn không thấy, thử tìm với key đầy đủ (do cơ chế lưu của github pages)
-    if (wrongQuestions.length === 0) {
-        console.log("Đang thử tìm kiếm dữ liệu ở bộ nhớ dự phòng...");
-        // Tùy theo cấu trúc trình duyệt, đôi khi cần gọi qua window.localStorage
-    }
-
-    if (wrongQuestions.length === 0) {
-        return alert("Bạn chưa có câu sai nào để ôn tập! (Hãy đảm bảo bạn đã chọn câu sai ở cùng đường dẫn này)");
-    }
-    
-    window.currentQuizData = wrongQuestions;
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('quiz-screen').style.display = 'block';
-    
-    // Reset bộ đếm
-    const countCorrect = document.getElementById('count-correct');
-    const countWrong = document.getElementById('count-wrong');
-    if (countCorrect) countCorrect.innerText = 0;
-    if (countWrong) countWrong.innerText = 0;
-    
-    window.renderQuiz();
-};
-
-window.showRanking = function() {
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    
-    // 1. Tạo tên hàm callback duy nhất
-    const callbackName = 'jsonp_callback_' + Date.now();
-    
-    // 2. Định nghĩa hàm xử lý dữ liệu khi nhận được
-    window[callbackName] = function(data) {
-        // Xóa script sau khi đã nhận dữ liệu
-        document.body.removeChild(script);
-        delete window[callbackName];
-        
-        // Hiển thị dữ liệu
-        if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
-        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
-                       data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
-        alert(rankText);
-    };
-
-    // 3. Tạo thẻ script để gọi API
-    const script = document.createElement('script');
-    script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
-    document.body.appendChild(script);
-};
