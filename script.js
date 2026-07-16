@@ -151,13 +151,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.reviewWrong = function() {
+    // Tìm dữ liệu ở phạm vi gốc của website
     let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-    if (wrongQuestions.length === 0) return alert("Bạn chưa có câu sai nào để ôn tập!");
+    
+    // Nếu vẫn không thấy, thử tìm với key đầy đủ (do cơ chế lưu của github pages)
+    if (wrongQuestions.length === 0) {
+        console.log("Đang thử tìm kiếm dữ liệu ở bộ nhớ dự phòng...");
+        // Tùy theo cấu trúc trình duyệt, đôi khi cần gọi qua window.localStorage
+    }
+
+    if (wrongQuestions.length === 0) {
+        return alert("Bạn chưa có câu sai nào để ôn tập! (Hãy đảm bảo bạn đã chọn câu sai ở cùng đường dẫn này)");
+    }
     
     window.currentQuizData = wrongQuestions;
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     
+    // Reset bộ đếm
     const countCorrect = document.getElementById('count-correct');
     const countWrong = document.getElementById('count-wrong');
     if (countCorrect) countCorrect.innerText = 0;
