@@ -1,149 +1,18 @@
-/* 1. Thiết lập chung: Màu nền kem dịu mắt */
-body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background-color: #fdfaf6; 
-    padding: 20px; 
-    color: #333;
-    font-size: 18px; 
-    line-height: 1.6;
-}
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdfaf6; padding: 20px; color: #333; }
+.container { background: #ffffff; padding: 40px; max-width: 800px; margin: auto; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+h1 { text-align: center; color: #2c3e50; }
 
-/* 2. Container chính: Nền trắng, nổi bật trên nền kem */
-.container { 
-    background: #ffffff; 
-    padding: 40px; 
-    max-width: 800px; 
-    margin: auto; 
-    border-radius: 20px; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-}
+.status-bar { position: sticky; top: 10px; z-index: 1000; background: #ffffff; border: 1px solid #d1d5db; padding: 15px 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: bold; }
+.quiz-card { background: #fcfcfc; padding: 30px; margin-bottom: 30px; border-radius: 20px; border: 1px solid #ececec; border-left: 8px solid #4a90e2; }
 
-h1 { 
-    text-align: center; 
-    color: #2c3e50; 
-    margin-top: 0; 
-    margin-bottom: 30px; 
-    font-size: 2em; 
-}
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.option-box { border: 2px solid #e2e8f0; padding: 20px; border-radius: 15px; cursor: pointer; background: #ffffff; transition: 0.3s; }
+.option-box:hover { background-color: #f0f7ff; border-color: #4a90e2; }
 
-/* 3. Bảng trạng thái */
-.status-bar { 
-    position: sticky; 
-    top: 10px; 
-    z-index: 1000; 
-    background: #ffffff !important; 
-    border: 1px solid #d1d5db;
-    padding: 15px 25px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-    font-weight: bold;
-}
-
-/* 4. Thẻ câu hỏi (Quiz Card): Hiệu ứng nổi */
-.quiz-card {
-    background: #fcfcfc; 
-    padding: 30px;
-    margin-bottom: 30px;
-    border-radius: 20px;
-    border: 1px solid #ececec;
-    border-left: 8px solid #4a90e2; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    transition: transform 0.2s ease;
-}
-
-.question { 
-    font-weight: 600; 
-    margin-bottom: 20px; 
-    font-size: 1.4em; 
-    color: #2d3748; 
-}
-
-/* 5. Nút Nghe */
-button.speak-btn {
-    width: auto !important;
-    padding: 8px 16px !important;
-    background-color: #e1effe;
-    color: #2b6cb0;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9em !important;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    transition: 0.2s;
-    margin-bottom: 10px;
-}
-button.speak-btn:hover { 
-    background-color: #2b6cb0; 
-    color: white; 
-}
-
-/* 6. Lưới đáp án */
-.options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.option-box {
-    border: 2px solid #e2e8f0;
-    padding: 20px;
-    border-radius: 15px;
-    cursor: pointer;
-    background: #ffffff;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    font-size: 1.15em;
-}
-.option-box:hover { 
-    background-color: #f0f7ff; 
-    border-color: #4a90e2; 
-    transform: scale(1.01);
-}
-
-/* 7. Nút bấm chính */
-button { 
-    width: 100%; 
-    padding: 18px; 
-    color: white; 
-    border: none; 
-    cursor: pointer; 
-    border-radius: 12px; 
-    font-size: 1.2em; 
-    font-weight: bold; 
-    margin-top: 20px; 
-    transition: 0.3s; 
-}
-button:hover { 
-    opacity: 0.95; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
-}
-
+button { width: 100%; padding: 18px; color: white; border: none; cursor: pointer; border-radius: 12px; font-weight: bold; margin-top: 20px; }
 #start-btn { background: #4a90e2; }
 #submit-btn { background: #28a745; }
 
-/* 8. Vùng thông báo (Info Box - Vùng xám) */
-.info-box {
-    background-color: #f8f9fa; 
-    border: 2px solid #e2e8f0; 
-    padding: 20px;
-    margin-top: 30px;
-    border-radius: 15px; 
-    text-align: center;
-    color: #4a5568;
-    font-weight: 600;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.medal-text {
-    color: #e53e3e;
-}
-
-/* Responsive cho mobile */
-@media (max-width: 600px) {
-    .options-grid { grid-template-columns: 1fr; }
-    .container { padding: 20px; border-radius: 0; }
-}
+/* Vùng xếp hạng */
+.info-box { background: #f8f9fa; border: 2px solid #e2e8f0; padding: 20px; margin-top: 30px; border-radius: 15px; text-align: center; }
+#ranking-container h3 { color: #4a90e2; margin-top: 0; }
