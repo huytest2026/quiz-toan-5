@@ -179,21 +179,25 @@ window.reviewWrong = function() {
 
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    const callbackName = 'jsonp_callback_rank';
     
-    // Định nghĩa hàm callback toàn cục để nhận dữ liệu
+    // 1. Tạo tên hàm callback duy nhất
+    const callbackName = 'jsonp_callback_' + Date.now();
+    
+    // 2. Định nghĩa hàm xử lý dữ liệu khi nhận được
     window[callbackName] = function(data) {
+        // Xóa script sau khi đã nhận dữ liệu
+        document.body.removeChild(script);
+        delete window[callbackName];
+        
+        // Hiển thị dữ liệu
         if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
         let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
                        data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
         alert(rankText);
     };
 
-    // Tạo thẻ script để gọi API (JSONP)
+    // 3. Tạo thẻ script để gọi API
     const script = document.createElement('script');
     script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
     document.body.appendChild(script);
-    
-    // Xóa thẻ sau khi gọi xong
-    script.onload = () => document.body.removeChild(script);
 };
