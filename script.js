@@ -61,8 +61,8 @@ window.renderQuiz = function() {
 
 // --- 4. Logic chấm điểm thông minh ---
 window.checkAnswer = function(i, selectedKey, element) {
-    console.log("Đang kiểm tra câu:", i);
     const questionData = window.currentQuizData[i];
+    console.log("Dữ liệu câu hỏi đang kiểm tra:", questionData);
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
