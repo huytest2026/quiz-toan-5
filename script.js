@@ -178,7 +178,7 @@ window.reviewWrong = function() {
 };
 
 window.showRanking = function() {
-    const API_URL = "URL_CỦA_BẠN_ĐÃ_DEPLOY"; // Đảm bảo đúng URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Đảm bảo đúng URL
     fetch(`${API_URL}?action=getRanking`)
         .then(res => res.json())
         .then(data => {
