@@ -11,7 +11,7 @@ window.currentQuizData = [];
 // --- 1. Hàm tải dữ liệu ---
 window.loadData = function() {
     studentCode = document.getElementById('student-code').value.trim();
-    if (!studentCode) return alert("Vui lòng nhập mã học sinh!");
+    if (!studentCode) return alert("Nhập mã học sinh!");
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const script = document.createElement('script');
@@ -55,7 +55,7 @@ window.renderQuiz = function() {
         let textToSpeak = `Question ${i + 1}. ${item.question}`;
         
         let listenBtn = (currentSubject === 'Tiếng anh') ? `
-            <div style="margin-bottom:10px;">
+            <div style="margin-bottom:15px;">
                 <button class="speak-btn" onclick="window.speakText('${textToSpeak.replace(/'/g, "\\'")}')">🔊 Nghe câu hỏi</button>
             </div>` : '';
             
@@ -74,7 +74,6 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- Hàm hỗ trợ phát âm thanh ---
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
     let cleanText = text.replace(/[-_]+/g, '. '); 
@@ -84,34 +83,24 @@ window.speakText = function(text) {
     window.speechSynthesis.speak(msg);
 };
 
-// --- 4. Logic chấm điểm (Cải tiến) ---
+// --- 4. Logic chấm điểm ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
     const parent = element.parentElement;
     
-    // Ngăn chọn lại
     if (parent.dataset.answered) return;
     parent.dataset.answered = "true";
 
     const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
+    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) ? (selectedKey.toLowerCase() === rawCorrect) : (questionData[selectedKey].trim().toLowerCase() === rawCorrect);
     
-    // Xác định đúng/sai
-    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
-                    ? (selectedKey.toLowerCase() === rawCorrect) 
-                    : (questionData[selectedKey].trim().toLowerCase() === rawCorrect);
-    
-    // Highlight ô chọn
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     element.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
 
-    // Nếu sai, tự động highlight đáp án đúng cho người học
     if (!isCorrect) {
         parent.querySelectorAll('.option-box').forEach(box => {
-            if (box.dataset.key === rawCorrect) {
-                box.style.backgroundColor = '#d4edda';
-            }
+            if (box.dataset.key === rawCorrect) box.style.backgroundColor = '#d4edda';
         });
-        // Lưu câu sai
         let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
         if (!wrongQuestions.some(q => q.question === questionData.question)) {
             wrongQuestions.push(questionData);
@@ -119,7 +108,6 @@ window.checkAnswer = function(i, selectedKey, element) {
         }
     }
     
-    // Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
@@ -128,7 +116,7 @@ window.checkAnswer = function(i, selectedKey, element) {
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-    if (selected.length === 0) return alert("Vui lòng chọn chủ đề!");
+    if (selected.length === 0) return alert("Chọn chủ đề!");
     
     window.currentQuizData = window.allQuizData.filter(i => i.mon === currentSubject && selected.includes(i.chuDe))
                                                .sort(() => Math.random() - 0.5)
@@ -151,16 +139,10 @@ window.startQuiz = function() {
 window.submitQuiz = function() {
     clearInterval(timerInterval);
     window.speechSynthesis.cancel();
-    const countCorrect = document.getElementById('count-correct');
-    const score = countCorrect ? parseInt(countCorrect.innerText) : 0;
+    const score = document.getElementById('count-correct') ? parseInt(document.getElementById('count-correct').innerText) : 0;
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    
-    fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ maHS: studentCode, score: score, total: totalQuestions, mon: currentSubject })
-    });
+    fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ maHS: studentCode, score: score, total: totalQuestions, mon: currentSubject }) });
 
     alert("Nộp bài thành công!");
     location.reload();
@@ -173,15 +155,27 @@ window.showRanking = function() {
     
     window.jsonp_callback = function(data) {
         document.body.removeChild(script);
-        if (!data || data.length === 0) return alert("Chưa có dữ liệu!");
-        alert("BẢNG XẾP HẠNG (TOP 10):\n" + data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n'));
+        const rankList = document.getElementById('ranking-list');
+        if (!data || data.length === 0) return rankList.innerHTML = "Chưa có dữ liệu!";
+        
+        rankList.innerHTML = data.slice(0, 5).map((r, i) => `
+            <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                <span>${i + 1}. ${r.ten}</span>
+                <span style="font-weight:bold; color: #28a745;">${r.diem} điểm</span>
+            </div>
+        `).join('');
     };
 
     script.src = `${API_URL}?action=getRanking&callback=jsonp_callback`;
     document.body.appendChild(script);
 };
 
-// --- Khởi tạo ---
+window.reviewWrong = function() {
+    const wrong = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+    if (wrong.length === 0) return alert("Chưa có câu sai để ôn!");
+    alert("Số câu sai cần ôn: " + wrong.length);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
