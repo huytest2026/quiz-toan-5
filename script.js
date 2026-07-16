@@ -124,7 +124,7 @@ window.submitQuiz = function() {
     const total = window.currentQuizData.length;
     
     // Gửi dữ liệu về Google Apps Script
-    const API_URL = "URL_CUA_BAN"; // Dùng lại URL của bạn
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec; // Dùng lại URL của bạn
     fetch(API_URL, {
         method: "POST",
         mode: "no-cors",
