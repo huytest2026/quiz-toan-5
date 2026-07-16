@@ -148,22 +148,25 @@ window.submitQuiz = function() {
     location.reload();
 };
 
-// --- 6. Xếp hạng ---
+// --- 6. Xếp hạng (Có Huy chương) ---
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const script = document.createElement('script');
     
     window.jsonp_callback = function(data) {
         document.body.removeChild(script);
-        const rankList = document.getElementById('ranking-list');
-        if (!data || data.length === 0) return rankList.innerHTML = "Chưa có dữ liệu!";
+        if (!data || data.length === 0) return alert("Chưa có dữ liệu!");
         
-        rankList.innerHTML = data.slice(0, 5).map((r, i) => `
-            <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-                <span>${i + 1}. ${r.ten}</span>
-                <span style="font-weight:bold; color: #28a745;">${r.diem} điểm</span>
-            </div>
-        `).join('');
+        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + data.slice(0, 10).map((r, i) => {
+            let medal = "";
+            if (i === 0) medal = " 🥇 (Vàng)";
+            else if (i === 1) medal = " 🥈 (Bạc)";
+            else if (i === 2) medal = " 🥉 (Đồng)";
+            
+            return `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm${medal}`;
+        }).join('\n');
+        
+        alert(rankText);
     };
 
     script.src = `${API_URL}?action=getRanking&callback=jsonp_callback`;
