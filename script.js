@@ -138,7 +138,11 @@ window.submitQuiz = function() {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maHS: maHS, score: score, total: total })
+        body: JSON.stringify({
+        maHS: studentCode,
+        score: score,
+        total: totalQuestions,
+        mon: currentSubject })
     });
 
     alert("Nộp bài thành công!");
