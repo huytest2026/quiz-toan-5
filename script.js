@@ -65,14 +65,10 @@ window.checkAnswer = function(i, selectedKey, element) {
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    let isCorrect = false;
-    if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
-        isCorrect = (selectedKey.toLowerCase() === rawCorrect);
-    } else {
-        isCorrect = (selectedText === rawCorrect);
-    }
+    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
+                    ? (selectedKey.toLowerCase() === rawCorrect) 
+                    : (selectedText === rawCorrect);
     
-    // --- MỚI: Lưu câu sai vào LocalStorage ---
     if (!isCorrect) {
         let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
         if (!wrongQuestions.find(q => q.question === questionData.question)) {
@@ -80,10 +76,8 @@ window.checkAnswer = function(i, selectedKey, element) {
             localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
         }
     }
-    // ----------------------------------------
     
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
         box.style.pointerEvents = 'none';
@@ -101,8 +95,8 @@ window.startQuiz = function() {
     if (selected.length === 0) return alert("Chọn chủ đề!");
     
     window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
-                                             .sort(() => Math.random() - 0.5)
-                                             .slice(0, mon === 'Toán' ? 10 : 20);
+                                               .sort(() => Math.random() - 0.5)
+                                               .slice(0, mon === 'Toán' ? 10 : 20);
     
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
@@ -123,24 +117,27 @@ window.submitQuiz = function() {
     const score = parseInt(document.getElementById('count-correct').innerText);
     const total = window.currentQuizData.length;
     
-    // Gửi dữ liệu về Google Apps Script
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec; // Dùng lại URL của bạn
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    
     fetch(API_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ maHS: maHS, score: score, total: total })
+    }).then(() => {
+        alert("Nộp bài thành công! Hệ thống sẽ tải lại.");
+        localStorage.removeItem('wrongQuestions');
+        location.reload();
     });
-
-    alert("Nộp bài thành công! Hệ thống sẽ tải lại.");
-    localStorage.removeItem('wrongQuestions'); // Xóa câu sai cũ
-    location.reload();
 };
 
+// --- Khối khởi tạo sự kiện ---
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
 });
+
+// --- Các hàm bổ sung ---
 window.reviewWrong = function() {
     let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
     if (wrongQuestions.length === 0) return alert("Bạn chưa có câu sai nào để ôn tập!");
@@ -148,17 +145,18 @@ window.reviewWrong = function() {
     window.currentQuizData = wrongQuestions;
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
-    // Reset điểm trước khi ôn tập
     document.getElementById('count-correct').innerText = 0;
     document.getElementById('count-wrong').innerText = 0;
     window.renderQuiz();
 };
+
 window.showRanking = function() {
-    const API_URL = "URL_CUA_BAN"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; 
     fetch(`${API_URL}?action=getRanking`)
         .then(res => res.json())
         .then(data => {
             let rankText = "BẢNG XẾP HẠNG:\n" + data.map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
             alert(rankText);
-        });
+        })
+        .catch(err => alert("Không thể tải bảng xếp hạng!"));
 };
