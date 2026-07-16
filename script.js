@@ -152,3 +152,12 @@ window.submitQuiz = function() {
         alert("Có lỗi xảy ra khi nộp bài!");
     });
 };
+// --- 6. Gán sự kiện cho các nút bấm (Phải có đoạn này để nút chạy) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Kiểm tra các ID này có khớp với HTML của bạn không
+    const loadBtn = document.getElementById('load-data-btn');
+    const startBtn = document.getElementById('start-btn');
+    
+    if (loadBtn) loadBtn.onclick = window.loadData;
+    if (startBtn) startBtn.onclick = window.startQuiz;
+});
