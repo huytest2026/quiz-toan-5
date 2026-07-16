@@ -49,21 +49,27 @@ window.updateTopicList = function() {
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
+    
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
-        
-        // Chỉ lấy câu hỏi, bỏ qua đáp án
         let textToSpeak = `Question ${i + 1}. ${item.question}`;
         
+        let listenBtn = (currentSubject === 'Tiếng anh') ? `
+            <div style="margin-bottom:15px;">
+                <button class="speak-btn" onclick="window.speakText('${textToSpeak.replace(/'/g, "\\'")}')">🔊 Nghe câu hỏi</button>
+            </div>` : '';
+            
         return `
-        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
-            ${currentSubject === 'Tiếng anh' ? `<button onclick="window.speakText('${textToSpeak.replace(/'/g, "\\'")}')" style="float:right; cursor:pointer;">🔊 Nghe</button>` : ''}
-            <b>Câu ${i+1}: ${item.question}</b><br>
-            ${options.map(opt => `
-                <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
-                    <input type="radio" name="q${i}" value="${opt.k}" disabled> ${opt.v}
-                </div>
-            `).join('')}
+        <div class="quiz-card" id="q-card-${i}">
+            ${listenBtn}
+            <div class="question">Câu ${i+1}: ${item.question}</div>
+            <div class="options-grid">
+                ${options.map(opt => `
+                    <div class="option-box" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
+                        <input type="radio" name="q${i}" value="${opt.k}" disabled> ${opt.v}
+                    </div>
+                `).join('')}
+            </div>
         </div>`;
     }).join('');
 };
@@ -71,7 +77,6 @@ window.renderQuiz = function() {
 // --- Hàm hỗ trợ phát âm thanh ---
 window.speakText = function(text) {
     window.speechSynthesis.cancel();
-    // Thay thế gạch ngang/dưới bằng dấu chấm để tạo khoảng nghỉ
     let cleanText = text.replace(/[-_]+/g, '. '); 
     const msg = new SpeechSynthesisUtterance(cleanText);
     msg.lang = 'en-US';
