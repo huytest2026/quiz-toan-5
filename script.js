@@ -62,37 +62,42 @@ window.renderQuiz = function() {
 // --- 4. Logic chấm điểm đã cập nhật (Fix lỗi lưu LocalStorage) ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
-    const selectedText = questionData[selectedKey].trim().toLowerCase();
-    const rawCorrect = String(questionData.correct).trim().toLowerCase();
+    
+    // Kiểm tra dữ liệu: Nếu questionData bị lỗi, Console sẽ báo ngay
+    if (!questionData) {
+        console.error("LỖI: Không tìm thấy câu hỏi tại vị trí", i);
+        return;
+    }
+
+    const selectedText = (questionData[selectedKey] || "").trim().toLowerCase();
+    const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
     
     let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
                     ? (selectedKey.toLowerCase() === rawCorrect) 
                     : (selectedText === rawCorrect);
     
-    // Cập nhật logic lưu: ép buộc lưu ngay lập tức
+    // Nếu sai, lưu ngay vào LocalStorage
     if (!isCorrect) {
-        try {
-            let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-            // Kiểm tra trùng lặp dựa trên câu hỏi
-            if (!wrongQuestions.some(q => q.question === questionData.question)) {
-                wrongQuestions.push(questionData);
-                localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
-                console.log("Đã lưu câu sai vào LocalStorage");
-            }
-        } catch (e) {
-            console.error("Lỗi lưu:", e);
+        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+        
+        // Dùng câu hỏi làm khóa để kiểm tra trùng
+        if (!wrongQuestions.some(q => q.question === questionData.question)) {
+            wrongQuestions.push(questionData);
+            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+            console.log("Đã lưu thành công câu sai vào LocalStorage!");
+        } else {
+            console.log("Câu sai này đã có sẵn, không lưu đè.");
         }
     }
     
+    // Hiệu ứng màu sắc
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    const card = document.getElementById(`q-card-${i}`);
-    if (card) {
-        card.querySelectorAll('.option-box').forEach(box => {
-            box.style.pointerEvents = 'none';
-            box.style.opacity = '0.7';
-        });
-    }
+    element.parentElement.querySelectorAll('.option-box').forEach(box => {
+        box.style.pointerEvents = 'none';
+        box.style.opacity = '0.7';
+    });
     
+    // Cập nhật bộ đếm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
