@@ -45,15 +45,15 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị câu hỏi (ĐÃ CẬP NHẬT TÍNH NĂNG NGHE) ---
+// --- 3. Hàm hiển thị câu hỏi ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         
-        // Chuẩn bị nội dung để đọc
-        let textToSpeak = `Question ${i + 1}: ${item.question}. A: ${item.a}. B: ${item.b}. C: ${item.c}. D: ${item.d}`;
+        // Chỉ lấy câu hỏi, bỏ qua đáp án
+        let textToSpeak = `Question ${i + 1}. ${item.question}`;
         
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
@@ -68,11 +68,14 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// Hàm hỗ trợ phát âm thanh
+// --- Hàm hỗ trợ phát âm thanh ---
 window.speakText = function(text) {
-    window.speechSynthesis.cancel(); // Dừng âm thanh cũ nếu đang đọc
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'en-US'; 
+    window.speechSynthesis.cancel();
+    // Thay thế gạch ngang/dưới bằng dấu chấm để tạo khoảng nghỉ
+    let cleanText = text.replace(/[-_]+/g, '. '); 
+    const msg = new SpeechSynthesisUtterance(cleanText);
+    msg.lang = 'en-US';
+    msg.rate = 0.9;
     window.speechSynthesis.speak(msg);
 };
 
@@ -126,7 +129,7 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    window.speechSynthesis.cancel(); // Dừng đọc khi nộp bài
+    window.speechSynthesis.cancel();
     const countCorrect = document.getElementById('count-correct');
     const score = countCorrect ? parseInt(countCorrect.innerText) : 0;
     
@@ -152,12 +155,8 @@ window.showRanking = function() {
     window[callbackName] = function(data) {
         document.body.removeChild(script);
         delete window[callbackName];
-        
         if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
-        
-        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
-                       data.slice(0, 10).map((r, i) => 
-                       `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n');
+        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n');
         alert(rankText);
     };
 
