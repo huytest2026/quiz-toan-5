@@ -127,3 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
 });
+window.reviewWrongQuestions = function() {
+    const wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+    if (wrongQuestions.length === 0) return alert("Bạn chưa có câu sai nào để ôn tập!");
+    
+    window.currentQuizData = wrongQuestions; // Gán danh sách câu sai vào quiz
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    window.renderQuiz();
+    alert("Đang ôn tập " + wrongQuestions.length + " câu sai.");
+};
