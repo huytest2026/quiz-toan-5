@@ -119,7 +119,21 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    alert("Nộp bài xong! Hệ thống sẽ tải lại.");
+    const maHS = document.getElementById('student-code').value.trim();
+    const score = parseInt(document.getElementById('count-correct').innerText);
+    const total = window.currentQuizData.length;
+    
+    // Gửi dữ liệu về Google Apps Script
+    const API_URL = "URL_CUA_BAN"; // Dùng lại URL của bạn
+    fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maHS: maHS, score: score, total: total })
+    });
+
+    alert("Nộp bài thành công! Hệ thống sẽ tải lại.");
+    localStorage.removeItem('wrongQuestions'); // Xóa câu sai cũ
     location.reload();
 };
 
@@ -138,4 +152,13 @@ window.reviewWrong = function() {
     document.getElementById('count-correct').innerText = 0;
     document.getElementById('count-wrong').innerText = 0;
     window.renderQuiz();
+};
+window.showRanking = function() {
+    const API_URL = "URL_CUA_BAN"; 
+    fetch(`${API_URL}?action=getRanking`)
+        .then(res => res.json())
+        .then(data => {
+            let rankText = "BẢNG XẾP HẠNG:\n" + data.map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
+            alert(rankText);
+        });
 };
