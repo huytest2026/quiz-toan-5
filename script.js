@@ -45,14 +45,19 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị câu hỏi ---
+// --- 3. Hàm hiển thị câu hỏi (ĐÃ CẬP NHẬT TÍNH NĂNG NGHE) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
+        
+        // Chuẩn bị nội dung để đọc
+        let textToSpeak = `Question ${i + 1}: ${item.question}. A: ${item.a}. B: ${item.b}. C: ${item.c}. D: ${item.d}`;
+        
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
+            ${currentSubject === 'Tiếng anh' ? `<button onclick="window.speakText('${textToSpeak.replace(/'/g, "\\'")}')" style="float:right; cursor:pointer;">🔊 Nghe</button>` : ''}
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
@@ -61,6 +66,14 @@ window.renderQuiz = function() {
             `).join('')}
         </div>`;
     }).join('');
+};
+
+// Hàm hỗ trợ phát âm thanh
+window.speakText = function(text) {
+    window.speechSynthesis.cancel(); // Dừng âm thanh cũ nếu đang đọc
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'en-US'; 
+    window.speechSynthesis.speak(msg);
 };
 
 // --- 4. Logic chấm điểm ---
@@ -113,6 +126,7 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
+    window.speechSynthesis.cancel(); // Dừng đọc khi nộp bài
     const countCorrect = document.getElementById('count-correct');
     const score = countCorrect ? parseInt(countCorrect.innerText) : 0;
     
@@ -133,8 +147,6 @@ window.submitQuiz = function() {
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const callbackName = 'jsonp_callback_' + Date.now();
-    
-    // Đảm bảo script được tạo đúng cách để gọi JSONP
     const script = document.createElement('script');
     
     window[callbackName] = function(data) {
@@ -143,7 +155,6 @@ window.showRanking = function() {
         
         if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
         
-        // Hiển thị Tên, Môn học và Điểm số
         let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
                        data.slice(0, 10).map((r, i) => 
                        `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n');
@@ -157,7 +168,6 @@ window.showRanking = function() {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
-    // Gán sự kiện cho nút Xem Xếp Hạng nếu có
     const rankBtn = document.getElementById('rank-btn');
     if (rankBtn) rankBtn.onclick = window.showRanking;
 });
