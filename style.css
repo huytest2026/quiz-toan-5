@@ -1,77 +1,119 @@
-/* Thiết lập chung */
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; }
+/* Thiết lập chung - Nền dịu mắt, chữ to hơn */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: #eef2f7; 
+    padding: 20px; 
+    color: #333;
+    font-size: 18px; /* Tăng size chữ gốc */
+    line-height: 1.6;
+}
 
-.container { background: white; padding: 30px; max-width: 800px; margin: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.container { 
+    background: #ffffff; 
+    padding: 40px; 
+    max-width: 800px; 
+    margin: auto; 
+    border-radius: 20px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+}
 
-h1 { text-align: center; color: #333; margin-top: 0; }
+h1 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 30px; font-size: 2em; }
 
-/* Bảng trạng thái (Status Bar) - CSS Mới cho Bước 2 */
+/* Bảng trạng thái */
 .status-bar { 
     position: sticky; 
     top: 10px; 
     z-index: 1000; 
     background: #ffffff !important; 
     border: 1px solid #d1d5db;
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    font-weight: bold;
 }
 
-/* Các màn hình chính */
-#start-screen, #result-screen { text-align: center; }
-
-/* Ô chọn môn */
-#subject-select {
-    border: 1px solid #d1d5db;
-    outline: none;
-    transition: 0.2s;
-}
-#subject-select:focus { border-color: #007bff; box-shadow: 0 0 5px rgba(0,123,255,0.2); }
-
-/* Thẻ câu hỏi (Quiz Card) */
+/* Thẻ câu hỏi (Quiz Card) - Làm nổi bật */
 .quiz-card {
     background: #ffffff;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 12px;
-    border-left: 5px solid #007bff; /* Điểm nhấn cạnh bên */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 30px;
+    margin-bottom: 30px;
+    border-radius: 20px;
+    border-left: 8px solid #4a90e2; 
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
 }
 
-.question { font-weight: 600; margin-bottom: 15px; font-size: 1.15em; color: #2d3748; }
+/* Chữ câu hỏi to, rõ */
+.question { 
+    font-weight: 600; 
+    margin-bottom: 20px; 
+    font-size: 1.4em; 
+    color: #2d3748; 
+    line-height: 1.6;
+}
 
-/* Lưới 2 cột cho đáp án */
+/* Nút Nghe - Đẹp và dễ bấm */
+button.speak-btn {
+    width: auto !important;
+    padding: 8px 20px !important;
+    background-color: #f0f7ff;
+    color: #4a90e2;
+    border: 2px solid #4a90e2;
+    font-size: 1em !important;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+button.speak-btn:hover { background-color: #4a90e2; color: white; }
+
+/* Lưới đáp án */
 .options-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 20px;
 }
 
-/* Hiệu ứng chọn đáp án */
+/* Ô đáp án to hơn */
 .option-box {
-    border: 1.5px solid #e2e8f0;
-    padding: 12px;
-    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 15px;
     cursor: pointer;
-    background: #f8fafc;
-    transition: all 0.2s ease;
+    background: #f9fafb;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    font-weight: 500;
+    font-size: 1.15em;
 }
 
-.option-box:hover { background-color: #ebf8ff; border-color: #63b3ed; }
-.option-box input { margin-right: 12px; cursor: pointer; transform: scale(1.2); }
+.option-box:hover { 
+    background-color: #f0f7ff; 
+    border-color: #4a90e2; 
+    transform: scale(1.02);
+}
 
-/* Nút bấm */
-button { width: 100%; padding: 15px; color: white; border: none; cursor: pointer; border-radius: 8px; font-size: 1.1em; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-button:hover { opacity: 0.9; transform: translateY(-1px); }
+/* Nút bấm tổng thể */
+button { 
+    width: 100%; 
+    padding: 18px; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 12px; 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    margin-top: 20px; 
+    transition: 0.3s; 
+}
+button:hover { opacity: 0.95; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
 
-#start-btn { background: #007bff; }
+#start-btn { background: #4a90e2; }
 #submit-btn { background: #28a745; }
-#restart-btn { background: #ffc107; color: #333; }
 
-#result { margin-top: 20px; padding: 15px; text-align: center; font-size: 1.3em; color: #28a745; font-weight: bold; }
-
-/* Responsive cho điện thoại */
+/* Responsive */
 @media (max-width: 600px) {
     .options-grid { grid-template-columns: 1fr; }
-    .container { padding: 15px; }
+    .container { padding: 20px; border-radius: 0; }
 }
