@@ -129,9 +129,13 @@ window.submitQuiz = function() {
     location.reload();
 };
 
+// --- 6. Xếp hạng ---
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const callbackName = 'jsonp_callback_' + Date.now();
+    
+    // Đảm bảo script được tạo đúng cách để gọi JSONP
+    const script = document.createElement('script');
     
     window[callbackName] = function(data) {
         document.body.removeChild(script);
@@ -139,14 +143,13 @@ window.showRanking = function() {
         
         if (!data || data.length === 0) return alert("Chưa có dữ liệu xếp hạng!");
         
-        // Thêm r.mon vào chuỗi hiển thị
+        // Hiển thị Tên, Môn học và Điểm số
         let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
                        data.slice(0, 10).map((r, i) => 
                        `${i+1}. ${r.ten} (${r.mon}): ${r.diem} điểm`).join('\n');
         alert(rankText);
     };
 
-    const script = document.createElement('script');
     script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
     document.body.appendChild(script);
 };
@@ -154,4 +157,7 @@ window.showRanking = function() {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
+    // Gán sự kiện cho nút Xem Xếp Hạng nếu có
+    const rankBtn = document.getElementById('rank-btn');
+    if (rankBtn) rankBtn.onclick = window.showRanking;
 });
