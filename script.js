@@ -62,37 +62,34 @@ window.renderQuiz = function() {
 // --- 4. Logic chấm điểm thông minh ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
-    
-    // 1. Lấy dữ liệu
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
-    // 2. Debug: Kiểm tra xem hệ thống đang so sánh cái gì
-    console.log("Câu " + (i+1) + " | Chọn: " + selectedText + " | Đáp án đúng: " + rawCorrect);
-    
-    // 3. Logic xác định đúng/sai
     let isCorrect = false;
-    
-    // Nếu đáp án đúng là "a", "b", "c", "d" (trường hợp môn Toán)
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
     } else {
-        // Nếu đáp án đúng là văn bản (trường hợp môn Tiếng Anh)
-        // Chúng ta so sánh nội dung văn bản
         isCorrect = (selectedText === rawCorrect);
     }
     
-    // 4. Tô màu cho riêng đáp án được chọn
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // 5. Khóa các lựa chọn khác trong câu
+    // --- NÂNG CẤP: LƯU CÂU SAI VÀO BỘ NHỚ ---
+    if (!isCorrect) {
+        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+        // Lưu câu hỏi vào danh sách sai nếu chưa có
+        if (!wrongQuestions.find(q => q.question === questionData.question)) {
+            wrongQuestions.push(questionData);
+            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+        }
+    }
+
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
         box.style.pointerEvents = 'none';
-        box.style.opacity = '0.7'; // Làm mờ các lựa chọn khác
+        box.style.opacity = '0.7';
     });
     
-    // 6. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
