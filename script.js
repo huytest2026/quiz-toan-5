@@ -178,12 +178,17 @@ window.reviewWrong = function() {
 };
 
 window.showRanking = function() {
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; 
+    const API_URL = "URL_CỦA_BẠN_ĐÃ_DEPLOY"; // Đảm bảo đúng URL
     fetch(`${API_URL}?action=getRanking`)
         .then(res => res.json())
         .then(data => {
-            let rankText = "BẢNG XẾP HẠNG:\n" + data.map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
+            if (data.length === 0) return alert("Chưa có kết quả xếp hạng.");
+            let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
+                           data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
             alert(rankText);
         })
-        .catch(() => alert("Không thể tải bảng xếp hạng!"));
+        .catch(err => {
+            console.error(err);
+            alert("Không thể tải bảng xếp hạng!");
+        });
 };
