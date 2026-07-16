@@ -62,34 +62,37 @@ window.renderQuiz = function() {
 // --- 4. Logic chấm điểm thông minh ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
+    
+    // 1. Lấy dữ liệu
     const selectedText = questionData[selectedKey].trim().toLowerCase();
     const rawCorrect = String(questionData.correct).trim().toLowerCase();
     
+    // 2. Debug: Kiểm tra xem hệ thống đang so sánh cái gì
+    console.log("Câu " + (i+1) + " | Chọn: " + selectedText + " | Đáp án đúng: " + rawCorrect);
+    
+    // 3. Logic xác định đúng/sai
     let isCorrect = false;
+    
+    // Nếu đáp án đúng là "a", "b", "c", "d" (trường hợp môn Toán)
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
     } else {
+        // Nếu đáp án đúng là văn bản (trường hợp môn Tiếng Anh)
+        // Chúng ta so sánh nội dung văn bản
         isCorrect = (selectedText === rawCorrect);
     }
     
+    // 4. Tô màu cho riêng đáp án được chọn
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // --- NÂNG CẤP: LƯU CÂU SAI VÀO BỘ NHỚ ---
-    if (!isCorrect) {
-        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-        // Lưu câu hỏi vào danh sách sai nếu chưa có
-        if (!wrongQuestions.find(q => q.question === questionData.question)) {
-            wrongQuestions.push(questionData);
-            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
-        }
-    }
-
+    // 5. Khóa các lựa chọn khác trong câu
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
         box.style.pointerEvents = 'none';
-        box.style.opacity = '0.7';
+        box.style.opacity = '0.7'; // Làm mờ các lựa chọn khác
     });
     
+    // 6. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
@@ -119,45 +122,11 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    
-    // Thu thập thông tin cần thiết
-    const userName = document.getElementById('student-code').value.trim();
-    const subject = document.getElementById('subject-select').value;
-    const score = parseInt(document.getElementById('count-correct').innerText);
-    const total = window.currentQuizData.length;
-    
-    // Lấy danh sách câu sai từ bộ nhớ (đã lưu trong hàm checkAnswer)
-    const wrongList = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
-    
-    // Gửi lên Google Sheets
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    
-    fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors", // Bắt buộc để tránh lỗi CORS
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            name: userName, 
-            score: score, 
-            total: total, 
-            subject: subject, 
-            wrongList: wrongList 
-        })
-    }).then(() => {
-        alert("Đã nộp bài thành công! Hệ thống sẽ tải lại.");
-        localStorage.removeItem('wrongQuestions'); // Xóa câu sai sau khi nộp
-        location.reload();
-    }).catch(err => {
-        console.error(err);
-        alert("Có lỗi xảy ra khi nộp bài!");
-    });
+    alert("Nộp bài xong! Hệ thống sẽ tải lại.");
+    location.reload();
 };
-// --- 6. Gán sự kiện cho các nút bấm (Phải có đoạn này để nút chạy) ---
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Kiểm tra các ID này có khớp với HTML của bạn không
-    const loadBtn = document.getElementById('load-data-btn');
-    const startBtn = document.getElementById('start-btn');
-    
-    if (loadBtn) loadBtn.onclick = window.loadData;
-    if (startBtn) startBtn.onclick = window.startQuiz;
+    document.getElementById('load-data-btn').onclick = window.loadData;
+    document.getElementById('start-btn').onclick = window.startQuiz;
 });
