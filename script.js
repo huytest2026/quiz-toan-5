@@ -178,17 +178,20 @@ window.reviewWrong = function() {
 };
 
 window.showRanking = function() {
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; // Đảm bảo đúng URL
-    fetch(`${API_URL}?action=getRanking`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.length === 0) return alert("Chưa có kết quả xếp hạng.");
-            let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
-                           data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
-            alert(rankText);
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Không thể tải bảng xếp hạng!");
-        });
+    const API_URL = "https://script.google.com/macros/s/AKfyc.../exec"; // Link của bạn
+    const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+    
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        
+        // Hiển thị bảng xếp hạng
+        let rankText = "BẢNG XẾP HẠNG (TOP 10):\n" + 
+                       data.slice(0, 10).map((r, i) => `${i+1}. ${r.ten}: ${r.diem} điểm`).join('\n');
+        alert(rankText);
+    };
+
+    const script = document.createElement('script');
+    script.src = `${API_URL}?action=getRanking&callback=${callbackName}`;
+    document.body.appendChild(script);
 };
