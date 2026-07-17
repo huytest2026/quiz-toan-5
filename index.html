@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIZ Online</title>
+    <title>Bài Kiểm Tra Trực Tuyến</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container" id="start-screen">
-    <h1>Online QUIZ</h1>
+    <h1>Bài Kiểm Tra Trực Tuyến</h1>
     
     <input type="text" id="student-code" placeholder="Nhập MÃ HỌC SINH..." style="width: 100%; padding: 15px; margin-bottom: 15px; box-sizing: border-box; border-radius: 10px; border: 1px solid #ccc;">
     
@@ -24,27 +24,26 @@
 
     <div id="topic-container" style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 10px; max-height: 150px; overflow-y: auto; background: #fafafa;"></div>
 
-    <button id="start-btn">Bắt đầu QUIZ</button>
+    <button id="start-btn">Bắt Đầu Làm Bài</button>
 
     <div style="display: flex; gap: 10px;">
         <button onclick="window.showRanking()" style="background: #ffc107; color: #333;">Xem Xếp Hạng</button>
         <button onclick="window.reviewWrong()" style="background: #17a2b8; color: white;">Ôn tập câu sai</button>
     </div>
 
-    <!-- Khung hiển thị xếp hạng -->
-    <div class="info-box" id="ranking-container" style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 10px;">
+    <div class="info-box" id="ranking-container">
         <h3>🏆 Bảng Xếp Hạng</h3>
         <div id="ranking-list">Nhấn "Xem Xếp Hạng" để xem kết quả...</div>
     </div>
 </div>
 
 <div class="container" id="quiz-screen" style="display:none;">
-    <div class="status-bar" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <div>Thời gian: <span id="timer-display" style="color: red; font-weight: bold;">--:--</span></div>
-        <div>Đúng: <span id="count-correct" style="color: green; font-weight: bold;">0</span> | Sai: <span id="count-wrong" style="color: red; font-weight: bold;">0</span></div>
+    <div class="status-bar" style="display: flex; justify-content: space-between;">
+        <div>Thời gian: <span id="timer-display" style="color: red;">--:--</span></div>
+        <div>Đúng: <span id="count-correct" style="color: green;">0</span> | Sai: <span id="count-wrong" style="color: red;">0</span></div>
     </div>
     <div id="quiz"></div>
-    <button type="button" id="submit-btn" onclick="window.submitQuiz()" style="width: 100%; margin-top: 20px; background: #28a745; color: white;">Nộp QUIZ</button>
+    <button type="button" id="submit-btn" onclick="window.submitQuiz()">Nộp bài</button>
 </div>
 
 <script src="script.js" defer></script>
