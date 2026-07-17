@@ -9,7 +9,34 @@ h1 { text-align: center; color: #2c3e50; }
 .option-box { border: 2px solid #e2e8f0; padding: 20px; border-radius: 15px; cursor: pointer; background: #ffffff; transition: 0.3s; }
 .option-box:hover { background-color: #f0f7ff; border-color: #4a90e2; }
 
-button { width: 100%; padding: 18px; color: white; border: none; cursor: pointer; border-radius: 12px; font-weight: bold; margin-top: 20px; }
+/* --- CSS BỔ SUNG CHO GÕ TỪ (GO_TU) --- */
+.text-input {
+    width: 100%;
+    padding: 18px;
+    margin: 15px 0;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1.1em;
+    box-sizing: border-box;
+    transition: 0.3s;
+}
+.text-input:focus { border-color: #4a90e2; outline: none; }
+.text-input:disabled { background-color: #f8f9fa; cursor: not-allowed; }
+
+.speak-btn { 
+    background: #6c757d; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-bottom: 15px; 
+    font-size: 0.9em;
+}
+.speak-btn:hover { background: #5a6268; }
+
+/* --- NÚT BẤM CHUNG --- */
+button { width: 100%; padding: 18px; color: white; border: none; cursor: pointer; border-radius: 12px; font-weight: bold; margin-top: 10px; }
 #start-btn { background: #4a90e2; }
 #submit-btn { background: #28a745; }
 
