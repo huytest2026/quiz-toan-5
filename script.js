@@ -92,38 +92,51 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
 
+// --- HÀM CHẤM ĐIỂM TRẮC NGHIỆM CŨ ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
     const parent = element.parentElement;
     
-    // Nếu đã chọn rồi thì không cho chọn nữa
     if (parent.dataset.answered) return;
     parent.dataset.answered = "true";
+
+    const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
+    // Logic cũ: Nếu là a/b/c/d thì so sánh theo key, nếu là nội dung thì so sánh theo text
+    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
+        ? (selectedKey.toLowerCase() === rawCorrect) 
+        : (String(questionData[selectedKey] || "").trim().toLowerCase() === rawCorrect);
     
-    // Lấy đáp án đúng từ dữ liệu (chuẩn hóa về chữ thường để so sánh)
-    // Lưu ý: Dữ liệu Google Sheets trả về thường nằm ở cột 'correct' hoặc 'dapAnDung'
-    const rawCorrect = String(questionData.correct || questionData.dapAnDung || "").trim().toLowerCase();
-    const isCorrect = selectedKey.toLowerCase() === rawCorrect;
-    
-    // Đổi màu phần tử đã chọn
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     element.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
-    
-    // Nếu sai, tự động tô màu xanh vào ô chứa đáp án đúng
+
     if (!isCorrect) {
         parent.querySelectorAll('.option-box').forEach(box => {
-            if (box.dataset.key.toLowerCase() === rawCorrect) {
-                box.style.backgroundColor = '#d4edda';
-                box.style.borderColor = '#28a745';
-            }
+            if (box.dataset.key === rawCorrect) box.style.backgroundColor = '#d4edda';
         });
+        // Lưu câu sai vào localStorage
+        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+        if (!wrongQuestions.some(q => q.question === questionData.question)) {
+            wrongQuestions.push(questionData);
+            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+        }
     }
     
-    // Cập nhật điểm số trên giao diện
-    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    if (counter) {
-        counter.innerText = parseInt(counter.innerText || 0) + 1;
-    }
+    let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    if (el) el.innerText = parseInt(el.innerText || 0) + 1;
+};
+
+// --- HÀM CHẤM ĐIỂM CHO DẠNG GÕ TỪ (go_tu) ---
+window.checkTypedAnswer = function(i, correctValue) {
+    const inputVal = document.getElementById(`input-${i}`).value.trim().toLowerCase();
+    const feedback = document.getElementById(`feedback-${i}`);
+    const isCorrect = inputVal === String(correctValue).trim().toLowerCase();
+    
+    feedback.innerText = isCorrect ? "Chính xác!" : `Sai rồi, đáp án đúng là: ${correctValue}`;
+    feedback.style.color = isCorrect ? "green" : "red";
+    
+    // Cập nhật điểm số
+    let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
 
 window.startQuiz = function() {
