@@ -44,7 +44,7 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- ÂM THANH SẠCH (LOẠI BỎ UNDERSCORE) ---
+// --- ÂM THANH SẠCH ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -55,6 +55,7 @@ window.speakText = function(text, questionIndex) {
         window.speechSynthesis.speak(utterance);
     }
 };
+
 // --- BẮT ĐẦU & ĐỒNG HỒ ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
@@ -92,7 +93,6 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
-        // Escape dấu nháy đơn để tránh lỗi JS
         const safeQuestion = item.question.replace(/'/g, "\\'");
         const speakerBtn = `<button onclick="window.speakText('${safeQuestion}', ${i})" style="margin-left:10px; cursor:pointer;">🔊</button>`;
         
@@ -164,6 +164,18 @@ window.reviewWrong = function() {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     window.renderQuiz();
+};
+
+// --- CHỨC NĂNG MỚI: THỐNG KÊ LỖI SAI ---
+window.showWrongStats = function() {
+    if (wrongQuestions.length === 0) return alert("Bạn chưa có dữ liệu câu sai để thống kê!");
+    const stats = {};
+    wrongQuestions.forEach(q => stats[q.chuDe] = (stats[q.chuDe] || 0) + 1);
+    const sortedStats = Object.keys(stats).map(chuDe => ({ chuDe: chuDe, count: stats[chuDe] }))
+                                        .sort((a, b) => b.count - a.count);
+    let message = "THỐNG KÊ CÁC CHỦ ĐỀ CẦN ÔN TẬP:\n\n";
+    sortedStats.forEach((item, index) => message += `${index + 1}. ${item.chuDe}: Sai ${item.count} câu\n`);
+    alert(message);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
