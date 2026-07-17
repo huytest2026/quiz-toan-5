@@ -47,7 +47,8 @@ window.renderQuiz = function() {
     
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         // Chuẩn hóa dữ liệu để tránh lỗi khoảng trắng
-        const loai = (item.loai || "").trim();
+        const loai = String(item.loai || "").trim();
+if (loai === "go_tu")
         
         // KIỂM TRA ĐIỀU KIỆN
         if (loai === "go_tu") {
