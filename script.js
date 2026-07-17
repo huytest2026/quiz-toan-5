@@ -1,8 +1,8 @@
-// --- KHAI BÁO BIẾN ---
-let studentCode = "", currentSubject = "", totalQuestions = 0, timerInterval, timeLeft = 0, wrongQuestions = [];
+// --- CÁC BIẾN TOÀN CỤC ---
+let studentCode = "", currentSubject = "", timerInterval, timeLeft = 0, wrongQuestions = [];
 window.allQuizData = []; window.userPermissions = []; window.currentQuizData = [];
 
-// --- LOAD DỮ LIỆU ---
+// --- TẢI DỮ LIỆU ---
 window.loadData = function() {
     studentCode = document.getElementById('student-code').value.trim();
     if (!studentCode) return alert("Nhập mã học sinh!");
@@ -35,6 +35,34 @@ window.updateTopicList = function() {
     }).join('');
 };
 
+// --- LOGIC CHẤM ĐIỂM "CHUẨN" (ĐÃ CẬP NHẬT TỪ CODE CŨ) ---
+window.checkAnswer = function(i, selectedKey, element) {
+    if (element.parentElement.dataset.answered) return;
+    element.parentElement.dataset.answered = "true";
+
+    const questionData = window.currentQuizData[i];
+    
+    // Logic từ code cũ: So sánh nội dung văn bản nếu cần
+    const selectedText = String(questionData[selectedKey] || "").trim().toLowerCase();
+    const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
+    
+    let isCorrect = false;
+    // Nếu đáp án đúng là a,b,c,d thì so sánh key, nếu là văn bản thì so sánh text
+    if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
+        isCorrect = (selectedKey.toLowerCase() === rawCorrect);
+    } else {
+        isCorrect = (selectedText === rawCorrect);
+    }
+
+    // Tô màu và cập nhật điểm
+    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
+    if (!isCorrect) wrongQuestions.push(questionData);
+    
+    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    counter.innerText = parseInt(counter.innerText) + 1;
+};
+
+// --- CÁC TÍNH NĂNG KHÁC (GIỮ NGUYÊN) ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -44,15 +72,28 @@ window.speakText = function(text, questionIndex) {
     }
 };
 
+window.renderQuiz = function() {
+    document.getElementById('quiz').innerHTML = window.currentQuizData.map((item, i) => {
+        const speakerBtn = (currentSubject === "Tiếng anh") ? `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}', ${i})">🔊</button>` : "";
+        if (String(item.loai).trim().toLowerCase() === "voca") {
+            return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div><input type="text" id="input-${i}"><button onclick="window.checkTypedAnswer(${i}, '${item.correct}')">Kiểm tra</button><div id="feedback-${i}"></div></div>`;
+        }
+        return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>${['a','b','c','d'].map(key => `<div class="option-box" style="padding:10px; border:1px solid #ddd; cursor:pointer;" onclick="window.checkAnswer(${i}, '${key}', this)">${item[key] || ""}</div>`).join('')}</div>`;
+    }).join('');
+};
+
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Vui lòng chọn chủ đề!");
+    
     timeLeft = (currentSubject === "Toán") ? 900 : 600;
     wrongQuestions = [];
     window.currentQuizData = window.allQuizData.filter(i => i.mon === currentSubject && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, (currentSubject === "Toán" ? 10 : 20));
+    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
+    
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         timeLeft--;
@@ -60,44 +101,6 @@ window.startQuiz = function() {
         if (timeLeft <= 0) { clearInterval(timerInterval); window.submitQuiz(); }
     }, 1000);
     window.renderQuiz();
-};
-
-window.renderQuiz = function() {
-    document.getElementById('quiz').innerHTML = window.currentQuizData.map((item, i) => {
-        const speakerBtn = (currentSubject === "Tiếng anh") ? `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}', ${i})">🔊</button>` : "";
-        if (String(item.loai).trim().toLowerCase() === "voca") {
-            return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div><input type="text" id="input-${i}"><button onclick="window.checkTypedAnswer(${i}, '${item.correct}')">Kiểm tra</button><div id="feedback-${i}"></div></div>`;
-        }
-        return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>${['a','b','c','d'].map(key => `<div class="option-box" onclick="window.checkAnswer(${i}, '${key}', this)">${item[key] || ""}</div>`).join('')}</div>`;
-    }).join('');
-};
-
-// --- HÀM CHẤM ĐIỂM ĐÃ TỐI ƯU (KHÔNG BÁO SAI OAN) ---
-window.checkAnswer = function(i, key, el) {
-    if (el.parentElement.dataset.answered) return;
-    el.parentElement.dataset.answered = "true";
-
-    const question = window.currentQuizData[i];
-    // Làm sạch đáp án từ server và nội dung nút bấm trước khi so sánh
-    const correctVal = String(question.correct).trim().toLowerCase();
-    const selectedVal = String(question[key]).trim().toLowerCase();
-    
-    // So sánh nội dung đã làm sạch
-    const isCorrect = (selectedVal === correctVal);
-    
-    el.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    if (!isCorrect) wrongQuestions.push(question);
-    
-    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
-};
-
-window.checkTypedAnswer = function(i, correct) {
-    const input = document.getElementById(`input-${i}`);
-    const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
-    document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
-    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
-    input.disabled = true;
 };
 
 window.submitQuiz = function() {
@@ -108,37 +111,8 @@ window.submitQuiz = function() {
         body: JSON.stringify({ maHS: studentCode, score, total: window.currentQuizData.length, mon: currentSubject }) 
     }).then(() => {
         alert("Nộp bài thành công!");
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('start-screen').style.display = 'block';
-        window.showRanking();
+        location.reload();
     });
-};
-
-window.showRanking = function() {
-    const box = document.getElementById('ranking-content');
-    box.innerHTML = "Đang tải...";
-    fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getRanking&t=" + new Date().getTime())
-    .then(res => res.json()).then(data => {
-        data.sort((a,b) => b.diem - a.diem);
-        box.innerHTML = data.map((item, idx) => `<div>${idx+1}. ${item.maHS}: <b>${item.diem} điểm</b></div>`).join('');
-    });
-};
-
-window.reviewWrong = function() {
-    if (wrongQuestions.length === 0) return alert("Không có câu sai!");
-    window.currentQuizData = wrongQuestions;
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('quiz-screen').style.display = 'block';
-    window.renderQuiz();
-};
-
-window.showWrongStats = function() {
-    if (wrongQuestions.length === 0) return alert("Bạn chưa có dữ liệu câu sai!");
-    const stats = {};
-    wrongQuestions.forEach(q => stats[q.chuDe] = (stats[q.chuDe] || 0) + 1);
-    let msg = "THỐNG KÊ CÂU SAI:\n";
-    Object.keys(stats).forEach(k => msg += `- ${k}: ${stats[k]} câu sai\n`);
-    alert(msg);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
