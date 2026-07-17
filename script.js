@@ -35,7 +35,6 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- ÂM THANH (CHỈ HIỆN TRONG TIẾNG ANH) ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -45,7 +44,6 @@ window.speakText = function(text, questionIndex) {
     }
 };
 
-// --- BẮT ĐẦU & ĐỒNG HỒ ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
@@ -64,7 +62,6 @@ window.startQuiz = function() {
     window.renderQuiz();
 };
 
-// --- RENDER QUIZ ---
 window.renderQuiz = function() {
     document.getElementById('quiz').innerHTML = window.currentQuizData.map((item, i) => {
         const speakerBtn = (currentSubject === "Tiếng anh") ? `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}', ${i})">🔊</button>` : "";
@@ -75,7 +72,40 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- NỘP BÀI & TỰ ĐỘNG LOAD XẾP HẠNG ---
+// --- HÀM CHẤM ĐIỂM ĐÃ SỬA LỖI ---
+window.checkAnswer = function(i, selectedKey, element) {
+    if (element.parentElement.dataset.answered) return;
+    element.parentElement.dataset.answered = "true";
+    
+    const questionData = window.currentQuizData[i];
+    // Lấy đáp án đúng từ sheet (cột correct) và xử lý sạch
+    const correctVal = String(questionData.correct || "").trim().toLowerCase();
+    
+    // So sánh: Nếu đáp án đúng là 'a', 'b', 'c', 'd' thì so sánh key, ngược lại so sánh text nội dung
+    let isCorrect = false;
+    if (['a', 'b', 'c', 'd'].includes(correctVal)) {
+        isCorrect = (selectedKey.toLowerCase() === correctVal);
+    } else {
+        isCorrect = (element.innerText.trim().toLowerCase() === correctVal);
+    }
+
+    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
+    if (!isCorrect) wrongQuestions.push(questionData);
+    
+    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    counter.innerText = parseInt(counter.innerText) + 1;
+};
+
+window.checkTypedAnswer = function(i, correct) {
+    const input = document.getElementById(`input-${i}`);
+    const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
+    document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
+    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
+    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    counter.innerText = parseInt(counter.innerText) + 1;
+    input.disabled = true;
+};
+
 window.submitQuiz = function() {
     clearInterval(timerInterval);
     const score = parseInt(document.getElementById('count-correct').innerText || 0);
@@ -86,39 +116,18 @@ window.submitQuiz = function() {
         alert("Nộp bài thành công!");
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('start-screen').style.display = 'block';
-        window.showRanking(); // Tự động load lại bảng xếp hạng sau khi nộp
+        window.showRanking();
     });
 };
 
-// --- BẢNG XẾP HẠNG & THỐNG KÊ ---
 window.showRanking = function() {
     const box = document.getElementById('ranking-content');
-    box.innerHTML = "Đang tải bảng xếp hạng...";
-    // Thêm tham số thời gian để tránh bị lưu bộ nhớ đệm (cache)
-    const url = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getRanking&t=" + new Date().getTime();
-    fetch(url)
+    box.innerHTML = "Đang tải...";
+    fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getRanking&t=" + new Date().getTime())
     .then(res => res.json()).then(data => {
         data.sort((a,b) => b.diem - a.diem);
         box.innerHTML = data.map((item, idx) => `<div>${idx+1}. ${item.maHS}: <b>${item.diem} điểm</b></div>`).join('');
-    }).catch(() => box.innerHTML = "Không thể tải bảng xếp hạng!");
-};
-
-window.checkAnswer = function(i, key, el) {
-    if (el.parentElement.dataset.answered) return;
-    el.parentElement.dataset.answered = "true";
-    const isCorrect = key.toLowerCase() === String(window.currentQuizData[i].correct).trim().toLowerCase();
-    el.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
-};
-
-window.checkTypedAnswer = function(i, correct) {
-    const input = document.getElementById(`input-${i}`);
-    const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
-    document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
-    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
-    input.disabled = true;
+    });
 };
 
 window.reviewWrong = function() {
@@ -133,7 +142,7 @@ window.showWrongStats = function() {
     if (wrongQuestions.length === 0) return alert("Bạn chưa có dữ liệu câu sai!");
     const stats = {};
     wrongQuestions.forEach(q => stats[q.chuDe] = (stats[q.chuDe] || 0) + 1);
-    let msg = "THỐNG KÊ CÁC CHỦ ĐỀ CẦN ÔN TẬP:\n";
+    let msg = "THỐNG KÊ CÂU SAI:\n";
     Object.keys(stats).forEach(k => msg += `- ${k}: ${stats[k]} câu sai\n`);
     alert(msg);
 };
