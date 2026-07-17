@@ -44,28 +44,30 @@ window.updateTopicList = function() {
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Dùng .trim() và .toLowerCase() để so sánh chính xác hơn
+        // Lấy và chuẩn hóa loại câu hỏi
         const loai = String(item.loai || "").trim().toLowerCase();
         
-        // KIỂM TRA ĐÚNG LOẠI "go_tu"
+        // Nếu là "go_tu" -> Hiển thị ô gõ chữ
         if (loai === "go_tu") {
             return `
             <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
                 <input type="text" id="input-${i}" placeholder="Nhập đáp án..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="padding: 8px 15px;">Kiểm tra</button>
-                <div id="feedback-${i}" style="margin-top: 5px;"></div>
+                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="padding: 8px 15px; cursor:pointer;">Kiểm tra</button>
+                <div id="feedback-${i}" style="margin-top: 5px; font-weight:bold;"></div>
             </div>`;
-        } else {
-            // Hiển thị giao diện trắc nghiệm thông thường
+        } 
+        // Nếu không phải "go_tu" -> Hiển thị trắc nghiệm 4 đáp án
+        else {
             return `
             <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
                 <div class="options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="option-box" data-key="a" onclick="window.checkAnswer(${i}, 'a', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.a || ""}</div>
-                    <div class="option-box" data-key="b" onclick="window.checkAnswer(${i}, 'b', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.b || ""}</div>
-                    <div class="option-box" data-key="c" onclick="window.checkAnswer(${i}, 'c', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.c || ""}</div>
-                    <div class="option-box" data-key="d" onclick="window.checkAnswer(${i}, 'd', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.d || ""}</div>
+                    ${['a','b','c','d'].map(key => `
+                        <div class="option-box" data-key="${key}" onclick="window.checkAnswer(${i}, '${key}', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">
+                            ${item[key] || ""}
+                        </div>
+                    `).join('')}
                 </div>
             </div>`;
         }
