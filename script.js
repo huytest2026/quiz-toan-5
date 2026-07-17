@@ -46,25 +46,27 @@ window.renderQuiz = function() {
     if (!quizDiv) return;
     
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Kiểm tra nếu loại là "go_tu" thì hiển thị ô input
-        if (item.loai === "go_tu") {
+        // Chuẩn hóa dữ liệu để tránh lỗi khoảng trắng
+        const loai = (item.loai || "").trim();
+        
+        // KIỂM TRA ĐIỀU KIỆN
+        if (loai === "go_tu") {
             return `
             <div class="quiz-card" id="q-card-${i}">
-                <button class="speak-btn" onclick="window.speakText('${item.correct.replace(/'/g, "\\'")}')">🔊 Nghe</button>
+                <button class="speak-btn" onclick="window.speakText('${(item.correct || "").replace(/'/g, "\\'")}')">🔊 Nghe</button>
                 <div class="question">Câu ${i+1}: ${item.question}</div>
                 <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án tại đây...">
-                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="background:#6f42c1; color:white;">Kiểm tra</button>
+                <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || "").replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white;">Kiểm tra</button>
                 <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
             </div>`;
-        } 
-        // Ngược lại hiển thị trắc nghiệm (Quiz)
-        else {
+        } else {
+            // Đây là phần hiển thị trắc nghiệm cho Quiz
             let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
             return `
             <div class="quiz-card" id="q-card-${i}">
                 <div class="question">Câu ${i+1}: ${item.question}</div>
                 <div class="options-grid">
-                    ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)">${opt.v}</div>`).join('')}
+                    ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)">${opt.v || ""}</div>`).join('')}
                 </div>
             </div>`;
         }
