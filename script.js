@@ -15,7 +15,6 @@ window.loadData = function() {
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     
-    // Sử dụng thẻ script để tải dữ liệu (bypass CORB)
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(studentCode)}&callback=handleQuizData`;
     document.body.appendChild(script);
@@ -43,21 +42,36 @@ window.updateTopicList = function() {
     }).join('');
 };
 
+// --- TÍNH NĂNG ĐỌC VĂN BẢN (Đã phục hồi) ---
+window.speakText = function(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Dừng nếu đang đọc câu trước
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // Hoặc 'vi-VN' tùy theo dữ liệu của bạn
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("Trình duyệt của bạn không hỗ trợ tính năng đọc văn bản.");
+    }
+};
+
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
+        // Nút loa để gọi hàm speakText
+        const speakerBtn = `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}')" style="margin-left:10px; cursor:pointer;">🔊</button>`;
+        
         if (loai === "voca") {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px;">
-                <div class="question" style="font-weight:bold; margin-bottom:10px;">Câu ${i+1}: ${item.question}</div>
+                <div class="question" style="font-weight:bold; margin-bottom:10px;">Câu ${i+1}: ${item.question} ${speakerBtn}</div>
                 <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án..." style="width:100%; padding:10px; margin-bottom:10px;">
                 <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Kiểm tra</button>
                 <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
             </div>`;
         } else {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px;">
-                <div class="question" style="font-weight:bold; margin-bottom:10px;">Câu ${i+1}: ${item.question}</div>
+                <div class="question" style="font-weight:bold; margin-bottom:10px;">Câu ${i+1}: ${item.question} ${speakerBtn}</div>
                 <div class="options-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${['a','b','c','d'].map(key => `<div class="option-box" data-key="${key}" onclick="window.checkAnswer(${i}, '${key}', this)" style="border:1px solid #ccc; padding:10px; cursor:pointer;">${item[key] || ""}</div>`).join('')}
                 </div>
@@ -66,7 +80,7 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- CÁC TÍNH NĂNG ĐÃ NÂNG CẤP ---
+// --- CÁC TÍNH NĂNG KHÁC ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
@@ -100,13 +114,10 @@ window.submitQuiz = function() {
         alert("Nộp bài thành công! Điểm: " + score + "/" + totalQuestions);
         location.reload();
     })
-    .catch(error => {
-        console.error("Lỗi:", error);
-        alert("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!");
-    });
+    .catch(error => { alert("Có lỗi xảy ra khi nộp bài!"); });
 };
 
-// --- CÁC TÍNH NĂNG CŨ (Giữ nguyên) ---
+// --- CÁC HÀM CŨ KHÁC ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
     const parent = element.parentElement;
@@ -136,7 +147,6 @@ window.checkTypedAnswer = function(i, correctAnswer) {
 };
 
 window.showRanking = function() { /* Logic cũ */ };
-window.speakText = function(text) { /* Logic cũ */ };
 window.reviewWrong = function() { /* Logic cũ */ };
 
 document.addEventListener('DOMContentLoaded', () => {
