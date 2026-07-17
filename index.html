@@ -27,15 +27,16 @@
     <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px;">Bắt Đầu Làm Bài</button>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-        <button onclick="window.showRanking()" style="background: #ffc107; color: #333; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Xem Xếp Hạng</button>
-        <button onclick="window.reviewWrong()" style="background: #17a2b8; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Ôn tập câu sai</button>
+        <!-- Nút Xem Xếp Hạng đã xóa, chỉ còn Ôn tập -->
+        <button onclick="window.reviewWrong()" style="grid-column: span 2; background: #17a2b8; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Ôn tập câu sai</button>
         <!-- Nút Thống kê lỗi sai -->
         <button onclick="window.showWrongStats()" style="grid-column: span 2; background: #fd7e14; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Thống kê lỗi sai</button>
     </div>
 
     <div class="info-box" id="ranking-container" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff;">
         <h3 style="margin-top: 0;">🏆 Bảng Xếp Hạng</h3>
-        <div id="ranking-list">Nhấn "Xem Xếp Hạng" để xem kết quả...</div>
+        <!-- Nội dung sẽ tự động cập nhật tại đây sau khi nộp bài -->
+        <div id="ranking-content">Nhấn "Bắt đầu làm bài" và nộp bài để xem kết quả...</div>
     </div>
 </div>
 
