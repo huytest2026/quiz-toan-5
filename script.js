@@ -32,7 +32,7 @@ window.handleQuizData = function(data) {
 window.getRanking = function() {
     // Gọi API để lấy bảng xếp hạng (cần thay thế link API thực tế của bảng xếp hạng)
     console.log("Đang tải bảng xếp hạng...");
-    document.getElementById('ranking-container').innerHTML = "Đang cập nhật xếp hạng...";
+    document.getElementById('ranking-container').innerHTML = "Đang tải dữ liệu xếp hạng...";
 };
 
 // --- CHẤM ĐIỂM ---
