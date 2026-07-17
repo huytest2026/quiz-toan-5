@@ -44,23 +44,24 @@ window.updateTopicList = function() {
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
+    
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
+        // Kiểm tra nếu loại là "go_tu" thì hiển thị ô input
         if (item.loai === "go_tu") {
             return `
             <div class="quiz-card" id="q-card-${i}">
-                <button class="speak-btn" onclick="window.speakText('${item.correct.replace(/'/g, "\\'")}')">🔊 Nghe phát âm</button>
-                <div class="question">${item.question}</div>
-                <input type="text" id="input-${i}" class="text-input" placeholder="Gõ từ vào đây...">
-                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="background:#6f42c1; width:100%; padding:15px; border-radius:10px; color:white; border:none; cursor:pointer; margin-top:10px;">Kiểm tra</button>
+                <button class="speak-btn" onclick="window.speakText('${item.correct.replace(/'/g, "\\'")}')">🔊 Nghe</button>
+                <div class="question">Câu ${i+1}: ${item.question}</div>
+                <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án tại đây...">
+                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="background:#6f42c1; color:white;">Kiểm tra</button>
                 <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
             </div>`;
-        } else {
+        } 
+        // Ngược lại hiển thị trắc nghiệm (Quiz)
+        else {
             let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
-            let textToSpeak = `Question ${i + 1}. ${item.question}`;
-            let listenBtn = (currentSubject === 'Tiếng anh') ? `<div style="margin-bottom:15px;"><button class="speak-btn" onclick="window.speakText('${textToSpeak.replace(/'/g, "\\'")}')">🔊 Nghe câu hỏi</button></div>` : '';
             return `
             <div class="quiz-card" id="q-card-${i}">
-                ${listenBtn}
                 <div class="question">Câu ${i+1}: ${item.question}</div>
                 <div class="options-grid">
                     ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)">${opt.v}</div>`).join('')}
