@@ -43,36 +43,29 @@ window.updateTopicList = function() {
 // --- LOGIC HIỂN THỊ CÂU HỎI (Hỗ trợ "go_tu" và "Quiz") ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
-    if (!quizDiv) return;
-    
-    // Kiểm tra dữ liệu có tồn tại không
-    if (!window.currentQuizData || window.currentQuizData.length === 0) {
-        quizDiv.innerHTML = "<p>Không có câu hỏi nào để hiển thị!</p>";
-        return;
-    }
-
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        const loai = String(item.loai || "").trim();
+        // Dùng .trim() và .toLowerCase() để so sánh chính xác hơn
+        const loai = String(item.loai || "").trim().toLowerCase();
         
-        // 1. Trường hợp là câu hỏi Gõ từ (go_tu)
+        // KIỂM TRA ĐÚNG LOẠI "go_tu"
         if (loai === "go_tu") {
             return `
-            <div class="quiz-card" id="q-card-${i}" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
-                <button class="speak-btn" onclick="window.speakText('${(item.correct || "").replace(/'/g, "\\'")}')">🔊 Nghe</button>
-                <div class="question" style="font-weight:bold; margin: 10px 0;">Câu ${i+1}: ${item.question}</div>
-                <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án tại đây..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
-                <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || "").replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Kiểm tra</button>
-                <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
-            </div>`;
-        } 
-        // 2. Trường hợp là câu hỏi Trắc nghiệm (Quiz)
-        else {
-            let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
-            return `
-            <div class="quiz-card" id="q-card-${i}" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
+            <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
-                <div class="options-grid" style="display: grid; gap: 10px;">
-                    ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${opt.v || ""}</div>`).join('')}
+                <input type="text" id="input-${i}" placeholder="Nhập đáp án..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="padding: 8px 15px;">Kiểm tra</button>
+                <div id="feedback-${i}" style="margin-top: 5px;"></div>
+            </div>`;
+        } else {
+            // Hiển thị giao diện trắc nghiệm thông thường
+            return `
+            <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
+                <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
+                <div class="options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="option-box" data-key="a" onclick="window.checkAnswer(${i}, 'a', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.a || ""}</div>
+                    <div class="option-box" data-key="b" onclick="window.checkAnswer(${i}, 'b', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.b || ""}</div>
+                    <div class="option-box" data-key="c" onclick="window.checkAnswer(${i}, 'c', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.c || ""}</div>
+                    <div class="option-box" data-key="d" onclick="window.checkAnswer(${i}, 'd', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${item.d || ""}</div>
                 </div>
             </div>`;
         }
