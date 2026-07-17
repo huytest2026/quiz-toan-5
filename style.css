@@ -32,13 +32,14 @@ input[type="text"] {
     display: inline-block;
     width: auto;
     padding: 10px 20px;
-    background-color: #4a90e2;
-    color: Blue;
+    background-color: #0056b3; /* Màu xanh dương đậm hơn */
+    color: #ffffff; /* Chữ trắng hoàn toàn */
     border: none;
     border-radius: 8px;
-    font-weight: bold;
+    font-weight: 800; /* Làm chữ đậm (bold) hơn */
     cursor: pointer;
     margin-left: 10px;
+    text-shadow: none;
 }
 
 /* --- TRẮC NGHIỆM --- */
