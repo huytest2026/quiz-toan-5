@@ -14,7 +14,6 @@ window.currentQuizData = [];
 window.loadData = function() {
     studentCode = document.getElementById('student-code').value.trim();
     if (!studentCode) return alert("Nhập mã học sinh!");
-    
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(studentCode)}&callback=handleQuizData`;
@@ -88,24 +87,25 @@ function updateTimer() {
     timeLeft--;
 }
 
-// --- RENDER GIAO DIỆN ---
+// --- RENDER GIAO DIỆN (ĐÃ CẬP NHẬT GIAO DIỆN NÚT) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
         const safeQuestion = item.question.replace(/'/g, "\\'");
-        const speakerBtn = `<button onclick="window.speakText('${safeQuestion}', ${i})" style="margin-left:10px; cursor:pointer;">🔊</button>`;
+        const speakerBtn = `<button class="speaker-btn" onclick="window.speakText('${safeQuestion}', ${i})">🔊</button>`;
         
         if (loai === "voca") {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
                 <div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>
-                <input type="text" id="input-${i}"> <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')">Kiểm tra</button>
+                <input type="text" id="input-${i}" style="padding: 5px; width: 150px;"> 
+                <button class="check-voca-btn" onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')">Kiểm tra</button>
                 <div id="feedback-${i}"></div>
             </div>`;
         } else {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
                 <div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>
-                ${['a','b','c','d'].map(key => `<div class="option-box" data-key="${key}" onclick="window.checkAnswer(${i}, '${key}', this)" style="border:1px solid #ccc; padding:5px; margin:5px; cursor:pointer;">${item[key] || ""}</div>`).join('')}
+                ${['a','b','c','d'].map(key => `<div class="option-box" onclick="window.checkAnswer(${i}, '${key}', this)" style="border:1px solid #ccc; padding:5px; margin:5px; cursor:pointer;">${item[key] || ""}</div>`).join('')}
             </div>`;
         }
     }).join('');
@@ -116,7 +116,6 @@ window.submitQuiz = function() {
     clearInterval(timerInterval);
     const score = parseInt(document.getElementById('count-correct').innerText || 0);
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    
     fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ maHS: studentCode, score, total: totalQuestions, mon: currentSubject }) })
     .then(() => {
         alert("Nộp bài thành công! Điểm: " + score + "/" + totalQuestions);
@@ -149,12 +148,19 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     inputElement.disabled = true;
 };
 
-// --- XẾP HẠNG & ÔN TẬP ---
+// --- XẾP HẠNG (CÓ HUY CHƯƠNG) & ÔN TẬP ---
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     fetch(`${API_URL}?action=getRanking`)
     .then(res => res.json())
-    .then(data => alert(data.map((item, idx) => `${idx + 1}. ${item.maHS}: ${item.diem} điểm`).join('\n')))
+    .then(data => {
+        data.sort((a, b) => b.diem - a.diem);
+        let list = data.map((item, idx) => {
+            let medal = (idx === 0) ? "🥇 " : (idx === 1) ? "🥈 " : (idx === 2) ? "🥉 " : "";
+            return `${idx + 1}. ${medal}${item.maHS}: ${item.diem} điểm`;
+        }).join('\n');
+        alert("🏆 BẢNG XẾP HẠNG:\n\n" + list);
+    })
     .catch(() => alert("Không lấy được xếp hạng!"));
 };
 
@@ -166,13 +172,11 @@ window.reviewWrong = function() {
     window.renderQuiz();
 };
 
-// --- CHỨC NĂNG MỚI: THỐNG KÊ LỖI SAI ---
 window.showWrongStats = function() {
     if (wrongQuestions.length === 0) return alert("Bạn chưa có dữ liệu câu sai để thống kê!");
     const stats = {};
     wrongQuestions.forEach(q => stats[q.chuDe] = (stats[q.chuDe] || 0) + 1);
-    const sortedStats = Object.keys(stats).map(chuDe => ({ chuDe: chuDe, count: stats[chuDe] }))
-                                        .sort((a, b) => b.count - a.count);
+    const sortedStats = Object.keys(stats).map(chuDe => ({ chuDe: chuDe, count: stats[chuDe] })).sort((a, b) => b.count - a.count);
     let message = "THỐNG KÊ CÁC CHỦ ĐỀ CẦN ÔN TẬP:\n\n";
     sortedStats.forEach((item, index) => message += `${index + 1}. ${item.chuDe}: Sai ${item.count} câu\n`);
     alert(message);
