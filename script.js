@@ -15,13 +15,12 @@ window.loadData = function() {
     
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     
-    // Tạo thẻ script để tải dữ liệu, đảm bảo không bị trình duyệt chặn
+    // Sử dụng thẻ script để tải dữ liệu (bypass CORB)
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(studentCode)}&callback=handleQuizData`;
     document.body.appendChild(script);
 };
 
-// Hàm xử lý dữ liệu sau khi tải xong
 window.handleQuizData = function(data) {
     if (data.error) return alert(data.error);
     window.allQuizData = data.questions || [];
@@ -67,7 +66,7 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- CÁC TÍNH NĂNG CŨ (Đảm bảo hoạt động không đổi) ---
+// --- CÁC TÍNH NĂNG ĐÃ NÂNG CẤP ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
@@ -84,6 +83,30 @@ window.startQuiz = function() {
     window.renderQuiz();
 };
 
+window.submitQuiz = function() {
+    const countCorrectEl = document.getElementById('count-correct');
+    const score = countCorrectEl ? parseInt(countCorrectEl.innerText || 0) : 0;
+    if (!studentCode) return alert("Vui lòng tải lại trang và nhập mã học sinh!");
+
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    
+    fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maHS: studentCode, score: score, total: totalQuestions, mon: currentSubject })
+    })
+    .then(() => {
+        alert("Nộp bài thành công! Điểm: " + score + "/" + totalQuestions);
+        location.reload();
+    })
+    .catch(error => {
+        console.error("Lỗi:", error);
+        alert("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!");
+    });
+};
+
+// --- CÁC TÍNH NĂNG CŨ (Giữ nguyên) ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
     const parent = element.parentElement;
@@ -112,7 +135,6 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
 
-window.submitQuiz = function() { /* Logic cũ */ };
 window.showRanking = function() { /* Logic cũ */ };
 window.speakText = function(text) { /* Logic cũ */ };
 window.reviewWrong = function() { /* Logic cũ */ };
@@ -120,4 +142,6 @@ window.reviewWrong = function() { /* Logic cũ */ };
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) submitBtn.onclick = window.submitQuiz;
 });
