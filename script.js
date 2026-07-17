@@ -44,15 +44,14 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- ÂM THANH THÔNG MINH ---
+// --- ÂM THANH MỚI (BỎ UNDERSCORE, ĐỌC "CÂU X") ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        // Thay thế dấu gạch chân bằng "blank", thêm số câu hỏi
-        let cleanText = text.replace(/_+/g, " blank ");
-        let fullText = "Question " + (questionIndex + 1) + ". " + cleanText;
+        let cleanText = text.replace(/_+/g, " "); 
+        let fullText = "Câu " + (questionIndex + 1) + ". " + cleanText;
         const utterance = new SpeechSynthesisUtterance(fullText);
-        utterance.lang = 'en-US';
+        utterance.lang = 'vi-VN'; 
         window.speechSynthesis.speak(utterance);
     }
 };
@@ -94,8 +93,9 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
-        // Truyền thêm chỉ số i vào speakText
-        const speakerBtn = `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}', ${i})" style="margin-left:10px; cursor:pointer;">🔊</button>`;
+        // Dùng backticks cho template string và escape dấu ngoặc đơn
+        const safeQuestion = item.question.replace(/'/g, "\\'");
+        const speakerBtn = `<button onclick="window.speakText('${safeQuestion}', ${i})" style="margin-left:10px; cursor:pointer;">🔊</button>`;
         
         if (loai === "voca") {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
@@ -150,6 +150,7 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     inputElement.disabled = true;
 };
 
+// --- XẾP HẠNG & ÔN TẬP ---
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     fetch(`${API_URL}?action=getRanking`)
