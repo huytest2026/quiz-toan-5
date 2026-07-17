@@ -44,10 +44,11 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- ÂM THANH MỚI (BỎ UNDERSCORE, ĐỌC "CÂU X") ---
+// --- ÂM THANH SẠCH (LOẠI BỎ UNDERSCORE) ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+        // Thay thế toàn bộ ký tự gạch chân bằng khoảng trắng để máy không đọc thành chữ "a"
         let cleanText = text.replace(/_+/g, " "); 
         let fullText = "Câu " + (questionIndex + 1) + ". " + cleanText;
         const utterance = new SpeechSynthesisUtterance(fullText);
@@ -56,7 +57,7 @@ window.speakText = function(text, questionIndex) {
     }
 };
 
-// --- ĐỒNG HỒ & BẮT ĐẦU ---
+// --- BẮT ĐẦU & ĐỒNG HỒ ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
@@ -93,7 +94,7 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
-        // Dùng backticks cho template string và escape dấu ngoặc đơn
+        // Escape dấu nháy đơn để tránh lỗi JS
         const safeQuestion = item.question.replace(/'/g, "\\'");
         const speakerBtn = `<button onclick="window.speakText('${safeQuestion}', ${i})" style="margin-left:10px; cursor:pointer;">🔊</button>`;
         
@@ -112,7 +113,7 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- NỘP BÀI & CÁC HÀM XỬ LÝ ---
+// --- HÀM XỬ LÝ KẾT QUẢ ---
 window.submitQuiz = function() {
     clearInterval(timerInterval);
     const score = parseInt(document.getElementById('count-correct').innerText || 0);
