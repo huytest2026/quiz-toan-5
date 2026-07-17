@@ -43,22 +43,23 @@ window.updateTopicList = function() {
 // --- LOGIC HIỂN THỊ CÂU HỎI (Hỗ trợ "go_tu" và "Quiz") ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
+    if (!quizDiv) return;
+
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Lấy và chuẩn hóa loại câu hỏi
+        // Cột loại ở Sheets đã đổi thành 'voca'
         const loai = String(item.loai || "").trim().toLowerCase();
-        
-        // Nếu là "go_tu" -> Hiển thị ô gõ chữ
-        if (loai === "go_tu") {
+
+        // So sánh với "voca"
+        if (loai === "voca") {
             return `
             <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
-                <input type="text" id="input-${i}" placeholder="Nhập đáp án..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                <button onclick="window.checkTypedAnswer(${i}, '${item.correct}')" style="padding: 8px 15px; cursor:pointer;">Kiểm tra</button>
-                <div id="feedback-${i}" style="margin-top: 5px; font-weight:bold;"></div>
+                <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án..." style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc;">
+                <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Kiểm tra</button>
+                <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
             </div>`;
-        } 
-        // Nếu không phải "go_tu" -> Hiển thị trắc nghiệm 4 đáp án
-        else {
+        } else {
+            // Các loại khác hiển thị trắc nghiệm
             return `
             <div class="quiz-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
