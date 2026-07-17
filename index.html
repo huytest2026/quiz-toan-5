@@ -11,9 +11,11 @@
 <div class="container" id="start-screen">
     <h1>Bài Kiểm Tra Trực Tuyến</h1>
     
-    <input type="text" id="student-code" placeholder="Nhập MÃ HỌC SINH..." style="width: 100%; padding: 15px; margin-bottom: 15px; box-sizing: border-box; border-radius: 10px; border: 1px solid #ccc;">
-    
-    <button type="button" id="load-data-btn" style="background: #6f42c1; color: white; margin-bottom: 20px; width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer;">Xác nhận Mã & Tải đề</button>
+    <!-- Nhóm nhập mã -->
+    <div id="login-section">
+        <input type="text" id="student-code" placeholder="Nhập MÃ HỌC SINH..." style="width: 100%; padding: 15px; margin-bottom: 15px; box-sizing: border-box; border-radius: 10px; border: 1px solid #ccc;">
+        <button type="button" id="load-data-btn" style="background: #6f42c1; color: white; margin-bottom: 20px; width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer;">Xác nhận Mã & Tải đề</button>
+    </div>
 
     <label style="font-weight: bold;">Chọn môn học:</label>
     <select id="subject-select" onchange="window.updateTopicList()" style="width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px;">
@@ -27,15 +29,13 @@
     <button id="start-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px;">Bắt Đầu Làm Bài</button>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-        <!-- Nút Xem Xếp Hạng đã xóa, chỉ còn Ôn tập -->
         <button onclick="window.reviewWrong()" style="grid-column: span 2; background: #17a2b8; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Ôn tập câu sai</button>
-        <!-- Nút Thống kê lỗi sai -->
         <button onclick="window.showWrongStats()" style="grid-column: span 2; background: #fd7e14; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer;">Thống kê lỗi sai</button>
     </div>
 
     <div class="info-box" id="ranking-container" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff;">
         <h3 style="margin-top: 0;">🏆 Bảng Xếp Hạng</h3>
-        <!-- Nội dung sẽ tự động cập nhật tại đây sau khi nộp bài -->
+        <!-- ID ranking-content này sẽ được code JS cập nhật -->
         <div id="ranking-content">Nhấn "Bắt đầu làm bài" và nộp bài để xem kết quả...</div>
     </div>
 </div>
@@ -46,7 +46,7 @@
         <div>Đúng: <span id="count-correct" style="color: green; font-weight: bold;">0</span> | Sai: <span id="count-wrong" style="color: red; font-weight: bold;">0</span></div>
     </div>
     <div id="quiz"></div>
-    <button type="button" id="submit-btn" onclick="window.submitQuiz()" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">Nộp bài</button>
+    <button type="button" id="submit-btn" style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer;">Nộp bài</button>
 </div>
 
 <script src="script.js" defer></script>
