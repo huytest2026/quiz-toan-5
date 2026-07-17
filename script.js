@@ -100,20 +100,29 @@ window.checkAnswer = function(i, selectedKey, element) {
     if (parent.dataset.answered) return;
     parent.dataset.answered = "true";
 
+    // Lấy đáp án đúng từ Sheets
     const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
-    // Logic cũ: Nếu là a/b/c/d thì so sánh theo key, nếu là nội dung thì so sánh theo text
-    let isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
-        ? (selectedKey.toLowerCase() === rawCorrect) 
-        : (String(questionData[selectedKey] || "").trim().toLowerCase() === rawCorrect);
     
+    // Logic: Nếu rawCorrect là 'a', 'b', 'c', 'd' -> so sánh theo key.
+    // Nếu rawCorrect là chữ (ví dụ: "goes") -> so sánh với nội dung của ô được nhấn.
+    const isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) 
+        ? (selectedKey.toLowerCase() === rawCorrect) 
+        : (element.innerText.trim().toLowerCase() === rawCorrect);
+
+    // Tô màu
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     element.style.borderColor = isCorrect ? '#28a745' : '#dc3545';
 
+    // Nếu sai, tô xanh ô đúng
     if (!isCorrect) {
         parent.querySelectorAll('.option-box').forEach(box => {
+            // Trường hợp 1: Nếu đáp án đúng là key (a,b,c,d)
             if (box.dataset.key === rawCorrect) box.style.backgroundColor = '#d4edda';
+            // Trường hợp 2: Nếu đáp án đúng là nội dung chữ
+            else if (box.innerText.trim().toLowerCase() === rawCorrect) box.style.backgroundColor = '#d4edda';
         });
-        // Lưu câu sai vào localStorage
+        
+        // Lưu câu sai
         let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
         if (!wrongQuestions.some(q => q.question === questionData.question)) {
             wrongQuestions.push(questionData);
@@ -121,6 +130,7 @@ window.checkAnswer = function(i, selectedKey, element) {
         }
     }
     
+    // Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     if (el) el.innerText = parseInt(el.innerText || 0) + 1;
 };
