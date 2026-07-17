@@ -35,34 +35,44 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- LOGIC CHẤM ĐIỂM "CHUẨN" (ĐÃ CẬP NHẬT TỪ CODE CŨ) ---
+// --- HÀM CHẤM ĐIỂM HOÀN THIỆN ---
 window.checkAnswer = function(i, selectedKey, element) {
     if (element.parentElement.dataset.answered) return;
     element.parentElement.dataset.answered = "true";
 
     const questionData = window.currentQuizData[i];
-    
-    // Logic từ code cũ: So sánh nội dung văn bản nếu cần
     const selectedText = String(questionData[selectedKey] || "").trim().toLowerCase();
     const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
     
     let isCorrect = false;
-    // Nếu đáp án đúng là a,b,c,d thì so sánh key, nếu là văn bản thì so sánh text
+    // So sánh đáp án
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
     } else {
         isCorrect = (selectedText === rawCorrect);
     }
 
-    // Tô màu và cập nhật điểm
+    // Tô màu lựa chọn
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    if (!isCorrect) wrongQuestions.push(questionData);
     
+    // Nếu sai, tự động tô màu đáp án đúng
+    if (!isCorrect) {
+        wrongQuestions.push(questionData);
+        element.parentElement.querySelectorAll('.option-box').forEach(box => {
+            const boxText = box.innerText.trim().toLowerCase();
+            // So sánh nội dung đáp án đúng với nội dung hiển thị trong box
+            if (boxText === rawCorrect || box.getAttribute('onclick').includes(`'${rawCorrect}'`)) {
+                box.style.backgroundColor = '#d4edda';
+            }
+        });
+    }
+
+    // Cập nhật điểm
     let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     counter.innerText = parseInt(counter.innerText) + 1;
 };
 
-// --- CÁC TÍNH NĂNG KHÁC (GIỮ NGUYÊN) ---
+// --- CÁC TÍNH NĂNG BỔ TRỢ ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
