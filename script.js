@@ -48,7 +48,6 @@ window.updateTopicList = function() {
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        // Thay thế toàn bộ ký tự gạch chân bằng khoảng trắng để máy không đọc thành chữ "a"
         let cleanText = text.replace(/_+/g, " "); 
         let fullText = "Câu " + (questionIndex + 1) + ". " + cleanText;
         const utterance = new SpeechSynthesisUtterance(fullText);
@@ -56,7 +55,6 @@ window.speakText = function(text, questionIndex) {
         window.speechSynthesis.speak(utterance);
     }
 };
-
 // --- BẮT ĐẦU & ĐỒNG HỒ ---
 window.startQuiz = function() {
     currentSubject = document.getElementById('subject-select').value;
