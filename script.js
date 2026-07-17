@@ -35,40 +35,27 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- HÀM CHẤM ĐIỂM HOÀN THIỆN ---
-window.checkAnswer = function(i, selectedKey, element) {
+// --- HÀM CHẤM ĐIỂM (HIỂN THỊ MÀU XANH KHI SAI) ---
+window.checkAnswer = function(i, selectedKey, element, isRight) {
     if (element.parentElement.dataset.answered) return;
     element.parentElement.dataset.answered = "true";
 
-    const questionData = window.currentQuizData[i];
-    const selectedText = String(questionData[selectedKey] || "").trim().toLowerCase();
-    const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
+    // 1. Tô màu lựa chọn của học sinh (đỏ nếu sai, xanh nếu đúng)
+    element.style.backgroundColor = isRight ? '#d4edda' : '#f8d7da';
     
-    let isCorrect = false;
-    // Logic so sánh: dựa trên key hoặc nội dung văn bản
-    if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
-        isCorrect = (selectedKey.toLowerCase() === rawCorrect);
-    } else {
-        isCorrect = (selectedText === rawCorrect);
-    }
-
-    // Tô màu lựa chọn của học sinh
-    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    
-    // Nếu sai, duyệt qua các key a, b, c, d để tìm ô đáp án đúng và tô màu
-    if (!isCorrect) {
-        wrongQuestions.push(questionData);
-        const allBoxes = element.parentElement.querySelectorAll('.option-box');
-        ['a', 'b', 'c', 'd'].forEach((key, index) => {
-            const boxValue = String(questionData[key] || "").trim().toLowerCase();
-            if (boxValue === rawCorrect || (rawCorrect === key && index < allBoxes.length)) {
-                if (allBoxes[index]) allBoxes[index].style.backgroundColor = '#d4edda';
+    // 2. Nếu chọn sai, tự động tìm đáp án đúng và tô xanh
+    if (!isRight) {
+        wrongQuestions.push(window.currentQuizData[i]);
+        element.parentElement.querySelectorAll('.option-box').forEach(box => {
+            // Kiểm tra thuộc tính đã đánh dấu sẵn từ lúc render
+            if (box.dataset.isCorrect === "true") {
+                box.style.backgroundColor = '#d4edda';
             }
         });
     }
 
-    // Cập nhật điểm
-    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
+    // 3. Cập nhật điểm
+    let counter = document.getElementById(isRight ? 'count-correct' : 'count-wrong');
     counter.innerText = parseInt(counter.innerText) + 1;
 };
 
@@ -94,10 +81,21 @@ window.checkTypedAnswer = function(i, correct) {
 window.renderQuiz = function() {
     document.getElementById('quiz').innerHTML = window.currentQuizData.map((item, i) => {
         const speakerBtn = (currentSubject === "Tiếng anh") ? `<button onclick="window.speakText('${item.question.replace(/'/g, "\\'")}', ${i})">🔊</button>` : "";
+        
+        // Vẽ các ô lựa chọn và đánh dấu sẵn đáp án đúng vào data-is-correct
+        const optionsHTML = ['a','b','c','d'].map(key => {
+            const isRight = (String(item[key]).trim().toLowerCase() === String(item.correct).trim().toLowerCase());
+            return `<div class="option-box" style="padding:10px; border:1px solid #ddd; cursor:pointer;" 
+                         onclick="window.checkAnswer(${i}, '${key}', this, ${isRight})" 
+                         data-is-correct="${isRight}">
+                         ${item[key] || ""}
+                    </div>`;
+        }).join('');
+
         if (String(item.loai).trim().toLowerCase() === "voca") {
             return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div><input type="text" id="input-${i}"><button onclick="window.checkTypedAnswer(${i}, '${item.correct}')">Kiểm tra</button><div id="feedback-${i}"></div></div>`;
         }
-        return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>${['a','b','c','d'].map(key => `<div class="option-box" style="padding:10px; border:1px solid #ddd; cursor:pointer;" onclick="window.checkAnswer(${i}, '${key}', this)">${item[key] || ""}</div>`).join('')}</div>`;
+        return `<div class="quiz-card"><div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>${optionsHTML}</div>`;
     }).join('');
 };
 
