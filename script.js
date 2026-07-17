@@ -72,28 +72,23 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- HÀM CHẤM ĐIỂM ĐÃ SỬA LỖI ---
-window.checkAnswer = function(i, selectedKey, element) {
-    if (element.parentElement.dataset.answered) return;
-    element.parentElement.dataset.answered = "true";
-    
-    const questionData = window.currentQuizData[i];
-    // Lấy đáp án đúng từ sheet (cột correct) và xử lý sạch
-    const correctVal = String(questionData.correct || "").trim().toLowerCase();
-    
-    // So sánh: Nếu đáp án đúng là 'a', 'b', 'c', 'd' thì so sánh key, ngược lại so sánh text nội dung
-    let isCorrect = false;
-    if (['a', 'b', 'c', 'd'].includes(correctVal)) {
-        isCorrect = (selectedKey.toLowerCase() === correctVal);
-    } else {
-        isCorrect = (element.innerText.trim().toLowerCase() === correctVal);
-    }
+// --- HÀM CHẤM ĐIỂM ĐÃ TỐI ƯU (KHÔNG BÁO SAI OAN) ---
+window.checkAnswer = function(i, key, el) {
+    if (el.parentElement.dataset.answered) return;
+    el.parentElement.dataset.answered = "true";
 
-    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    if (!isCorrect) wrongQuestions.push(questionData);
+    const question = window.currentQuizData[i];
+    // Làm sạch đáp án từ server và nội dung nút bấm trước khi so sánh
+    const correctVal = String(question.correct).trim().toLowerCase();
+    const selectedVal = String(question[key]).trim().toLowerCase();
     
-    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    counter.innerText = parseInt(counter.innerText) + 1;
+    // So sánh nội dung đã làm sạch
+    const isCorrect = (selectedVal === correctVal);
+    
+    el.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
+    if (!isCorrect) wrongQuestions.push(question);
+    
+    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
 };
 
 window.checkTypedAnswer = function(i, correct) {
@@ -101,8 +96,7 @@ window.checkTypedAnswer = function(i, correct) {
     const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
     document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
     if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    let counter = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    counter.innerText = parseInt(counter.innerText) + 1;
+    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
     input.disabled = true;
 };
 
