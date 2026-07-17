@@ -9,14 +9,24 @@ window.userPermissions = [];
 window.currentQuizData = [];
 
 // --- LOAD DỮ LIỆU ---
-window.loadData = function() {
+window.loadData = async function() {
     studentCode = document.getElementById('student-code').value.trim();
     if (!studentCode) return alert("Nhập mã học sinh!");
-    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    const script = document.createElement('script');
-    script.src = `${API_URL}?ma=${encodeURIComponent(studentCode)}&callback=handleQuizData`;
-    document.body.appendChild(script);
-    script.onload = () => script.remove();
+    
+    // Dán URL mới vào đây:
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec"; 
+    
+    try {
+        const response = await fetch(`${API_URL}?ma=${encodeURIComponent(studentCode)}`, {
+            method: 'GET',
+            mode: 'cors' // Đảm bảo chế độ CORS
+        });
+        const data = await response.json();
+        window.handleQuizData(data);
+    } catch (error) {
+        console.error("Lỗi kết nối:", error);
+        alert("Lỗi tải dữ liệu. Hãy đảm bảo bạn đã triển khai 'Bất kỳ ai'.");
+    }
 };
 
 window.handleQuizData = function(data) {
