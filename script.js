@@ -45,29 +45,34 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     
+    // Kiểm tra dữ liệu có tồn tại không
+    if (!window.currentQuizData || window.currentQuizData.length === 0) {
+        quizDiv.innerHTML = "<p>Không có câu hỏi nào để hiển thị!</p>";
+        return;
+    }
+
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Chuẩn hóa dữ liệu để tránh lỗi khoảng trắng
         const loai = String(item.loai || "").trim();
-if (loai === "go_tu")
         
-        // KIỂM TRA ĐIỀU KIỆN
+        // 1. Trường hợp là câu hỏi Gõ từ (go_tu)
         if (loai === "go_tu") {
             return `
-            <div class="quiz-card" id="q-card-${i}">
+            <div class="quiz-card" id="q-card-${i}" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
                 <button class="speak-btn" onclick="window.speakText('${(item.correct || "").replace(/'/g, "\\'")}')">🔊 Nghe</button>
-                <div class="question">Câu ${i+1}: ${item.question}</div>
-                <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án tại đây...">
-                <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || "").replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white;">Kiểm tra</button>
+                <div class="question" style="font-weight:bold; margin: 10px 0;">Câu ${i+1}: ${item.question}</div>
+                <input type="text" id="input-${i}" class="text-input" placeholder="Nhập đáp án tại đây..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
+                <button onclick="window.checkTypedAnswer(${i}, '${(item.correct || "").replace(/'/g, "\\'")}')" style="background:#6f42c1; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Kiểm tra</button>
                 <div id="feedback-${i}" style="margin-top:10px; font-weight:bold;"></div>
             </div>`;
-        } else {
-            // Đây là phần hiển thị trắc nghiệm cho Quiz
+        } 
+        // 2. Trường hợp là câu hỏi Trắc nghiệm (Quiz)
+        else {
             let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
             return `
-            <div class="quiz-card" id="q-card-${i}">
-                <div class="question">Câu ${i+1}: ${item.question}</div>
-                <div class="options-grid">
-                    ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)">${opt.v || ""}</div>`).join('')}
+            <div class="quiz-card" id="q-card-${i}" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px;">
+                <div class="question" style="font-weight:bold; margin-bottom: 10px;">Câu ${i+1}: ${item.question}</div>
+                <div class="options-grid" style="display: grid; gap: 10px;">
+                    ${options.map(opt => `<div class="option-box" data-key="${opt.k}" onclick="window.checkAnswer(${i}, '${opt.k}', this)" style="border: 1px solid #ccc; padding: 10px; cursor:pointer;">${opt.v || ""}</div>`).join('')}
                 </div>
             </div>`;
         }
