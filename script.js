@@ -86,7 +86,7 @@ window.submitQuiz = function() {
         alert("Nộp bài thành công!");
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('start-screen').style.display = 'block';
-        window.showRanking(); // Tự động load bảng xếp hạng
+        window.showRanking(); // Tự động load lại bảng xếp hạng sau khi nộp
     });
 };
 
@@ -94,11 +94,13 @@ window.submitQuiz = function() {
 window.showRanking = function() {
     const box = document.getElementById('ranking-content');
     box.innerHTML = "Đang tải bảng xếp hạng...";
-    fetch("https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getRanking")
+    // Thêm tham số thời gian để tránh bị lưu bộ nhớ đệm (cache)
+    const url = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec?action=getRanking&t=" + new Date().getTime();
+    fetch(url)
     .then(res => res.json()).then(data => {
         data.sort((a,b) => b.diem - a.diem);
         box.innerHTML = data.map((item, idx) => `<div>${idx+1}. ${item.maHS}: <b>${item.diem} điểm</b></div>`).join('');
-    }).catch(() => box.innerHTML = "Không thể tải bảng xếp hạng.");
+    }).catch(() => box.innerHTML = "Không thể tải bảng xếp hạng!");
 };
 
 window.checkAnswer = function(i, key, el) {
@@ -131,8 +133,8 @@ window.showWrongStats = function() {
     if (wrongQuestions.length === 0) return alert("Bạn chưa có dữ liệu câu sai!");
     const stats = {};
     wrongQuestions.forEach(q => stats[q.chuDe] = (stats[q.chuDe] || 0) + 1);
-    let msg = "THỐNG KÊ CÂU SAI:\n";
-    Object.keys(stats).forEach(k => msg += `${k}: ${stats[k]} câu\n`);
+    let msg = "THỐNG KÊ CÁC CHỦ ĐỀ CẦN ÔN TẬP:\n";
+    Object.keys(stats).forEach(k => msg += `- ${k}: ${stats[k]} câu sai\n`);
     alert(msg);
 };
 
