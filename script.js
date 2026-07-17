@@ -87,18 +87,21 @@ function updateTimer() {
     timeLeft--;
 }
 
-// --- RENDER GIAO DIỆN (ĐÃ CẬP NHẬT GIAO DIỆN NÚT) ---
+// --- RENDER GIAO DIỆN ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
         const safeQuestion = item.question.replace(/'/g, "\\'");
-        const speakerBtn = `<button class="speaker-btn" onclick="window.speakText('${safeQuestion}', ${i})">🔊</button>`;
+        // Chỉ hiện nút loa nếu là môn Tiếng Anh
+        const speakerBtn = (currentSubject === "Tiếng anh") 
+            ? `<button class="speaker-btn" onclick="window.speakText('${safeQuestion}', ${i})">🔊</button>` 
+            : "";
         
         if (loai === "voca") {
             return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
                 <div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>
-                <input type="text" id="input-${i}" style="padding: 5px; width: 150px;"> 
+                <input type="text" id="input-${i}" style="padding: 5px; width: 200px;"> 
                 <button class="check-voca-btn" onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')">Kiểm tra</button>
                 <div id="feedback-${i}"></div>
             </div>`;
@@ -148,7 +151,7 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     inputElement.disabled = true;
 };
 
-// --- XẾP HẠNG (CÓ HUY CHƯƠNG) & ÔN TẬP ---
+// --- XẾP HẠNG & THỐNG KÊ ---
 window.showRanking = function() {
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     fetch(`${API_URL}?action=getRanking`)
