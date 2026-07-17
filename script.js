@@ -45,24 +45,24 @@ window.checkAnswer = function(i, selectedKey, element) {
     const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
     
     let isCorrect = false;
-    // So sánh đáp án
+    // Logic so sánh: dựa trên key hoặc nội dung văn bản
     if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
         isCorrect = (selectedKey.toLowerCase() === rawCorrect);
     } else {
         isCorrect = (selectedText === rawCorrect);
     }
 
-    // Tô màu lựa chọn
+    // Tô màu lựa chọn của học sinh
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // Nếu sai, tự động tô màu đáp án đúng
+    // Nếu sai, duyệt qua các key a, b, c, d để tìm ô đáp án đúng và tô màu
     if (!isCorrect) {
         wrongQuestions.push(questionData);
-        element.parentElement.querySelectorAll('.option-box').forEach(box => {
-            const boxText = box.innerText.trim().toLowerCase();
-            // So sánh nội dung đáp án đúng với nội dung hiển thị trong box
-            if (boxText === rawCorrect || box.getAttribute('onclick').includes(`'${rawCorrect}'`)) {
-                box.style.backgroundColor = '#d4edda';
+        const allBoxes = element.parentElement.querySelectorAll('.option-box');
+        ['a', 'b', 'c', 'd'].forEach((key, index) => {
+            const boxValue = String(questionData[key] || "").trim().toLowerCase();
+            if (boxValue === rawCorrect || (rawCorrect === key && index < allBoxes.length)) {
+                if (allBoxes[index]) allBoxes[index].style.backgroundColor = '#d4edda';
             }
         });
     }
@@ -80,6 +80,15 @@ window.speakText = function(text, questionIndex) {
         utterance.lang = 'vi-VN';
         window.speechSynthesis.speak(utterance);
     }
+};
+
+window.checkTypedAnswer = function(i, correct) {
+    const input = document.getElementById(`input-${i}`);
+    const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
+    document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
+    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
+    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
+    input.disabled = true;
 };
 
 window.renderQuiz = function() {
