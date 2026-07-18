@@ -46,53 +46,41 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
+        let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
-                <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" onclick="window.checkAnswer(${i}, '${opt.k}', this)">
-                    <input type="radio" name="q${i}" value="${opt.k}" disabled> ${opt.v}
+                <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" 
+                     onclick="window.checkAnswer(${i}, '${opt.k}', this, '${opt.v.replace(/'/g, "\\'")}')">
+                    <input type="radio" name="q${i}" disabled> ${opt.v}
                 </div>
             `).join('')}
         </div>`;
     }).join('');
 };
 
-// --- 4. Logic chấm điểm thông minh ---
-window.checkAnswer = function(i, selectedKey, element) {
+// --- 4. Logic chấm điểm cải tiến ---
+window.checkAnswer = function(i, selectedKey, element, selectedText) {
     const questionData = window.currentQuizData[i];
+    const correctValue = String(questionData.correct).trim();
     
-    // 1. Lấy dữ liệu
-    const selectedText = questionData[selectedKey].trim().toLowerCase();
-    const rawCorrect = String(questionData.correct).trim().toLowerCase();
-    
-    // 2. Debug: Kiểm tra xem hệ thống đang so sánh cái gì
-    console.log("Câu " + (i+1) + " | Chọn: " + selectedText + " | Đáp án đúng: " + rawCorrect);
-    
-    // 3. Logic xác định đúng/sai
-    let isCorrect = false;
-    
-    // Nếu đáp án đúng là "a", "b", "c", "d" (trường hợp môn Toán)
-    if (['a', 'b', 'c', 'd'].includes(rawCorrect)) {
-        isCorrect = (selectedKey.toLowerCase() === rawCorrect);
-    } else {
-        // Nếu đáp án đúng là văn bản (trường hợp môn Tiếng Anh)
-        // Chúng ta so sánh nội dung văn bản
-        isCorrect = (selectedText === rawCorrect);
-    }
-    
-    // 4. Tô màu cho riêng đáp án được chọn
+    // Logic so sánh dựa trên code cũ của bạn
+    let isCorrect = (selectedText.trim() === correctValue) || (selectedKey.toLowerCase() === correctValue.toLowerCase());
+
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // 5. Khóa các lựa chọn khác trong câu
+    // Cải tiến: Tự động tô xanh đáp án đúng nếu người dùng chọn sai
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
+        // Nếu box này chứa đáp án đúng, tô màu xanh
+        if (box.innerText.trim() === correctValue || box.innerHTML.includes(`value="${correctValue.toLowerCase()}"`)) {
+            box.style.backgroundColor = '#d4edda';
+        }
         box.style.pointerEvents = 'none';
-        box.style.opacity = '0.7'; // Làm mờ các lựa chọn khác
+        box.style.opacity = '0.7';
     });
     
-    // 6. Cập nhật điểm
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
