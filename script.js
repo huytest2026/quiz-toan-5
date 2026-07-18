@@ -69,13 +69,27 @@ window.renderQuiz = function() {
 };
 
 // --- HÀM CHẤM ĐIỂM ĐÃ TỐI ƯU ---
-window.checkTypedAnswer = function(i, correct) {
-    const input = document.getElementById(`input-${i}`);
-    const isCorrect = input.value.trim().toLowerCase() === String(correct).trim().toLowerCase();
-    document.getElementById(`feedback-${i}`).innerText = isCorrect ? "✅ Đúng!" : "❌ Sai!";
-    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    document.getElementById(isCorrect ? 'count-correct' : 'count-wrong').innerText++;
-    input.disabled = true;
+window.checkAnswer = function(i, element) {
+    if (element.parentElement.dataset.answered) return;
+    element.parentElement.dataset.answered = "true";
+
+    const userAnswer = element.innerText.trim();
+    const correctAnswer = String(window.currentQuizData[i].correct).trim();
+    const isRight = (userAnswer === correctAnswer);
+
+    element.style.backgroundColor = isRight ? '#d4edda' : '#f8d7da';
+    
+    if (!isRight) {
+        // Nếu sai, highlight đáp án đúng
+        element.parentElement.querySelectorAll('.option-box').forEach(box => {
+            if (box.innerText.trim() === correctAnswer) {
+                box.style.backgroundColor = '#d4edda';
+            }
+        });
+    }
+    
+    const counter = document.getElementById(isRight ? 'count-correct' : 'count-wrong');
+    if(counter) counter.innerText = parseInt(counter.innerText) + 1;
 };
 
 // --- 3. HÀM NỘP BÀI ---
