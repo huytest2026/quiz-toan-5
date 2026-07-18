@@ -44,29 +44,30 @@ window.renderQuiz = function() {
     if (!quizDiv) return;
     
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        const type = (item.loai || "").toLowerCase();
+        const type = (item.loai || "").toLowerCase().trim();
         
-        // Dạng Voca: Hiện từ, nghĩa, phiên âm
+        // --- Giao diện cho VOCA ---
         if (type === 'voca') {
             return `
-            <div class="quiz-card" style="margin-bottom:20px; padding:15px; border:2px solid #007bff; border-radius:8px; background: #e7f3ff;">
-                <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:10px; cursor:pointer;">🔊 Nghe từ</button>
-                <h3 style="margin:5px 0; color: #007bff;">Từ: ${item.question}</h3>
-                <p style="margin:5px 0;">Nghĩa: <b>${item.correct}</b></p>
-                <p style="margin:5px 0;">Phiên âm: <i>${item.diengiai}</i></p>
+            <div class="quiz-card" style="margin-bottom:20px; padding:20px; border:2px solid #007bff; border-radius:12px; background: #f8fbff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:15px; cursor:pointer; padding:8px 15px; background: #007bff; color: white; border: none; border-radius: 5px;">🔊 Nghe từ vựng</button>
+                <h2 style="margin:5px 0; color: #333;">${item.question}</h2>
+                <div style="font-size: 1.1em; margin-top:10px;">
+                    <p>Nghĩa: <b>${item.correct}</b></p>
+                    <p style="color: #666;">Phiên âm: <i>${item.diengiai || ''}</i></p>
+                </div>
             </div>`;
         }
         
-        // Dạng Trắc nghiệm (Quiz)
+        // --- Giao diện cho Trắc nghiệm (Quiz) ---
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         const cleanQuestion = item.question.replace(/_/g, " ");
-        const speechText = `Câu ${i+1}: ${cleanQuestion}`;
         return `
-        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
-            <button onclick="window.speak('${speechText.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer;">🔊 Nghe câu hỏi</button>
-            <b>Câu ${i+1}: ${item.question}</b><br>
+        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:15px; border:2px solid #ddd; border-radius:8px;">
+            <button onclick="window.speak('${('Câu ' + (i+1) + ': ' + cleanQuestion).replace(/'/g, "\\'")}')" style="margin-bottom:10px; cursor:pointer;">🔊 Nghe câu hỏi</button>
+            <b style="font-size: 1.1em;">Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
-                <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" 
+                <div class="option-box" style="display:block; margin:8px 0; padding:10px; border:1px solid #ccc; border-radius:5px; cursor:pointer; background: white;" 
                      onclick="window.checkAnswer(${i}, '${opt.k}', this, '${opt.v.replace(/'/g, "\\'")}')">
                     ${opt.v}
                 </div>
