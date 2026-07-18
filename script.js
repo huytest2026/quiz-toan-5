@@ -38,24 +38,27 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị (Có cả Trắc nghiệm & VOCA) ---
+// --- 3. Hàm hiển thị (Phân biệt Quiz và Voca) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Nếu là VOCA (dựa vào tên chủ đề hoặc dữ liệu đặc thù)
-        if (item.chuDe.toLowerCase().includes('voca') || item.type === 'voca') {
+        // Kiểm tra cột loai
+        const type = (item.loai || "").toLowerCase();
+        
+        // Dạng Voca
+        if (type === 'voca') {
             return `
             <div class="quiz-card" style="margin-bottom:20px; padding:15px; border:2px solid #007bff; border-radius:8px; background: #f0f7ff;">
-                <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer;">🔊 Nghe từ</button>
-                <h3 style="margin:5px 0;">${item.question}</h3>
-                <p>Nghĩa: <b>${item.a}</b></p>
-                <p>Ví dụ: <i>${item.b}</i></p>
+                <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:10px; cursor:pointer;">🔊 Nghe từ</button>
+                <h3 style="margin:5px 0;">Từ: ${item.question}</h3>
+                <p>Nghĩa: <b>${item.correct}</b></p>
+                <p>Phiên âm: <i>${item.diengiai}</i></p>
             </div>`;
         }
         
-        // Mặc định là Trắc nghiệm
+        // Dạng Trắc nghiệm (Quiz)
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         const cleanQuestion = item.question.replace(/_/g, " ");
         const speechText = `Câu ${i+1}: ${cleanQuestion}`;
