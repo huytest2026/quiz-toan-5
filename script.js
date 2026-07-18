@@ -46,7 +46,7 @@ window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}];
+        let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
             <b>Câu ${i+1}: ${item.question}</b><br>
@@ -60,22 +60,24 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- 4. Logic chấm điểm cải tiến ---
+// --- 4. Logic chấm điểm ---
 window.checkAnswer = function(i, selectedKey, element, selectedText) {
     const questionData = window.currentQuizData[i];
     const correctValue = String(questionData.correct).trim();
+    const currentSubject = document.getElementById('subject-select').value;
     
-    // Logic so sánh dựa trên code cũ của bạn
+    // Logic so sánh: khớp chữ hoặc khớp key (a,b,c,d)
     let isCorrect = (selectedText.trim() === correctValue) || (selectedKey.toLowerCase() === correctValue.toLowerCase());
 
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
-    // Cải tiến: Tự động tô xanh đáp án đúng nếu người dùng chọn sai
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
-        // Nếu box này chứa đáp án đúng, tô màu xanh
-        if (box.innerText.trim() === correctValue || box.innerHTML.includes(`value="${correctValue.toLowerCase()}"`)) {
-            box.style.backgroundColor = '#d4edda';
+        // Chỉ tô xanh đáp án đúng nếu là môn Tiếng Anh và đã chọn sai
+        if (currentSubject === 'Tiếng anh' && !isCorrect) {
+            if (box.innerText.trim() === correctValue || box.innerHTML.includes(`value="${correctValue.toLowerCase()}"`)) {
+                box.style.backgroundColor = '#d4edda';
+            }
         }
         box.style.pointerEvents = 'none';
         box.style.opacity = '0.7';
