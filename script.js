@@ -44,17 +44,16 @@ window.renderQuiz = function() {
     if (!quizDiv) return;
     
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
-        // Kiểm tra cột loai
         const type = (item.loai || "").toLowerCase();
         
-        // Dạng Voca
+        // Dạng Voca: Hiện từ, nghĩa, phiên âm
         if (type === 'voca') {
             return `
-            <div class="quiz-card" style="margin-bottom:20px; padding:15px; border:2px solid #007bff; border-radius:8px; background: #f0f7ff;">
+            <div class="quiz-card" style="margin-bottom:20px; padding:15px; border:2px solid #007bff; border-radius:8px; background: #e7f3ff;">
                 <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:10px; cursor:pointer;">🔊 Nghe từ</button>
-                <h3 style="margin:5px 0;">Từ: ${item.question}</h3>
-                <p>Nghĩa: <b>${item.correct}</b></p>
-                <p>Phiên âm: <i>${item.diengiai}</i></p>
+                <h3 style="margin:5px 0; color: #007bff;">Từ: ${item.question}</h3>
+                <p style="margin:5px 0;">Nghĩa: <b>${item.correct}</b></p>
+                <p style="margin:5px 0;">Phiên âm: <i>${item.diengiai}</i></p>
             </div>`;
         }
         
