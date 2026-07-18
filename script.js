@@ -43,7 +43,7 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- ÂM THANH SẠCH ---
+// --- ÂM THANH (CHỈ HIỆN TRONG TIẾNG ANH) ---
 window.speakText = function(text, questionIndex) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -87,46 +87,56 @@ function updateTimer() {
     timeLeft--;
 }
 
-// --- RENDER GIAO DIỆN ---
+// --- RENDER QUIZ ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         const loai = String(item.loai || "").trim().toLowerCase();
         const safeQuestion = item.question.replace(/'/g, "\\'");
-        // Chỉ hiện nút loa nếu là môn Tiếng Anh
+        // Điều kiện hiện nút loa
         const speakerBtn = (currentSubject === "Tiếng anh") 
             ? `<button class="speaker-btn" onclick="window.speakText('${safeQuestion}', ${i})">🔊</button>` 
             : "";
         
         if (loai === "voca") {
-            return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
+            return `<div class="quiz-card">
                 <div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>
-                <input type="text" id="input-${i}" style="padding: 5px; width: 200px;"> 
+                <input type="text" id="input-${i}" style="padding: 10px; width: 200px;"> 
                 <button class="check-voca-btn" onclick="window.checkTypedAnswer(${i}, '${(item.correct || '').replace(/'/g, "\\'")}')">Kiểm tra</button>
                 <div id="feedback-${i}"></div>
             </div>`;
         } else {
-            return `<div class="quiz-card" style="border:1px solid #ddd; padding:15px; margin:10px 0;">
+            return `<div class="quiz-card">
                 <div>Câu ${i+1}: ${item.question} ${speakerBtn}</div>
-                ${['a','b','c','d'].map(key => `<div class="option-box" onclick="window.checkAnswer(${i}, '${key}', this)" style="border:1px solid #ccc; padding:5px; margin:5px; cursor:pointer;">${item[key] || ""}</div>`).join('')}
+                ${['a','b','c','d'].map(key => `<div class="option-box" onclick="window.checkAnswer(${i}, '${key}', this)">${item[key] || ""}</div>`).join('')}
             </div>`;
         }
     }).join('');
 };
 
-// --- HÀM XỬ LÝ KẾT QUẢ ---
+// --- NỘP BÀI & TỰ ĐỘNG LOAD XẾP HẠNG ---
 window.submitQuiz = function() {
     clearInterval(timerInterval);
     const score = parseInt(document.getElementById('count-correct').innerText || 0);
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
-    fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ maHS: studentCode, score, total: totalQuestions, mon: currentSubject }) })
+    
+    fetch(API_URL, { 
+        method: "POST", 
+        mode: "no-cors", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ maHS: studentCode, score, total: totalQuestions, mon: currentSubject }) 
+    })
     .then(() => {
         alert("Nộp bài thành công! Điểm: " + score + "/" + totalQuestions);
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('start-screen').style.display = 'block';
+        
+        // Tự động cập nhật bảng xếp hạng
+        window.showRanking();
     });
 };
 
+// --- XỬ LÝ ĐÁP ÁN ---
 window.checkAnswer = function(i, selectedKey, element) {
     const questionData = window.currentQuizData[i];
     const parent = element.parentElement;
@@ -151,20 +161,23 @@ window.checkTypedAnswer = function(i, correctAnswer) {
     inputElement.disabled = true;
 };
 
-// --- XẾP HẠNG & THỐNG KÊ ---
+// --- BẢNG XẾP HẠNG & THỐNG KÊ ---
 window.showRanking = function() {
+    const rankingContent = document.getElementById('ranking-content');
+    rankingContent.innerHTML = "Đang tải bảng xếp hạng...";
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
+    
     fetch(`${API_URL}?action=getRanking`)
     .then(res => res.json())
     .then(data => {
         data.sort((a, b) => b.diem - a.diem);
         let list = data.map((item, idx) => {
             let medal = (idx === 0) ? "🥇 " : (idx === 1) ? "🥈 " : (idx === 2) ? "🥉 " : "";
-            return `${idx + 1}. ${medal}${item.maHS}: ${item.diem} điểm`;
-        }).join('\n');
-        alert("🏆 BẢNG XẾP HẠNG:\n\n" + list);
+            return `<div>${idx + 1}. ${medal}${item.maHS}: <b>${item.diem} điểm</b></div>`;
+        }).join('');
+        rankingContent.innerHTML = list || "Chưa có dữ liệu.";
     })
-    .catch(() => alert("Không lấy được xếp hạng!"));
+    .catch(() => { rankingContent.innerHTML = "Không lấy được xếp hạng!"; });
 };
 
 window.reviewWrong = function() {
@@ -188,6 +201,4 @@ window.showWrongStats = function() {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-data-btn').onclick = window.loadData;
     document.getElementById('start-btn').onclick = window.startQuiz;
-    const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn) submitBtn.onclick = window.submitQuiz;
 });
