@@ -41,14 +41,20 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị câu hỏi ---
+// --- 3. Hàm hiển thị câu hỏi (Kèm tính năng âm thanh) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
+        
+        // Xử lý văn bản để không đọc dấu gạch dưới (_)
+        const cleanQuestion = item.question.replace(/_/g, " ");
+        const speechText = `Câu ${i+1}: ${cleanQuestion}`;
+
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
+            <div style="cursor:pointer; color:blue; text-decoration:underline;" onclick="window.speak('${speechText}')">🔊 Nghe câu hỏi</div>
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" 
@@ -60,22 +66,28 @@ window.renderQuiz = function() {
     }).join('');
 };
 
+// --- Hàm hỗ trợ đọc âm thanh ---
+window.speak = function(text) {
+    window.speechSynthesis.cancel(); // Dừng âm thanh cũ nếu đang đọc
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'en-US'; // Hoặc 'vi-VN' tùy môn học
+    window.speechSynthesis.speak(msg);
+};
+
 // --- 4. Logic chấm điểm ---
 window.checkAnswer = function(i, selectedKey, element, selectedText) {
     const questionData = window.currentQuizData[i];
     const correctValue = String(questionData.correct).trim();
     const currentSubject = document.getElementById('subject-select').value;
     
-    // Logic so sánh: khớp chữ hoặc khớp key (a,b,c,d)
     let isCorrect = (selectedText.trim() === correctValue) || (selectedKey.toLowerCase() === correctValue.toLowerCase());
 
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
     
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
-        // Chỉ tô xanh đáp án đúng nếu là môn Tiếng Anh và đã chọn sai
         if (currentSubject === 'Tiếng anh' && !isCorrect) {
-            if (box.innerText.trim() === correctValue || box.innerHTML.includes(`value="${correctValue.toLowerCase()}"`)) {
+            if (box.innerText.trim() === correctValue) {
                 box.style.backgroundColor = '#d4edda';
             }
         }
