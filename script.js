@@ -38,22 +38,35 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị câu hỏi (Có nút Âm thanh) ---
+// --- 3. Hàm hiển thị (Có cả Trắc nghiệm & VOCA) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
+    
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
+        // Nếu là VOCA (dựa vào tên chủ đề hoặc dữ liệu đặc thù)
+        if (item.chuDe.toLowerCase().includes('voca') || item.type === 'voca') {
+            return `
+            <div class="quiz-card" style="margin-bottom:20px; padding:15px; border:2px solid #007bff; border-radius:8px; background: #f0f7ff;">
+                <button onclick="window.speak('${item.question.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer;">🔊 Nghe từ</button>
+                <h3 style="margin:5px 0;">${item.question}</h3>
+                <p>Nghĩa: <b>${item.a}</b></p>
+                <p>Ví dụ: <i>${item.b}</i></p>
+            </div>`;
+        }
+        
+        // Mặc định là Trắc nghiệm
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
         const cleanQuestion = item.question.replace(/_/g, " ");
         const speechText = `Câu ${i+1}: ${cleanQuestion}`;
         return `
         <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
-            <button onclick="window.speak('${speechText.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer; background: #e2e6ea; border: 1px solid #ccc; border-radius: 4px;">🔊 Nghe câu hỏi</button>
+            <button onclick="window.speak('${speechText.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer;">🔊 Nghe câu hỏi</button>
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" 
                      onclick="window.checkAnswer(${i}, '${opt.k}', this, '${opt.v.replace(/'/g, "\\'")}')">
-                    <input type="radio" name="q${i}" disabled> ${opt.v}
+                    ${opt.v}
                 </div>
             `).join('')}
         </div>`;
@@ -91,7 +104,7 @@ window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Chọn chủ đề!");
-    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5);
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
