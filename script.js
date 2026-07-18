@@ -60,27 +60,39 @@ window.renderQuiz = function() {
     const quizContainer = document.getElementById('quiz');
     quizContainer.innerHTML = window.currentQuizData.map((item, i) => {
         const optionsHTML = ['a','b','c','d'].map(key => {
-            const isRight = (String(item[key]).trim().toLowerCase() === String(item.correct).trim().toLowerCase());
-            return `<div class="option-box" style="padding:10px; border:1px solid #ddd; cursor:pointer;" onclick="window.checkAnswer(${i}, this, ${isRight})" data-is-correct="${isRight}">${item[key] || ""}</div>`;
+            // Truyền giá trị thực để hàm checkAnswer so sánh chính xác
+            const val = String(item[key] || "").trim();
+            return `<div class="option-box" style="padding:10px; border:1px solid #ddd; cursor:pointer;" onclick="window.checkAnswer(${i}, this)">${val}</div>`;
         }).join('');
         return `<div class="quiz-card" style="margin-bottom:20px; padding:10px; border:1px solid #eee;"><div>Câu ${i+1}: ${item.question}</div>${optionsHTML}</div>`;
     }).join('');
 };
 
-window.checkAnswer = function(i, element, isRight) {
+// --- HÀM CHẤM ĐIỂM ĐÃ TỐI ƯU ---
+window.checkAnswer = function(i, element) {
     if (element.parentElement.dataset.answered) return;
     element.parentElement.dataset.answered = "true";
+
+    const userAnswer = element.innerText.trim();
+    const correctAnswer = String(window.currentQuizData[i].correct).trim();
+    const isRight = (userAnswer === correctAnswer);
+
     element.style.backgroundColor = isRight ? '#d4edda' : '#f8d7da';
+    
     if (!isRight) {
+        // Nếu sai, highlight đáp án đúng
         element.parentElement.querySelectorAll('.option-box').forEach(box => {
-            if (box.dataset.isCorrect === "true") box.style.backgroundColor = '#d4edda';
+            if (box.innerText.trim() === correctAnswer) {
+                box.style.backgroundColor = '#d4edda';
+            }
         });
     }
+    
     const counter = document.getElementById(isRight ? 'count-correct' : 'count-wrong');
-    counter.innerText = parseInt(counter.innerText) + 1;
+    if(counter) counter.innerText = parseInt(counter.innerText) + 1;
 };
 
-// --- 3. HÀM NỘP BÀI (TỐI ƯU ĐỂ HẾT ĐƠ) ---
+// --- 3. HÀM NỘP BÀI ---
 window.submitQuiz = function() {
     const score = parseInt(document.getElementById('count-correct').innerText || 0);
     alert("Đang gửi bài, vui lòng chờ...");
