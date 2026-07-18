@@ -7,7 +7,6 @@ let timerInterval;
 window.loadData = function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Nhập mã học sinh!");
-    
     const API_URL = "https://script.google.com/macros/s/AKfycbwrNmZYpd3oMQrWxsTQg5lkhaSg7zVa-wN-xm5YRkoFGwUv36Za739HkHNQ5ZQOl4L3Cw/exec";
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
@@ -29,10 +28,8 @@ window.updateTopicList = function() {
     const maHS = document.getElementById('student-code').value.trim();
     const container = document.getElementById('topic-container');
     if (!container || !mon) return;
-
     const allowed = window.userPermissions.filter(p => String(p.maHS) === maHS && p.mon === mon).map(p => p.chuDe);
     const topics = [...new Set(window.allQuizData.filter(i => i.mon === mon).map(i => i.chuDe))];
-    
     container.innerHTML = topics.map(topic => {
         const isAllowed = allowed.includes(topic);
         return `<label style="display:block; margin:5px 0; opacity:${isAllowed ? '1' : '0.5'}">
@@ -41,20 +38,17 @@ window.updateTopicList = function() {
     }).join('');
 };
 
-// --- 3. Hàm hiển thị câu hỏi (Kèm tính năng âm thanh) ---
+// --- 3. Hàm hiển thị câu hỏi (Có nút Âm thanh) ---
 window.renderQuiz = function() {
     const quizDiv = document.getElementById('quiz');
     if (!quizDiv) return;
     quizDiv.innerHTML = window.currentQuizData.map((item, i) => {
         let options = [{k:'a',v:item.a}, {k:'b',v:item.b}, {k:'c',v:item.c}, {k:'d',v:item.d}].sort(() => Math.random() - 0.5);
-        
-        // Xử lý văn bản để không đọc dấu gạch dưới (_)
         const cleanQuestion = item.question.replace(/_/g, " ");
         const speechText = `Câu ${i+1}: ${cleanQuestion}`;
-
         return `
-        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px; transition: 0.3s;">
-            <div style="cursor:pointer; color:blue; text-decoration:underline;" onclick="window.speak('${speechText}')">🔊 Nghe câu hỏi</div>
+        <div class="quiz-card" id="q-card-${i}" style="margin-bottom:15px; padding:10px; border:2px solid #ddd; border-radius:8px;">
+            <button onclick="window.speak('${speechText.replace(/'/g, "\\'")}')" style="margin-bottom:5px; cursor:pointer; background: #e2e6ea; border: 1px solid #ccc; border-radius: 4px;">🔊 Nghe câu hỏi</button>
             <b>Câu ${i+1}: ${item.question}</b><br>
             ${options.map(opt => `
                 <div class="option-box" style="display:block; margin:5px 0; padding:5px; border:1px solid #eee; cursor:pointer;" 
@@ -66,11 +60,10 @@ window.renderQuiz = function() {
     }).join('');
 };
 
-// --- Hàm hỗ trợ đọc âm thanh ---
 window.speak = function(text) {
-    window.speechSynthesis.cancel(); // Dừng âm thanh cũ nếu đang đọc
+    window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'en-US'; // Hoặc 'vi-VN' tùy môn học
+    msg.lang = 'en-US';
     window.speechSynthesis.speak(msg);
 };
 
@@ -79,22 +72,16 @@ window.checkAnswer = function(i, selectedKey, element, selectedText) {
     const questionData = window.currentQuizData[i];
     const correctValue = String(questionData.correct).trim();
     const currentSubject = document.getElementById('subject-select').value;
-    
     let isCorrect = (selectedText.trim() === correctValue) || (selectedKey.toLowerCase() === correctValue.toLowerCase());
-
     element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    
     const card = document.getElementById(`q-card-${i}`);
     card.querySelectorAll('.option-box').forEach(box => {
-        if (currentSubject === 'Tiếng anh' && !isCorrect) {
-            if (box.innerText.trim() === correctValue) {
-                box.style.backgroundColor = '#d4edda';
-            }
+        if (currentSubject === 'Tiếng anh' && !isCorrect && box.innerText.trim() === correctValue) {
+            box.style.backgroundColor = '#d4edda';
         }
         box.style.pointerEvents = 'none';
         box.style.opacity = '0.7';
     });
-    
     let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
     el.innerText = parseInt(el.innerText) + 1;
 };
@@ -104,11 +91,7 @@ window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
     if (selected.length === 0) return alert("Chọn chủ đề!");
-    
-    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe))
-                                             .sort(() => Math.random() - 0.5)
-                                             .slice(0, mon === 'Toán' ? 10 : 20);
-    
+    window.currentQuizData = window.allQuizData.filter(i => i.mon === mon && selected.includes(i.chuDe)).sort(() => Math.random() - 0.5).slice(0, mon === 'Toán' ? 10 : 20);
     let time = (mon === 'Toán' ? 15 : 10) * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -116,7 +99,6 @@ window.startQuiz = function() {
         document.getElementById('timer-display').innerText = Math.floor(time/60) + ":" + (time%60).toString().padStart(2,'0');
         if (time <= 0) { clearInterval(timerInterval); alert("Hết giờ!"); window.submitQuiz(); }
     }, 1000);
-    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display = 'block';
     window.renderQuiz();
@@ -124,7 +106,6 @@ window.startQuiz = function() {
 
 window.submitQuiz = function() {
     clearInterval(timerInterval);
-    alert("Nộp bài xong! Hệ thống sẽ tải lại.");
     location.reload();
 };
 
