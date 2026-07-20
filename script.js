@@ -217,7 +217,7 @@ window.renderLeaderboard = function(subjectFilter = null) {
 };
 
 function getOriginalCorrectKey(item) {
-    const raw = String(item.correct || '').trim();
+    const raw = String(item.correct || item.dap_an_dung || '').trim();
     const upper = raw.toUpperCase();
     if (['A', 'B', 'C', 'D'].includes(upper)) {
         return upper.toLowerCase();
@@ -227,7 +227,7 @@ function getOriginalCorrectKey(item) {
             return key;
         }
     }
-    return upper.toLowerCase();
+    return raw; // Trả về nguyên bản đáp án đúng nếu là dạng điền từ (voca)
 }
 
 window.startQuiz = function() {
@@ -276,22 +276,37 @@ window.renderQuiz = function() {
     const container = document.getElementById('quiz');
     if (!container) return;
     container.innerHTML = AppState.currentQuizData.map((item, index) => {
-        let keysToRender = item._shuffledKeys || ['a', 'b', 'c', 'd'].filter(k => item[k]);
-        let optionsHtml = keysToRender.map((optKey, displayIndex) => {
-            if (!item[optKey]) return '';
-            let displayLetter = String.fromCharCode(65 + displayIndex);
-            return `<div class="option-box" data-orig-key="${optKey}" onclick="window.checkAnswer(this, '${optKey}', ${index})">
-                <b>${displayLetter}.</b> ${escapeHTML(item[optKey])}
-            </div>`;
-        }).join('');
+        let isVoca = String(item.loai || '').trim().toLowerCase() === 'voca' || (!item.a && !item.b && !item.c && !item.d);
+        
+        let questionText = item.question || item.noi_dung_cau_hoi || '';
+        let explanationText = item.giai_thich || item.dien_giai || 'Không có giải thích.';
 
-        let speakerBtn = (item.mon === 'Tiếng Anh') ? `<button class="speaker-btn" data-question="${escapeHTML(item.question)}" onclick="window.handleSpeak(this)">🔊 Nghe câu hỏi</button>` : '';
+        let speakerBtn = (item.mon === 'Tiếng Anh') ? `<button class="speaker-btn" data-question="${escapeHTML(questionText)}" onclick="window.handleSpeak(this)">🔊 Nghe câu hỏi</button>` : '';
+
+        let bodyHtml = '';
+        if (isVoca) {
+            bodyHtml = `
+                <div style="margin-top: 10px;">
+                    <input type="text" id="voca-input-${index}" placeholder="Nhập đáp án tiếng Anh..." style="width: 100%; padding: 12px 15px; border: 1px solid #540606; border-radius: 8px; box-sizing: border-box; font-size: 1em;">
+                    <button type="button" onclick="window.checkVocaAnswer(${index})" style="margin-top: 8px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Kiểm tra</button>
+                </div>
+            `;
+        } else {
+            let keysToRender = item._shuffledKeys || ['a', 'b', 'c', 'd'].filter(k => item[k]);
+            bodyHtml = keysToRender.map((optKey, displayIndex) => {
+                if (!item[optKey]) return '';
+                let displayLetter = String.fromCharCode(65 + displayIndex);
+                return `<div class="option-box" data-orig-key="${optKey}" onclick="window.checkAnswer(this, '${optKey}', ${index})">
+                    <b>${displayLetter}.</b> ${escapeHTML(item[optKey])}
+                </div>`;
+            }).join('');
+        }
 
         return `<div class="quiz-card" id="q-card-${index}">
-            <p><b>Câu ${index + 1}:</b> ${escapeHTML(item.question)}</p>
+            <p><b>Câu ${index + 1}:</b> ${escapeHTML(questionText)}</p>
             ${speakerBtn}
-            ${optionsHtml}
-            <div class="explanation-box" id="exp-${index}"><b>Giải thích:</b> ${escapeHTML(item.giai_thich || 'Không có giải thích.')}</div>
+            ${bodyHtml}
+            <div class="explanation-box" id="exp-${index}"><b>Giải thích:</b> ${escapeHTML(explanationText)}</div>
         </div>`;
     }).join('');
 };
@@ -335,6 +350,47 @@ window.checkAnswer = function(element, chosenKey, index) {
 
     const expBox = document.getElementById(`exp-${index}`);
     if (expBox) expBox.style.display = 'block';
+
+    if (AppState.correctCount + AppState.wrongCount === AppState.currentQuizData.length) {
+        clearInterval(AppState.timerInterval);
+    }
+};
+
+window.checkVocaAnswer = function(index) {
+    const card = document.getElementById(`q-card-${index}`);
+    if (card.getAttribute('data-answered') === 'true') return;
+    
+    const inputElem = document.getElementById(`voca-input-${index}`);
+    if (!inputElem) return;
+    
+    const userVal = inputElem.value.trim().toLowerCase();
+    if (!userVal) return alert("Vui lòng nhập đáp án!");
+    
+    card.setAttribute('data-answered', 'true');
+    inputElem.disabled = true;
+
+    const item = AppState.currentQuizData[index];
+    const correctVal = String(item._correctKey || '').trim().toLowerCase();
+
+    const expBox = document.getElementById(`exp-${index}`);
+    if (expBox) expBox.style.display = 'block';
+
+    if (userVal === correctVal) {
+        AppState.correctCount++;
+        inputElem.style.backgroundColor = '#d4edda';
+        inputElem.style.borderColor = '#28a745';
+    } else {
+        AppState.wrongCount++;
+        inputElem.style.backgroundColor = '#f8d7da';
+        inputElem.style.borderColor = '#dc3545';
+        if (expBox) {
+            expBox.innerHTML = `<b>Đáp án đúng:</b> <span style="color: green; font-weight: bold;">${escapeHTML(item._correctKey)}</span><br>` + expBox.innerHTML;
+        }
+        AppState.wrongQuestions.push(item);
+    }
+
+    document.getElementById('count-correct').textContent = AppState.correctCount;
+    document.getElementById('count-wrong').textContent = AppState.wrongCount;
 
     if (AppState.correctCount + AppState.wrongCount === AppState.currentQuizData.length) {
         clearInterval(AppState.timerInterval);
