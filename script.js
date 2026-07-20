@@ -137,30 +137,44 @@ window.submitQuiz = function() {
 };
 
 // --- XỬ LÝ ĐÁP ÁN ---
-window.checkAnswer = function(i, selectedKey, element) {
-    const questionData = window.currentQuizData[i];
-    const parent = element.parentElement;
-    if (parent.dataset.answered) return;
-    parent.dataset.answered = "true";
-    const rawCorrect = String(questionData.correct || "").trim().toLowerCase();
-    const isCorrect = (['a', 'b', 'c', 'd'].includes(rawCorrect)) ? (selectedKey.toLowerCase() === rawCorrect) : (element.innerText.trim().toLowerCase() === rawCorrect);
-    element.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
-    if (!isCorrect) wrongQuestions.push(questionData);
-    let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    if (el) el.innerText = parseInt(el.innerText || 0) + 1;
-};
+window.checkAnswer = function(element, chosen, index) {
+    const card = document.getElementById(`q-card-${index}`);
+    if (card.getAttribute('data-answered') === 'true') return;
+    card.setAttribute('data-answered', 'true');
 
-window.checkTypedAnswer = function(i, correctAnswer) {
-    const inputElement = document.getElementById(`input-${i}`);
-    const feedback = document.getElementById(`feedback-${i}`);
-    const isCorrect = inputElement.value.trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
-    feedback.innerText = isCorrect ? "✅ Đúng!" : `❌ Sai! Đáp án: ${correctAnswer}`;
-    if (!isCorrect) wrongQuestions.push(window.currentQuizData[i]);
-    let el = document.getElementById(isCorrect ? 'count-correct' : 'count-wrong');
-    if (el) el.innerText = parseInt(el.innerText || 0) + 1;
-    inputElement.disabled = true;
-};
+    const item = AppState.currentQuizData[index];
+    const correctOpt = String(item.correct).trim().toUpperCase();
+    
+    const options = card.querySelectorAll('.option-box');
+    options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.textContent.trim().startsWith(correctOpt + '.')) {
+            opt.style.backgroundColor = '#d4edda';
+            opt.style.borderColor = '#28a745';
+        }
+    });
 
+    if (chosen === correctOpt) {
+        AppState.correctCount++;
+        element.style.backgroundColor = '#d4edda';
+        element.style.borderColor = '#28a745';
+    } else {
+        AppState.wrongCount++;
+        element.style.backgroundColor = '#f8d7da';
+        element.style.borderColor = '#dc3545';
+        AppState.wrongQuestions.push(item);
+    }
+
+    document.getElementById('count-correct').textContent = AppState.correctCount;
+    document.getElementById('count-wrong').textContent = AppState.wrongCount;
+
+    const expBox = document.getElementById(`exp-${index}`);
+    if (expBox) expBox.style.display = 'block';
+
+    if (AppState.correctCount + AppState.wrongCount === AppState.currentQuizData.length) {
+        clearInterval(AppState.timerInterval);
+    }
+};
 // --- BẢNG XẾP HẠNG & THỐNG KÊ ---
 window.showRanking = function() {
     const rankingContent = document.getElementById('ranking-content');
