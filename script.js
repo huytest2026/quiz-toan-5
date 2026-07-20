@@ -217,7 +217,7 @@ window.renderLeaderboard = function(subjectFilter = null) {
 };
 
 function getOriginalCorrectKey(item) {
-    const raw = String(item.correct || item.dap_an_dung || '').trim();
+    const raw = String(item.correct || item.dap_an_dung || item.dapAnDung || item['đáp án đúng'] || '').trim();
     const upper = raw.toUpperCase();
     if (['A', 'B', 'C', 'D'].includes(upper)) {
         return upper.toLowerCase();
@@ -276,10 +276,15 @@ window.renderQuiz = function() {
     const container = document.getElementById('quiz');
     if (!container) return;
     container.innerHTML = AppState.currentQuizData.map((item, index) => {
-        let isVoca = String(item.loai || '').trim().toLowerCase() === 'voca' || (!item.a && !item.b && !item.c && !item.d);
+        let loaiVal = String(item.loai || item.loại || item.LOAI || '').trim().toLowerCase();
+        let hasNoOptions = (!item.a || String(item.a).trim() === '') &&
+                           (!item.b || String(item.b).trim() === '') &&
+                           (!item.c || String(item.c).trim() === '') &&
+                           (!item.d || String(item.d).trim() === '');
+        let isVoca = loaiVal === 'voca' || loaiVal.includes('voca') || loaiVal.includes('dien') || hasNoOptions;
         
-        let questionText = item.question || item.noi_dung_cau_hoi || '';
-        let explanationText = item.giai_thich || item.dien_giai || 'Không có giải thích.';
+        let questionText = item.question || item.noi_dung_cau_hoi || item.noiDungCauHoi || '';
+        let explanationText = item.giai_thich || item.dien_giai || item.dienGiai || 'Không có giải thích.';
 
         let speakerBtn = (item.mon === 'Tiếng Anh') ? `<button class="speaker-btn" data-question="${escapeHTML(questionText)}" onclick="window.handleSpeak(this)">🔊 Nghe câu hỏi</button>` : '';
 
