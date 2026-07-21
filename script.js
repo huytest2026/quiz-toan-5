@@ -6,7 +6,8 @@ const AppState = {
     timerInterval: null,
     correctCount: 0,
     wrongCount: 0,
-    wrongQuestions: []
+    wrongQuestions: [],
+    isReadingComp: false
 };
 
 (function injectStyles() {
@@ -22,9 +23,34 @@ const AppState = {
         .medal { font-size: 1.2em; margin-right: 10px; }
         .score-badge { background: #eef2f3; padding: 4px 12px; border-radius: 20px; font-weight: bold; color: #4f46e5; }
         .time-text { font-size: 0.8em; color: #888; display: block; }
-        .speaker-btn { background: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
+        .speaker-btn { background: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
+        .speaker-btn:hover { background: #5a6268; }
         #retry-wrong-btn { background: #d9534f; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; width: 100%; font-weight: bold; }
         
+        .passage-box { 
+            background: #ffffff; 
+            border: 2px solid #540606; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            font-size: 1.05em; 
+            line-height: 1.6; 
+            color: #333; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+
+        .passage-tag {
+            display: inline-block;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 1em;
+        }
+
         input[type="text"], select {
             width: 100%;
             padding: 12px 15px;
@@ -61,29 +87,80 @@ function escapeHTML(str) {
     });
 }
 
-// Hàm chuẩn hóa dữ liệu linh hoạt từ Google Sheets
+function removeDiacritics(str) {
+    return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+function cleanKey(str) {
+    return removeDiacritics(str).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 function normalizeItem(item) {
-    const getVal = (keys) => {
-        for (let k of keys) {
-            if (item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') return item[k];
-            const foundKey = Object.keys(item).find(realKey => realKey.toLowerCase().replace(/[^a-z0-9]/g, '') === k.toLowerCase().replace(/[^a-z0-9]/g, ''));
-            if (foundKey && item[foundKey] !== undefined && item[foundKey] !== null) return item[foundKey];
+    if (!item) return null;
+    
+    if (!Array.isArray(item) && typeof item === 'object') {
+        const findKey = (possibleNames) => {
+            for (let name of possibleNames) {
+                const cleanN = cleanKey(name);
+                for (let realKey of Object.keys(item)) {
+                    if (cleanKey(realKey) === cleanN) {
+                        const val = item[realKey];
+                        if (val !== undefined && val !== null && String(val).trim() !== '') {
+                            return String(val).trim();
+                        }
+                    }
+                }
+            }
+            return '';
+        };
+
+        return {
+            mon: findKey(['mon', 'môn', 'subject']),
+            chuDe: findKey(['chude', 'chủ đề', 'chu de', 'topic']),
+            question: findKey(['question', 'noidungcauhoi', 'noi_dung_cau_hoi', 'noi_dung', 'noidung', 'cauhoi', 'cau_hoi', 'cau', 'de_bai', 'de', 'nd', 'content', 'text', 'câu hỏi', 'nội dung câu hỏi', 'đề bài', 'đề']),
+            a: findKey(['a', 'dapan_a', 'dap an a', 'đáp án a', 'option_a']),
+            b: findKey(['b', 'dapan_b', 'dap an b', 'đáp án b', 'option_b']),
+            c: findKey(['c', 'dapan_c', 'dap an c', 'đáp án c', 'option_c']),
+            d: findKey(['d', 'dapan_d', 'dap an d', 'đáp án d', 'option_d']),
+            correct: findKey(['correct', 'dapan_dung', 'dap an dung', 'đáp án đúng', 'dapandung', 'đáp_án_đúng', 'answer']),
+            explanation: findKey(['explanation', 'giaithich', 'giai_thich', 'diễn giải', 'dien giai', 'giải thích', 'giai thich']),
+            loai: findKey(['loai', 'loại', 'type']),
+            level: findKey(['level', 'cấp độ', 'cap do', 'muc do']),
+            passage: findKey(['passage', 'doanvan', 'đoạn văn', 'doan_van', 'đoạn_văn', 'noidungdoanvan', 'noidung', 'reading', 'content'])
+        };
+    }
+    
+    let values = Array.isArray(item) ? item : [];
+    if (values.length === 0) return null;
+
+    let v0 = String(values[0] || '').trim().toLowerCase();
+    if (v0 === 'id' || v0 === 'môn' || v0 === 'mon') {
+        return null;
+    }
+
+    let hasStt = /^\d+$/.test(String(values[0]).trim());
+
+    const getVal = (indexWithoutId) => {
+        let idx = hasStt ? indexWithoutId + 1 : indexWithoutId;
+        if (idx < values.length && values[idx] !== undefined && values[idx] !== null) {
+            return String(values[idx]).trim();
         }
         return '';
     };
 
     return {
-        mon: String(getVal(['mon', 'môn'])).trim(),
-        chuDe: String(getVal(['chude', 'chủ đề', 'chu de'])).trim(),
-        question: String(getVal(['question', 'noidungcauhoi', 'noi_dung_cau_hoi', 'noi dung cau hỏi'])).trim(),
-        a: String(getVal(['a', 'dapan_a', 'dap an a', 'đáp án a'])).trim(),
-        b: String(getVal(['b', 'dapan_b', 'dap an b', 'đáp án b'])).trim(),
-        c: String(getVal(['c', 'dapan_c', 'dap an c', 'đáp án c'])).trim(),
-        d: String(getVal(['d', 'dapan_d', 'dap an d', 'đáp án d'])).trim(),
-        correct: String(getVal(['correct', 'dapan_dung', 'dap an dung', 'đáp án đúng', 'dapandung'])).trim(),
-        explanation: String(getVal(['explanation', 'giaithich', 'giai_thich', 'diễn giải', 'dien giai'])).trim(),
-        loai: String(getVal(['loai', 'loại'])).trim(),
-        level: String(getVal(['level', 'cấp độ', 'cap do'])).trim()
+        mon: getVal(0),
+        chuDe: getVal(1),
+        question: getVal(2),
+        a: getVal(3),
+        b: getVal(4),
+        c: getVal(5),
+        d: getVal(6),
+        correct: getVal(7),
+        explanation: getVal(8),
+        loai: getVal(9),
+        level: getVal(10),
+        passage: getVal(11)
     };
 }
 
@@ -92,24 +169,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('student-code');
     if (input) input.value = savedMa;
     
-    loadFromCache(savedMa);
     window.loadData();
 });
-
-function loadFromCache(maHS) {
-    const cachedData = localStorage.getItem('cache_quiz_data_' + maHS);
-    if (cachedData) {
-        try {
-            const data = JSON.parse(cachedData);
-            AppState.allQuizData = (data.questions || []).map(normalizeItem);
-            AppState.userPermissions = data.permissions || [];
-            AppState.rankings = data.rankings || [];
-            window.renderLeaderboard();
-            window.updateTopicList();
-            window.updateLevelOptions();
-        } catch(e) {}
-    }
-}
 
 window.handleSubjectChange = function() {
     const mon = document.getElementById('subject-select').value;
@@ -131,17 +192,17 @@ window.updateLevelOptions = function() {
     const rankings = AppState.rankings || [];
 
     const passedLevel1 = rankings.some(r => {
-        const rMon = String(r.subject || r.mon || '').trim().toLowerCase();
+        const rMon = cleanKey(r.subject || r.mon || '');
         const rLvl = String(r.level || '').trim();
         const rScore = parseFloat(r.score || 0);
-        return rMon === 'tiếng anh' && rLvl.includes('1') && rScore >= 8;
+        return rMon === cleanKey('Tiếng Anh') && rLvl.includes('1') && rScore >= 8;
     });
 
     const passedLevel2 = rankings.some(r => {
-        const rMon = String(r.subject || r.mon || '').trim().toLowerCase();
+        const rMon = cleanKey(r.subject || r.mon || '');
         const rLvl = String(r.level || '').trim();
         const rScore = parseFloat(r.score || 0);
-        return rMon === 'tiếng anh' && rLvl.includes('2') && rScore >= 8;
+        return rMon === cleanKey('Tiếng Anh') && rLvl.includes('2') && rScore >= 8;
     });
 
     for (let option of levelSelect.options) {
@@ -164,17 +225,19 @@ window.updateLevelOptions = function() {
 };
 
 window.updateTopicList = function() {
-    const monSelect = document.getElementById('subject-select').value.trim().toLowerCase();
+    const monSelect = document.getElementById('subject-select').value.trim();
     const maHS = document.getElementById('student-code').value.trim();
     const container = document.getElementById('topic-container');
     if (!container || !monSelect) return;
 
+    const cleanMonSelect = cleanKey(monSelect);
+
     const allowed = AppState.userPermissions
-        .filter(p => String(p.maHS).trim() === maHS && String(p.mon).trim().toLowerCase() === monSelect)
+        .filter(p => String(p.maHS).trim() === maHS && cleanKey(p.mon) === cleanMonSelect)
         .map(p => String(p.chuDe).trim());
 
     const topics = [...new Set(AppState.allQuizData
-        .filter(i => i.mon.toLowerCase() === monSelect)
+        .filter(i => cleanKey(i.mon) === cleanMonSelect && i.question !== '')
         .map(i => i.chuDe))].filter(topic => topic !== "");
 
     if (topics.length === 0) {
@@ -182,10 +245,12 @@ window.updateTopicList = function() {
         return;
     }
 
+    const hasSpecificPermissions = allowed.length > 0;
+
     container.innerHTML = topics.map(topic => {
-        const isAllowed = allowed.includes(topic);
+        const isAllowed = !hasSpecificPermissions || allowed.includes(topic);
         return `<label style="display:block; margin:5px 0; opacity:${isAllowed ? '1' : '0.5'}">
-            <input type="checkbox" name="topic" value="${escapeHTML(topic)}" ${isAllowed ? 'checked' : 'disabled'}> ${escapeHTML(topic)}
+            <input type="checkbox" name="topic" value="${escapeHTML(topic)}" ${isAllowed ? 'checked' : ''}> ${escapeHTML(topic)}
         </label>`;
     }).join('');
 };
@@ -194,19 +259,86 @@ window.loadData = function() {
     const maHS = document.getElementById('student-code').value.trim();
     if (!maHS) return alert("Vui lòng nhập mã học sinh!");
     localStorage.setItem('saved_maHS', maHS);
+    localStorage.removeItem('cache_quiz_data_' + maHS);
+
+    const container = document.getElementById('topic-container');
+    if (container) container.innerHTML = "Đang tải dữ liệu chủ đề...";
 
     const API_URL = "https://script.google.com/macros/s/AKfycbwClcRQ_6XkCq-psx7vOYArfCloZuQ_hBygTWmx_shheM27EaSYlyYUqk-2N97lXqCFew/exec";
     const script = document.createElement('script');
     script.src = `${API_URL}?ma=${encodeURIComponent(maHS)}&callback=handleQuizData`;
-    script.onerror = () => { script.remove(); };
+    script.onerror = () => { 
+        script.remove(); 
+        if (container) container.innerHTML = "Lỗi kết nối tải dữ liệu.";
+    };
     document.body.appendChild(script);
     script.onload = () => script.remove();
 };
 
 window.handleQuizData = function(data) {
-    if (data.error) return;
-    AppState.allQuizData = (data.questions || []).map(normalizeItem);
-    AppState.userPermissions = data.permissions || [];
+    if (!data || data.error) {
+        const container = document.getElementById('topic-container');
+        if (container) container.innerHTML = "Không thể tải dữ liệu từ máy chủ.";
+        return;
+    }
+    
+    let lastMon = '';
+    let lastChuDe = '';
+    let lastLevel = '';
+    let lastLoai = '';
+    let lastPassage = '';
+
+    AppState.allQuizData = (data.questions || [])
+        .map(rawItem => {
+            let item = normalizeItem(rawItem);
+            if (!item) return null;
+
+            if (item.mon) lastMon = item.mon;
+            else item.mon = lastMon;
+
+            if (item.chuDe) lastChuDe = item.chuDe;
+            else item.chuDe = lastChuDe;
+
+            if (item.level) lastLevel = item.level;
+            else if (lastLevel) item.level = lastLevel;
+
+            if (item.loai) lastLoai = item.loai;
+            else if (lastLoai) item.loai = lastLoai;
+
+            // QUAN TRỌNG: Chỉ lưu và nhớ passage nếu thực sự thuộc môn Tiếng Anh và đúng dòng đọc hiểu
+            if (item.passage) {
+                lastPassage = item.passage;
+            } else if (cleanKey(item.mon) !== cleanKey('Tiếng Anh') || !String(item.chuDe || '').toUpperCase().startsWith('DH')) {
+                lastPassage = ''; // Xóa sạch passage nếu chuyển sang môn khác hoặc chủ đề khác không phải đọc hiểu
+            } else if (lastPassage) {
+                item.passage = lastPassage;
+            }
+
+            // Chặn tuyệt đối passage lọt sang môn Toán
+            if (cleanKey(item.mon) !== cleanKey('Tiếng Anh')) {
+                item.passage = '';
+            }
+
+            return item;
+        })
+        .filter(item => item && item.question !== '' && item.mon !== '');
+        
+    let lastMaHS = '';
+    let lastPermMon = '';
+    AppState.userPermissions = (data.permissions || []).map(p => {
+        let maHS = String(p.maHS || p[0] || '').trim();
+        let mon = String(p.mon || p[1] || '').trim();
+        let chuDe = String(p.chuDe || p[2] || '').trim();
+        
+        if (maHS !== '') lastMaHS = maHS;
+        else maHS = lastMaHS;
+        
+        if (mon !== '') lastPermMon = mon;
+        else mon = lastPermMon;
+        
+        return { maHS, mon, chuDe };
+    }).filter(p => p.chuDe !== '');
+
     AppState.rankings = data.rankings || [];
 
     const maHS = document.getElementById('student-code').value.trim();
@@ -223,7 +355,7 @@ window.renderLeaderboard = function(subjectFilter = null) {
     list.className = "leaderboard-container";
     let data = AppState.rankings;
     if (subjectFilter && subjectFilter !== "-- Chọn môn --") {
-        data = data.filter(item => item.subject === subjectFilter);
+        data = data.filter(item => cleanKey(item.subject || item.mon || '') === cleanKey(subjectFilter));
     }
     const qualifiedData = data.filter(item => item.score >= 8);
     if (qualifiedData.length === 0) {
@@ -240,13 +372,14 @@ window.renderLeaderboard = function(subjectFilter = null) {
 };
 
 function getOriginalCorrectKey(item) {
-    const raw = item.correct;
+    const raw = String(item.correct || '').trim();
+    if (!raw) return '';
     const upper = raw.toUpperCase();
     if (['A', 'B', 'C', 'D'].includes(upper)) {
         return upper.toLowerCase();
     }
     for (let key of ['a', 'b', 'c', 'd']) {
-        if (item[key] && item[key].toLowerCase() === raw.toLowerCase()) {
+        if (item[key] && String(item[key]).trim().toLowerCase() === raw.toLowerCase()) {
             return key;
         }
     }
@@ -256,26 +389,40 @@ function getOriginalCorrectKey(item) {
 window.startQuiz = function() {
     const mon = document.getElementById('subject-select').value;
     const levelSelected = document.getElementById('level-select').value;
-    const selected = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
-    if (!selected.length) return alert("Vui lòng chọn chủ đề!");
+    const selectedTopics = Array.from(document.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+    if (!selectedTopics.length) return alert("Vui lòng chọn chủ đề!");
     
-    let limit = (mon === 'Toán') ? 10 : 20;
-    
-    let filtered = AppState.allQuizData.filter(i => {
-        const isSameSubject = (i.mon.toLowerCase() === mon.trim().toLowerCase());
-        const isTopicMatch = selected.includes(i.chuDe);
-        const isLevelMatch = (mon !== 'Tiếng Anh') || (i.level === String(levelSelected).trim());
-        return isSameSubject && isTopicMatch && isLevelMatch;
+    let readingTopics = selectedTopics.filter(t => t.toUpperCase().startsWith('DH'));
+    let normalTopics = selectedTopics.filter(t => !t.toUpperCase().startsWith('DH'));
+
+    let readingQuestions = AppState.allQuizData.filter(i => {
+        const isSameSubject = (cleanKey(i.mon) === cleanKey(mon));
+        const isTopicMatch = readingTopics.includes(i.chuDe);
+        return isSameSubject && isTopicMatch && i.question !== '';
     });
 
-    if (filtered.length === 0) return alert("Không tìm thấy câu hỏi phù hợp cho lựa chọn này!");
+    let normalQuestions = [];
+    if (normalTopics.length > 0) {
+        let filteredNormal = AppState.allQuizData.filter(i => {
+            const isSameSubject = (cleanKey(i.mon) === cleanKey(mon));
+            const isTopicMatch = normalTopics.includes(i.chuDe);
+            const isLevelMatch = (cleanKey(mon) !== cleanKey('Tiếng Anh')) || (String(i.level).trim() === String(levelSelected).trim());
+            return isSameSubject && isTopicMatch && isLevelMatch && i.question !== '';
+        });
+        normalQuestions = filteredNormal.sort(() => 0.5 - Math.random()).slice(0, 20);
+    }
 
-    let rawSelectedQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, limit);
+    let rawSelectedQuestions = [...readingQuestions, ...normalQuestions];
+    if (rawSelectedQuestions.length === 0) return alert("Không tìm thấy câu hỏi phù hợp cho lựa chọn này!");
+
+    let isReadingComp = readingTopics.length > 0;
     
     AppState.currentQuizData = rawSelectedQuestions.map(item => {
         let originalCorrectKey = getOriginalCorrectKey(item);
         let validKeys = ['a', 'b', 'c', 'd'].filter(k => item[k] !== '');
-        let shuffledKeys = [...validKeys].sort(() => 0.5 - Math.random());
+        let isDH = item.chuDe && item.chuDe.toUpperCase().startsWith('DH');
+        let shuffledKeys = isDH ? validKeys : [...validKeys].sort(() => 0.5 - Math.random());
+
         return {
             ...item,
             _shuffledKeys: shuffledKeys,
@@ -283,6 +430,7 @@ window.startQuiz = function() {
         };
     });
 
+    AppState.isReadingComp = isReadingComp;
     AppState.correctCount = 0; 
     AppState.wrongCount = 0;
     AppState.wrongQuestions = [];
@@ -291,31 +439,103 @@ window.startQuiz = function() {
     document.getElementById('quiz-screen').style.display = 'block';
     window.renderQuiz();
     
-    let totalSeconds = (mon === 'Toán') ? 15 * 60 : 10 * 60;
+    let totalSeconds = 10 * 60;
+    if (isReadingComp) {
+        totalSeconds = 22 * 60; 
+    } else if (cleanKey(mon) === cleanKey('Toán')) {
+        totalSeconds = 15 * 60;
+    }
     window.startTimerTotal(totalSeconds);
 };
 
 window.renderQuiz = function() {
     const container = document.getElementById('quiz');
     if (!container) return;
-    container.innerHTML = AppState.currentQuizData.map((item, index) => {
-        let loaiVal = item.loai.toLowerCase();
-        let hasNoOptions = (!item.a && !item.b && !item.c && !item.d);
-        let isVoca = loaiVal === 'voca' || loaiVal.includes('voca') || loaiVal.includes('dien') || hasNoOptions;
+
+    let passageHtml = '';
+    // Lọc chỉ lấy passage thực sự có nội dung và bắt buộc phải là môn Tiếng Anh
+    let passageItems = AppState.currentQuizData.filter(i => cleanKey(i.mon) === cleanKey('Tiếng Anh') && i.passage && i.passage.trim() !== '');
+    if (passageItems.length > 0) {
+        let uniquePassages = {};
+        passageItems.forEach(item => {
+            if (!uniquePassages[item.chuDe]) {
+                uniquePassages[item.chuDe] = item.passage;
+            }
+        });
+
+        for (let code in uniquePassages) {
+            passageHtml += `
+                <div class="passage-box">
+                    <div class="passage-tag">${escapeHTML(code)}</div>
+                    <div>
+                        <button class="speaker-btn" data-question="${escapeHTML(uniquePassages[code])}" onclick="window.handleSpeak(this)">🔊 Nghe đoạn văn</button>
+                    </div>
+                    <div style="white-space: pre-line; margin-top: 10px;">${escapeHTML(uniquePassages[code])}</div>
+                </div>
+            `;
+        }
+    }
+
+    let questionsHtml = AppState.currentQuizData.map((item, index) => {
+        let loaiVal = (item.loai || '').toLowerCase();
+        let hasNoOptions = (!item.a || item.a.trim() === '') &&
+                           (!item.b || item.b.trim() === '') &&
+                           (!item.c || item.c.trim() === '') &&
+                           (!item.d || item.d.trim() === '');
+        let isVoca = loaiVal.includes('voca') || loaiVal.includes('dien') || loaiVal.includes('từ') || hasNoOptions;
         
         let questionText = item.question;
         let explanationText = item.explanation || 'Không có giải thích.';
 
-        let speakerBtn = (item.mon.toLowerCase() === 'tiếng anh') ? `<button class="speaker-btn" data-question="${escapeHTML(questionText)}" onclick="window.handleSpeak(this)">🔊 Nghe câu hỏi</button>` : '';
-
+        let speakerBtn = '';
         let bodyHtml = '';
-        if (isVoca) {
-            bodyHtml = `
-                <div style="margin-top: 10px;">
-                    <input type="text" id="voca-input-${index}" placeholder="Nhập đáp án tiếng Anh...">
-                    <button type="button" onclick="window.checkVocaAnswer(${index})" style="margin-top: 8px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Kiểm tra</button>
-                </div>
-            `;
+
+        if (cleanKey(item.mon) === cleanKey('Tiếng Anh')) {
+            let chuDeLower = String(item.chuDe || '').toLowerCase();
+            let loaiLower = String(item.loai || '').toLowerCase();
+            
+            if (isVoca) {
+                const hasVietnameseChars = /[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/i.test(questionText);
+                const isVietAnh = chuDeLower.includes('việt anh') || chuDeLower.includes('viet anh') || 
+                                  loaiLower.includes('việt anh') || loaiLower.includes('viet anh') || 
+                                  hasVietnameseChars;
+                const isAnhViet = chuDeLower.includes('anh việt') || chuDeLower.includes('anh viet') || 
+                                  loaiLower.includes('anh việt') || loaiLower.includes('anh viet') || 
+                                  (!hasVietnameseChars && !isVietAnh);
+
+                let placeholderText = "Nhập đáp án tiếng Anh...";
+                let speakTextContent = questionText;
+                let speakerLabel = '🔊 Nghe từ tiếng Anh';
+
+                if (isVietAnh) {
+                    placeholderText = "Nhập đáp án tiếng Anh...";
+                    speakerLabel = '🔊 Nghe từ tiếng Anh';
+                    speakTextContent = item._correctKey || questionText;
+                } else if (isAnhViet) {
+                    placeholderText = "Nhập đáp án tiếng Việt...";
+                    speakerLabel = '🔊 Nghe từ tiếng Anh';
+                    speakTextContent = questionText;
+                }
+
+                speakerBtn = `<button class="speaker-btn" data-question="${escapeHTML(speakTextContent)}" onclick="window.handleSpeak(this)">${speakerLabel}</button>`;
+
+                bodyHtml = `
+                    <div style="margin-top: 10px;">
+                        <input type="text" id="voca-input-${index}" placeholder="${placeholderText}">
+                        <button type="button" onclick="window.checkVocaAnswer(${index})" style="margin-top: 8px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Kiểm tra</button>
+                    </div>
+                `;
+            } else {
+                speakerBtn = `<button class="speaker-btn" data-question="${escapeHTML(questionText)}" onclick="window.handleSpeak(this)">🔊 Nghe câu hỏi</button>`;
+                let keysToRender = item._shuffledKeys.length > 0 ? item._shuffledKeys : ['a', 'b', 'c', 'd'].filter(k => item[k]);
+                bodyHtml = keysToRender.map((optKey, displayIndex) => {
+                    if (!item[optKey]) return '';
+                    let displayLetter = String.fromCharCode(65 + displayIndex);
+                    return `<div class="option-box" data-orig-key="${optKey}" onclick="window.checkAnswer(this, '${optKey}', ${index})">
+                        <b>${displayLetter}.</b> ${escapeHTML(item[optKey])}
+                    </div>`;
+                }).join('');
+            }
         } else {
             let keysToRender = item._shuffledKeys.length > 0 ? item._shuffledKeys : ['a', 'b', 'c', 'd'].filter(k => item[k]);
             bodyHtml = keysToRender.map((optKey, displayIndex) => {
@@ -334,6 +554,8 @@ window.renderQuiz = function() {
             <div class="explanation-box" id="exp-${index}"><b>Giải thích:</b> ${escapeHTML(explanationText)}</div>
         </div>`;
     }).join('');
+
+    container.innerHTML = passageHtml + questionsHtml;
 };
 
 window.handleSpeak = function(btn) {
@@ -395,7 +617,7 @@ window.checkVocaAnswer = function(index) {
     inputElem.disabled = true;
 
     const item = AppState.currentQuizData[index];
-    const correctVal = item._correctKey.toLowerCase();
+    const correctVal = String(item._correctKey || '').trim().toLowerCase();
 
     const expBox = document.getElementById(`exp-${index}`);
     if (expBox) expBox.style.display = 'block';
@@ -460,7 +682,8 @@ window.retryWrongAnswers = function() {
     AppState.currentQuizData = AppState.wrongQuestions.map(item => {
         let originalCorrectKey = getOriginalCorrectKey(item);
         let validKeys = ['a', 'b', 'c', 'd'].filter(k => item[k] !== '');
-        let shuffledKeys = [...validKeys].sort(() => 0.5 - Math.random());
+        let isDH = item.chuDe && item.chuDe.toUpperCase().startsWith('DH');
+        let shuffledKeys = isDH ? validKeys : [...validKeys].sort(() => 0.5 - Math.random());
         return {
             ...item,
             _shuffledKeys: shuffledKeys,
